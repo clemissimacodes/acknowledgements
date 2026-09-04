@@ -834,6 +834,71 @@ input {
   text-underline-offset: 0.2em;
 }
 
+.poetry-adored {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(22, 20, 18, 0.16);
+}
+
+.poetry-adored h2 {
+  margin: 0 0 1.5rem;
+  color: var(--mute);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.poetry-adored-list {
+  display: grid;
+  gap: 1.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.poetry-adored-name,
+.poetry-adored-author {
+  display: block;
+}
+
+.poetry-adored-name {
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.poetry-adored-name [lang="zh-Hans"] {
+  margin-top: 0.12rem;
+  font-family: "Songti SC", "STSong", serif;
+}
+
+.poetry-adored-author,
+.poetry-adored-pending,
+.poetry-adored-sources {
+  margin-top: 0.18rem;
+  color: var(--mute);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.poetry-adored-sources {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.poetry-adored-sources a {
+  color: var(--ink);
+  text-underline-offset: 0.18em;
+}
+
+.poetry-adored-note {
+  max-width: 28rem;
+  margin: 2rem 0 0;
+  color: var(--mute);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .poem-for {
   display: block;
   font-style: italic;

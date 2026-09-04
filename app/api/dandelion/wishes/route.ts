@@ -33,12 +33,20 @@ function openField(response: NextResponse, count: number) {
 export async function GET() {
   const jar = await cookies();
   const opened = hasBlown(jar.get(DANDELION_COOKIE)?.value);
+  const wishes = await listWishes();
   if (!opened) {
-    return NextResponse.json({ opened: false, wishes: [] });
+    return NextResponse.json({
+      opened: false,
+      wishes: wishes.map((wish) => ({
+        id: wish.id,
+        body: "hidden",
+        createdAt: wish.createdAt,
+      })),
+    });
   }
   return NextResponse.json({
     opened: true,
-    wishes: await listWishes(),
+    wishes,
   });
 }
 

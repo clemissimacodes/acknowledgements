@@ -89,7 +89,7 @@ export function Dandelion() {
       .then((response) => response.json())
       .then((data: { opened?: boolean; wishes?: Wish[] }) => {
         setOpened(Boolean(data.opened));
-        setWishes(data.opened ? (data.wishes ?? []) : []);
+        setWishes(data.wishes ?? []);
       })
       .catch(() => undefined);
   }, []);
@@ -101,12 +101,12 @@ export function Dandelion() {
   }, []);
 
   const seeds = useMemo(
-    () => (opened ? wishes.map(seedPose) : []),
-    [opened, wishes],
+    () => wishes.map(seedPose),
+    [wishes],
   );
 
   function catchSeed(id: string) {
-    if (!opened || phase === "blowing") return;
+    if (phase === "blowing") return;
     setCaught(id);
     if (catchTimer.current) window.clearTimeout(catchTimer.current);
     catchTimer.current = window.setTimeout(() => setCaught(null), 4200);
@@ -221,7 +221,7 @@ export function Dandelion() {
             } as React.CSSProperties
           }
           onClick={() => catchSeed(seed.id)}
-          aria-label="A seed"
+          aria-label={opened ? "A wish" : "A hidden wish"}
         >
           <svg viewBox="0 0 18 28" aria-hidden="true">
             <path
@@ -238,8 +238,8 @@ export function Dandelion() {
           </svg>
           {caught === seed.id ? (
             <span className="seed-wish">
-              {seed.body}
-              {wishNote(seed) ? (
+              {opened ? seed.body : "hidden"}
+              {opened && wishNote(seed) ? (
                 <span className="seed-meta">{wishNote(seed)}</span>
               ) : null}
             </span>
