@@ -18,12 +18,7 @@ const POSES = [
 
 type PoseId = (typeof POSES)[number]["id"];
 
-const STORAGE_KEY = "clemi-pose";
 const CHANGE_INTERVAL = 8_000;
-
-function isPoseId(value: string | null): value is PoseId {
-  return POSES.some((pose) => pose.id === value);
-}
 
 function pickNextPose(current: PoseId): PoseId {
   const choices = POSES.filter((pose) => pose.id !== current);
@@ -36,32 +31,38 @@ export function Clemi() {
 
   useEffect(() => {
     let timeoutId: number | undefined;
-    let lastChange = 0;
+    let lastChange = Date.now();
+    let loading = false;
+    let cancelled = false;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const changePose = () => {
-      let previous = currentPose.current;
-
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (isPoseId(stored)) previous = stored;
-      } catch {
-        // Clemi still moves when storage is unavailable.
+      if (loading || reducedMotion.matches) return;
+      loading = true;
+      const next = pickNextPose(currentPose.current);
+      const nextPose = POSES.find((pose) => pose.id === next);
+      if (!nextPose) {
+        loading = false;
+        return;
       }
 
-      const next = pickNextPose(previous);
-      currentPose.current = next;
-      lastChange = Date.now();
-      setPoseId(next);
-
-      try {
-        localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        // Persisting the pose is optional.
-      }
+      const image = new Image();
+      image.onload = () => {
+        loading = false;
+        if (cancelled) return;
+        currentPose.current = next;
+        lastChange = Date.now();
+        setPoseId(next);
+      };
+      image.onerror = () => {
+        loading = false;
+      };
+      image.src = nextPose.src;
     };
 
     const scheduleChange = () => {
       window.clearTimeout(timeoutId);
+      if (reducedMotion.matches) return;
       timeoutId = window.setTimeout(() => {
         if (document.visibilityState === "visible") changePose();
         scheduleChange();
@@ -71,7 +72,7 @@ export function Clemi() {
     const changeAfterReturning = () => {
       if (
         document.visibilityState === "visible" &&
-        Date.now() - lastChange > 500
+        Date.now() - lastChange >= CHANGE_INTERVAL
       ) {
         changePose();
         scheduleChange();
@@ -80,20 +81,22 @@ export function Clemi() {
       }
     };
 
-    POSES.forEach(({ src }) => {
-      const image = new Image();
-      image.src = src;
-    });
+    const handleMotionPreference = () => {
+      window.clearTimeout(timeoutId);
+      if (!reducedMotion.matches) scheduleChange();
+    };
 
-    changePose();
     scheduleChange();
     document.addEventListener("visibilitychange", changeAfterReturning);
     window.addEventListener("pageshow", changeAfterReturning);
+    reducedMotion.addEventListener("change", handleMotionPreference);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(timeoutId);
       document.removeEventListener("visibilitychange", changeAfterReturning);
       window.removeEventListener("pageshow", changeAfterReturning);
+      reducedMotion.removeEventListener("change", handleMotionPreference);
     };
   }, []);
 

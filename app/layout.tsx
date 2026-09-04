@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { EB_Garamond } from "next/font/google";
-import Link from "next/link";
+import { SiteAnchor } from "@/components/SiteAnchor";
 import "./globals.css";
 
 const bookSerif = EB_Garamond({
@@ -41,9 +41,7 @@ export default function RootLayout({
           }}
         />
         <header className="site-masthead">
-          <Link className="site-anchor" href="/about">
-            Clementine Kay Shao
-          </Link>
+          <SiteAnchor />
         </header>
         {children}
       </body>
