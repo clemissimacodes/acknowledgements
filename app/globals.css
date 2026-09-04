@@ -1,5 +1,5 @@
 :root {
-  --site-masthead-height: clamp(6.5rem, 16vh, 9rem);
+  --site-masthead-height: calc(12vh + 3rem);
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -110,17 +110,18 @@ body {
   position: fixed;
   z-index: 100;
   inset: 0 0 auto;
-  height: var(--site-masthead-height);
+  height: 0;
   color: #161412;
   font-family: var(--font-book), "Palatino Linotype", Palatino, "Times New Roman", serif;
-  background: #f6f1e8;
+  pointer-events: none;
 }
 
 .site-anchor {
   position: absolute;
-  top: clamp(2.75rem, 7vh, 4.75rem);
+  top: 12vh;
   left: 6vw;
   width: fit-content;
+  padding-right: 0.25rem;
   color: inherit;
   font-size: 1.65rem;
   font-weight: 400;
@@ -128,6 +129,8 @@ body {
   letter-spacing: 0.01em;
   text-decoration: none;
   white-space: nowrap;
+  background: #f6f1e8;
+  pointer-events: auto;
 }
 
 .site-anchor:hover,
@@ -137,16 +140,16 @@ body {
   text-underline-offset: 0.16em;
 }
 
-html:has(.poetry-page) .site-masthead {
+html:has(.poetry-page) .site-anchor {
   background: #f4efe4;
 }
 
-html:has(.dandelion-page) .site-masthead {
+html:has(.dandelion-page) .site-anchor {
   color: #f6f1e8;
   background: #000;
 }
 
-html:has(.shell) .site-masthead {
+html:has(.shell) .site-anchor {
   color: var(--label);
   background: var(--thread-bg);
 }
@@ -189,9 +192,13 @@ input {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: calc(var(--site-masthead-height) + 1rem) 6vw
-    max(0.55rem, env(safe-area-inset-bottom));
+  padding: 12vh 6vw max(0.55rem, env(safe-area-inset-bottom));
   overflow: hidden;
+}
+
+.index::before {
+  flex: 0 0 3.15rem;
+  content: "";
 }
 
 .index-portrait {
@@ -296,7 +303,7 @@ input {
 
 @media (max-width: 767px) {
   :root {
-    --site-masthead-height: 5.75rem;
+    --site-masthead-height: calc(max(2.25rem, env(safe-area-inset-top)) + 3rem);
   }
 
   .site-anchor {
@@ -309,9 +316,13 @@ input {
   .index {
     display: flex;
     flex-direction: column;
-    padding: calc(var(--site-masthead-height) + 0.5rem) 1.25rem
+    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
       max(0.55rem, env(safe-area-inset-bottom));
     overflow: visible;
+  }
+
+  .index::before {
+    flex-basis: 2.9rem;
   }
 
   .index-portrait {
@@ -349,8 +360,15 @@ input {
 
 .about-page {
   min-height: 100dvh;
-  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
+  padding: 8vh 6vw 16vh;
   max-width: 40rem;
+}
+
+.about-page::before,
+.unlock-page::before {
+  display: block;
+  height: 3.3rem;
+  content: "";
 }
 
 .about-page h1 {
@@ -437,7 +455,7 @@ input {
 
 .unlock-page {
   min-height: 100dvh;
-  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
+  padding: 8vh 6vw 16vh;
   max-width: 36rem;
 }
 
@@ -487,29 +505,15 @@ input {
   max-width: 38rem;
 }
 
-.intro-lede {
-  max-width: 28rem;
-  margin: 0 0 2rem;
-  color: var(--mute);
-  line-height: 1.55;
-}
-
 .intro-form {
   display: grid;
-  gap: 1.35rem;
+  gap: 0.8rem;
   max-width: 28rem;
 }
 
-.intro-form > label:not(.intro-consent):not(.intro-honey) {
+.intro-form > label:not(.intro-honey) {
   display: grid;
   gap: 0.4rem;
-}
-
-.intro-form > label > span {
-  color: var(--mute);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
 .intro-form input:not([type="checkbox"]),
@@ -531,23 +535,10 @@ input {
   border-color: var(--ink);
 }
 
-.intro-consent {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  line-height: 1.45;
-}
-
-.intro-consent input {
-  margin-top: 0.2em;
-  accent-color: var(--ink);
-}
-
-.intro-consent span {
-  color: var(--ink) !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
+.intro-privacy {
+  margin: -0.2rem 0 0.45rem;
+  color: var(--mute);
+  font-size: 0.78rem;
 }
 
 .intro-form button {
@@ -626,6 +617,7 @@ input {
   z-index: 0;
   isolation: isolate;
   max-width: 42rem;
+  padding-top: calc(8vh + 3.3rem);
 }
 
 .posties-page::before {
@@ -775,7 +767,7 @@ input {
 .poetry-page {
   position: relative;
   min-height: 100dvh;
-  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
+  padding: 8vh 6vw 16vh;
   background: #f4efe4;
   overflow-x: hidden;
 }
@@ -784,6 +776,12 @@ input {
   position: relative;
   z-index: 1;
   max-width: 34rem;
+}
+
+.poetry-page .poetry-inner::before {
+  display: block;
+  height: 3.3rem;
+  content: "";
 }
 
 .poetry-kicker {
@@ -1268,8 +1266,12 @@ input {
   .about-page,
   .unlock-page,
   .poetry-page {
-    padding: calc(var(--site-masthead-height) + 0.5rem) 1.25rem
+    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
       max(3.5rem, env(safe-area-inset-bottom));
+  }
+
+  .unlock-page.posties-page {
+    padding-top: calc(max(2.25rem, env(safe-area-inset-top)) + 3.3rem);
   }
 
   .about-page {
@@ -1400,10 +1402,15 @@ input {
   flex-direction: column;
   min-height: 100dvh;
   height: 100dvh;
-  padding: calc(var(--site-masthead-height) + 0.5rem) 6vw 3vh;
+  padding: 6vh 6vw 3vh;
   overflow: hidden;
   background: #000;
   color: #f6f1e8;
+}
+
+.dandelion-page::before {
+  flex: 0 0 3.3rem;
+  content: "";
 }
 
 .dandelion-page .poetry-kicker,
@@ -1727,7 +1734,7 @@ input {
 
 @media (max-width: 767px) {
   .dandelion-page {
-    padding: calc(var(--site-masthead-height) + 0.25rem) 1.25rem
+    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
       max(2rem, env(safe-area-inset-bottom));
   }
 
@@ -1780,9 +1787,8 @@ input {
 
 .shell {
   display: flex;
-  height: calc(100dvh - var(--site-masthead-height));
-  height: calc(100svh - var(--site-masthead-height));
-  margin-top: var(--site-masthead-height);
+  height: 100dvh;
+  height: 100svh;
   background: var(--shell-wash);
   color: var(--label);
   font-family: var(--messages-ui);

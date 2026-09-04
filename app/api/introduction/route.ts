@@ -27,11 +27,7 @@ export async function POST(request: Request) {
   }
 
   let payload: {
-    name?: unknown;
-    location?: unknown;
-    foundVia?: unknown;
     tinyThing?: unknown;
-    consent?: unknown;
     website?: unknown;
   };
 
@@ -48,17 +44,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (payload.consent !== true) {
-    return NextResponse.json(
-      { error: "Please agree before entering." },
-      { status: 400 },
-    );
-  }
-
   const introduction = cleanIntroduction(payload);
   if (!introduction) {
     return NextResponse.json(
-      { error: "Please answer each little question." },
+      { error: "Tell me one teeny tiny thing first." },
       { status: 400 },
     );
   }

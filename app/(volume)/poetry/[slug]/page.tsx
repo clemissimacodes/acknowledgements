@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PoemSheet } from "@/components/poetry/PoemSheet";
 import { TurnipChase } from "@/components/poetry/TurnipChase";
@@ -30,9 +29,6 @@ export default async function PoemPage({
     <main className="poetry-page poetry-read">
       {poem.swarm ? <TurnipChase /> : null}
       <div className="poetry-inner">
-        <p className="poetry-kicker">
-          <Link href="/poetry">Poetry</Link>
-        </p>
         <PoemSheet
           title={poem.title}
           dedication={poem.dedication}

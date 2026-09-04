@@ -2,9 +2,6 @@ import { randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
 
 type Introduction = {
-  name: string;
-  location: string;
-  foundVia: string;
   tinyThing: string;
 };
 
@@ -21,28 +18,10 @@ function cleanLine(value: unknown, max: number) {
 }
 
 export function cleanIntroduction(raw: {
-  name?: unknown;
-  location?: unknown;
-  foundVia?: unknown;
   tinyThing?: unknown;
 }): Introduction | null {
-  const introduction = {
-    name: cleanLine(raw.name, 80),
-    location: cleanLine(raw.location, 120),
-    foundVia: cleanLine(raw.foundVia, 240),
-    tinyThing: cleanLine(raw.tinyThing, 400),
-  };
-
-  if (
-    introduction.name.length < 2 ||
-    introduction.location.length < 2 ||
-    introduction.foundVia.length < 3 ||
-    introduction.tinyThing.length < 3
-  ) {
-    return null;
-  }
-
-  return introduction;
+  const tinyThing = cleanLine(raw.tinyThing, 400);
+  return tinyThing.length >= 3 ? { tinyThing } : null;
 }
 
 export async function addIntroduction(introduction: Introduction) {
@@ -54,26 +33,26 @@ export async function addIntroduction(introduction: Introduction) {
     await sql`
       CREATE TABLE IF NOT EXISTS visitor_introductions (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        location TEXT NOT NULL,
-        found_via TEXT NOT NULL,
+        name TEXT,
+        location TEXT,
+        found_via TEXT,
         tiny_thing TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
     await sql`
+      ALTER TABLE visitor_introductions
+        ALTER COLUMN name DROP NOT NULL,
+        ALTER COLUMN location DROP NOT NULL,
+        ALTER COLUMN found_via DROP NOT NULL
+    `;
+    await sql`
       INSERT INTO visitor_introductions (
         id,
-        name,
-        location,
-        found_via,
         tiny_thing
       )
       VALUES (
         ${randomUUID()},
-        ${introduction.name},
-        ${introduction.location},
-        ${introduction.foundVia},
         ${introduction.tinyThing}
       )
     `;
