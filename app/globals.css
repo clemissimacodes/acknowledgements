@@ -3182,6 +3182,37 @@ html:has(.admin-page) .site-anchor {
   cursor: pointer;
 }
 
+.admin-radar button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.admin-device-radar {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) auto;
+  grid-column: 1 / -1;
+  align-items: end;
+  gap: 0.7rem 1rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(28, 35, 30, 0.14);
+}
+
+.admin-device-radar p,
+.admin-device-radar small {
+  grid-column: 1 / -1;
+}
+
+.admin-device-radar p {
+  min-height: 1.4em;
+  color: #244a34;
+}
+
+.admin-device-radar small {
+  max-width: 42rem;
+  color: rgba(28, 35, 30, 0.62);
+  line-height: 1.45;
+}
+
 .admin-radar-live {
   display: flex;
   grid-column: 1 / -1;
@@ -3347,6 +3378,10 @@ html:has(.admin-page) .site-anchor {
   }
 
   .admin-radar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-device-radar {
     grid-template-columns: 1fr;
   }
 

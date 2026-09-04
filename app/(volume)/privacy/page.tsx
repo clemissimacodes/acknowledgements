@@ -35,9 +35,11 @@ export default function PrivacyPage() {
       <section>
         <h2>Clemi Radar</h2>
         <p>
-          Radar locations are entered manually, are deliberately approximate,
-          and disappear after 12 hours. The previous location is replaced, so
-          no location history is retained.
+          Radar can use a location permission granted on Clementine’s laptop or
+          phone. Precise coordinates are immediately reduced to roughly a
+          two-mile area before lookup and are never saved. The approximate
+          status disappears after 12 hours and replaces the previous one, so no
+          location history is retained.
         </p>
       </section>
       <p>

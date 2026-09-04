@@ -2,6 +2,7 @@ import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { DeviceRadar } from "@/components/admin/DeviceRadar";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { removeRadar, updateRadar } from "./actions";
 
@@ -52,8 +53,8 @@ export default async function AdminPage() {
         <div>
           <h2 id="radar-control-title">Clemi Radar</h2>
           <p>
-            Set an approximate neighborhood or city. It vanishes after 12 hours
-            and replaces the prior status, so no location history is kept.
+            Catch this device’s fuzzy location, or enter a neighborhood
+            manually. It vanishes after 12 hours and replaces the prior status.
           </p>
         </div>
         <form action={updateRadar}>
@@ -78,6 +79,7 @@ export default async function AdminPage() {
           </label>
           <button type="submit">Transmit for 12 hours</button>
         </form>
+        <DeviceRadar />
         {data.radar ? (
           <div className="admin-radar-live">
             <p>

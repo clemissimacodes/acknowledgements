@@ -257,6 +257,87 @@ export async function setRadar(areaValue: unknown, noteValue: unknown) {
   `;
 }
 
+function coarseCoordinates(latitude: number, longitude: number) {
+  const latitudeStep = 0.04;
+  const longitudeStep =
+    latitudeStep /
+    Math.max(0.25, Math.cos((latitude * Math.PI) / 180));
+  return {
+    latitude: Math.round(latitude / latitudeStep) * latitudeStep,
+    longitude: Math.round(longitude / longitudeStep) * longitudeStep,
+  };
+}
+
+async function areaFromCoordinates(latitude: number, longitude: number) {
+  const coarse = coarseCoordinates(latitude, longitude);
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    lat: coarse.latitude.toFixed(5),
+    lon: coarse.longitude.toFixed(5),
+    zoom: "12",
+    addressdetails: "1",
+  });
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?${params}`,
+    {
+      headers: {
+        Accept: "application/json",
+        "Accept-Language": "en",
+        "User-Agent":
+          "Clemi-Radar/1.0 (https://clemissima.vercel.app/privacy)",
+      },
+      signal: AbortSignal.timeout(6_000),
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) throw new Error("Could not name this fuzzy location.");
+  const payload = (await response.json()) as {
+    address?: Record<string, string | undefined>;
+  };
+  const address = payload.address ?? {};
+  const neighborhood =
+    address.neighbourhood ??
+    address.suburb ??
+    address.city_district ??
+    address.borough;
+  const city =
+    address.city ??
+    address.town ??
+    address.village ??
+    address.municipality ??
+    address.county;
+  const parts = [neighborhood, city]
+    .filter((part, index, all): part is string =>
+      Boolean(part && all.indexOf(part) === index),
+    )
+    .slice(0, 2);
+  if (parts.length === 0 && address.state) parts.push(address.state);
+  if (parts.length === 0) throw new Error("Could not name this fuzzy location.");
+  return parts.join(", ");
+}
+
+export async function setRadarFromCoordinates(
+  latitudeValue: unknown,
+  longitudeValue: unknown,
+  noteValue: unknown,
+) {
+  const latitude = Number(latitudeValue);
+  const longitude = Number(longitudeValue);
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    throw new Error("That location signal was not valid.");
+  }
+  const area = await areaFromCoordinates(latitude, longitude);
+  await setRadar(area, noteValue);
+  return area;
+}
+
 export async function clearRadar() {
   await ensureTables();
   await db()`DELETE FROM clemi_radar WHERE id = 1`;
