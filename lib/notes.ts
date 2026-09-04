@@ -1,75 +1,94 @@
-import fs from "node:fs";
-import path from "node:path";
-import matter from "gray-matter";
+import snapshot from "@/data/acknowledgements.json";
+import { fetchAcknowledgementRows } from "@/lib/notion";
+import {
+  RELATIONSHIPS,
+  type Note,
+  type Relationship,
+} from "@/lib/types";
 
-export type Note = {
+export type { Note, Relationship } from "@/lib/types";
+export { RELATIONSHIPS, RELATIONSHIP_LABELS } from "@/lib/types";
+
+export type AcknowledgementRow = {
   name: string;
   slug: string;
-  hook: string;
-  date?: string;
+  first?: string;
+  last?: string;
   place?: string;
-  example: boolean;
-  bubbles: string[];
+  date?: string;
+  notes?: string;
+  relationship?: string;
+  example?: boolean;
+  message?: string;
 };
 
-const NOTES_DIR = path.join(process.cwd(), "notes");
-
-function toDateString(value: unknown): string | undefined {
-  if (!value) return undefined;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-  const text = String(value);
-  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
-  return text;
+function optionalString(value: unknown): string | undefined {
+  const text = String(value ?? "").trim();
+  return text ? text : undefined;
 }
 
-function bubblesFromBody(body: string): string[] {
-  return body
+function parseRelationship(value: unknown): Relationship | undefined {
+  const text = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  return RELATIONSHIPS.find((item) => item === text);
+}
+
+export function bubblesFromMessage(body: string): string[] {
+  const blocks = body
     .split(/\n\s*\n/)
     .map((block) => block.replace(/\s+/g, " ").trim())
     .filter(Boolean);
+
+  if (blocks.length !== 1) return blocks;
+  return blocks[0]
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
-function parseNote(filename: string): Note {
-  const raw = fs.readFileSync(path.join(NOTES_DIR, filename), "utf8");
-  const { data, content } = matter(raw);
-  const slug = String(data.slug ?? filename.replace(/\.md$/, ""));
-  const name = String(data.name ?? slug);
-  const bubbles = bubblesFromBody(content);
-
-  if (!name.trim()) {
-    throw new Error(`${filename}: frontmatter needs a name`);
-  }
-  if (bubbles.length === 0) {
-    throw new Error(`${filename}: write at least one paragraph; each becomes a blue bubble`);
-  }
+function rowToNote(row: AcknowledgementRow): Note {
+  const bubbles = bubblesFromMessage(row.message ?? "");
+  const name = row.name.trim();
+  const slug = (row.slug || name).trim();
 
   return {
     name,
     slug,
-    hook: String(data.hook ?? bubbles[0] ?? ""),
-    date: toDateString(data.date),
-    place: data.place ? String(data.place) : undefined,
-    example: Boolean(data.example),
+    hook: bubbles[0] ?? "",
+    first: optionalString(row.first),
+    last: optionalString(row.last),
+    notes: optionalString(row.notes),
+    date: optionalString(row.date),
+    place: optionalString(row.place),
+    relationship: parseRelationship(row.relationship),
+    example: Boolean(row.example),
     bubbles,
   };
 }
 
-export function getNotes(): Note[] {
-  const files = fs
-    .readdirSync(NOTES_DIR)
-    .filter((file) => file.endsWith(".md"));
-
-  return files
-    .map(parseNote)
-    .sort((a, b) => {
-      const aTime = a.date ? Date.parse(a.date) : 0;
-      const bTime = b.date ? Date.parse(b.date) : 0;
-      return bTime - aTime;
-    });
+function sortNotes(notes: Note[]): Note[] {
+  return [...notes].sort((a, b) => {
+    const aTime = a.date ? Date.parse(a.date) : 0;
+    const bTime = b.date ? Date.parse(b.date) : 0;
+    if (bTime !== aTime) return bTime - aTime;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  });
 }
 
-export function getNote(slug: string): Note | undefined {
-  return getNotes().find((note) => note.slug === slug);
+export async function getNotes(): Promise<Note[]> {
+  try {
+    const live = await fetchAcknowledgementRows();
+    if (live) return sortNotes(live.map(rowToNote));
+  } catch (error) {
+    console.error("Notion is unavailable; using the last snapshot.", error);
+  }
+
+  return sortNotes((snapshot as AcknowledgementRow[]).map(rowToNote));
+}
+
+export async function getNote(slug: string): Promise<Note | undefined> {
+  const notes = await getNotes();
+  return notes.find((note) => note.slug === slug);
 }

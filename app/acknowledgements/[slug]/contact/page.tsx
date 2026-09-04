@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getNote, getNotes } from "@/lib/notes";
-import { Thread } from "@/components/messages/Thread";
+import { ContactCard } from "@/components/messages/ContactCard";
 
 export const dynamicParams = true;
 
@@ -19,7 +19,7 @@ export async function generateMetadata({
   return { title: note ? note.name : "Messages" };
 }
 
-export default async function ThreadPage({
+export default async function ContactPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
@@ -27,5 +27,5 @@ export default async function ThreadPage({
   const { slug } = await params;
   const note = await getNote(slug);
   if (!note) notFound();
-  return <Thread note={note} />;
+  return <ContactCard note={note} />;
 }

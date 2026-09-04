@@ -6,12 +6,14 @@ export const metadata: Metadata = {
   title: "Messages",
 };
 
-export default function AcknowledgementsLayout({
+export const revalidate = 60;
+
+export default async function AcknowledgementsLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const notes = getNotes();
+  const notes = await getNotes();
 
   return <MessagesShell notes={notes}>{children}</MessagesShell>;
 }

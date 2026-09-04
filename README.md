@@ -1,38 +1,16 @@
 # Acknowledgements
 
-Visitors are inside Clementine Shao’s Messages. `/` is a plain Word-style page. `/acknowledgements` is the conversation list. Opening a thread shows only her outgoing blue bubbles.
+Visitors are inside Clementine Shao’s Messages. `/` is a plain Word-style page. `/acknowledgements` is the conversation list. Opening a thread shows only her outgoing blue bubbles. The name and chevron in the thread header open the iMessage contact card (`/acknowledgements/[slug]/contact`).
 
-Sample threads (Marisol, Priya, the man with the red umbrella) are fiction, marked Sample in the list, and **should be deleted before a real launch**.
+## Source
 
-## Add a note
+Rows live in the [Acknowledgements Notion database](https://app.notion.com/p/8f01c38233dc4cf785a4cf035b74df96). **Thank you message** is the thread: one sentence or paragraph per blue bubble.
 
-1. Create a markdown file in `notes/`.
-2. Use this frontmatter. `date` and `place` are optional. `example: true` marks a sample and should not be used for real notes.
-
-```yaml
----
-name: first name, or a scene-title like “the barista who…”
-slug: url-piece
-hook: one-line preview in the conversation list
-date: 2019-06-12
-place: Oakland
-example: false
----
-```
-
-3. Write the body as short paragraphs. Each paragraph becomes one blue bubble. Do not put a signature in the file; the layout supplies Sent.
-4. Restart or rebuild. The new conversation appears in the list, newest `date` first.
-
-Search filters by name only. A miss leaves the list unchanged (no empty state, no result count).
+The site reads Notion when `NOTION_TOKEN` is set (share the database with that integration). Otherwise it uses `data/acknowledgements.json`.
 
 ## Run locally
 
 ```bash
 npm install
 npm run dev
-```
-
-```bash
-npm run build
-npm start
 ```

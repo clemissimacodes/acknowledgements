@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { Note } from "@/lib/notes";
+import type { Note } from "@/lib/types";
 import { ConversationList } from "./ConversationList";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 export function MessagesShell({
   notes,
@@ -19,16 +20,20 @@ export function MessagesShell({
   return (
     <div className={`shell ${mode}`}>
       <aside className="sidebar">
-        <div className="mac-toolbar" aria-hidden="true">
-          <span className="traffic">
+        <div className="mac-toolbar">
+          <span className="traffic" aria-hidden="true">
             <i className="close" />
             <i className="min" />
             <i className="zoom" />
           </span>
           <span className="app-name">Messages</span>
+          <ThemeSwitch />
         </div>
         <div className="ios-header">
-          <h1>Messages</h1>
+          <div className="ios-header-row">
+            <h1>Messages</h1>
+            <ThemeSwitch />
+          </div>
         </div>
         <ConversationList notes={notes} activeSlug={slug} />
       </aside>

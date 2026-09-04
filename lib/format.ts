@@ -34,6 +34,13 @@ export function listTime(value?: string): string {
   return `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(2)}`;
 }
 
+/** Long date on the contact card. */
+export function cardDate(value?: string): string {
+  const date = parseDay(value);
+  if (!date) return "";
+  return `${MONTHS_SHORT[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
 /** Centered thread crumb. Place joins the date when present. */
 export function threadStamp(dateValue?: string, place?: string): string {
   const date = parseDay(dateValue);
@@ -56,21 +63,4 @@ export function initialsFor(name: string): string {
     return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   }
   return cleaned.slice(0, 1).toUpperCase() || "?";
-}
-
-const AVATAR_COLORS = [
-  "#5AC8FA",
-  "#FF6482",
-  "#FF9F0A",
-  "#30B0C7",
-  "#AF52DE",
-  "#FF6B6B",
-];
-
-export function avatarColor(slug: string): string {
-  let hash = 0;
-  for (const char of slug) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }
