@@ -41,7 +41,7 @@ export default function RootLayout({
           }}
         />
         <header className="site-masthead">
-          <Link className="site-anchor" href="/">
+          <Link className="site-anchor" href="/about">
             Clementine Kay Shao
           </Link>
         </header>
