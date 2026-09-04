@@ -1,32 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function AboutList({ notes }: { notes: string[] }) {
+export type AboutNote = {
+  text: string;
+  href?: string;
+  image?: {
+    src: string;
+    alt: string;
+  };
+};
+
+export function AboutList({ notes }: { notes: AboutNote[] }) {
   const [open, setOpen] = useState<number | null>(null);
 
-  function magnify(node: HTMLLIElement, index: number) {
-    node.style.setProperty("--mag", "1");
-    const roomX = Math.max(64, window.innerWidth - node.getBoundingClientRect().left - 28);
-    const roomY = Math.max(48, window.innerHeight - node.getBoundingClientRect().top - 28);
-    const mag = Math.min(roomX / node.offsetWidth, roomY / node.offsetHeight, 16);
-    node.style.setProperty("--mag", String(Math.max(1, mag)));
-    setOpen(index);
-  }
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(null);
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
 
   return (
     <ol className="about-list">
       {notes.map((note, index) => (
         <li
-          key={note}
+          key={note.text}
           tabIndex={0}
-          className={open === index ? "is-magnified" : undefined}
-          onPointerEnter={(event) => magnify(event.currentTarget, index)}
-          onPointerLeave={() => setOpen(null)}
-          onFocus={(event) => magnify(event.currentTarget, index)}
-          onBlur={() => setOpen(null)}
+          className={[
+            open === index ? "is-magnified" : "",
+            note.image ? "has-image" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onPointerEnter={(event) => {
+            if (event.pointerType === "mouse") setOpen(index);
+          }}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") setOpen(null);
+          }}
+          onFocus={() => setOpen(index)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setOpen(null);
+          }}
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest("a")) return;
+            setOpen(open === index ? null : index);
+          }}
         >
-          {note}
+          <span className="about-note-copy">
+            {note.href ? (
+              <a href={note.href} target="_blank" rel="noreferrer">
+                {note.text}
+              </a>
+            ) : (
+              note.text
+            )}
+          </span>
+          {note.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              className="about-note-image"
+              src={note.image.src}
+              alt={note.image.alt}
+            />
+          ) : null}
         </li>
       ))}
     </ol>

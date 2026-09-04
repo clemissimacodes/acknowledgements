@@ -345,9 +345,7 @@ input {
   font-size: 0.42rem;
   line-height: 1.5;
   counter-increment: about;
-  transform: scale(1);
-  transform-origin: left top;
-  transition: transform 0.42s cubic-bezier(0.16, 0.84, 0.32, 1);
+  outline: none;
 }
 
 .about-list li::before {
@@ -358,9 +356,69 @@ input {
 }
 
 .about-list li.is-magnified {
-  z-index: 3;
-  transform: scale(var(--mag, 1));
-  outline: none;
+  position: fixed;
+  z-index: 30;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-content: center;
+  width: min(86vw, 68rem);
+  max-width: none;
+  min-height: min(68vh, 44rem);
+  max-height: 88vh;
+  margin: 0;
+  padding: clamp(2.2rem, 6vw, 5.5rem);
+  overflow: auto;
+  font-size: clamp(2.1rem, 5.5vw, 5.5rem);
+  line-height: 1.04;
+  text-wrap: balance;
+  background: var(--paper);
+  border: 1px solid rgba(22, 20, 18, 0.12);
+  box-shadow: 0 2rem 6rem rgba(22, 20, 18, 0.2);
+  transform: translate(-50%, -50%);
+  animation: about-magnify-in 0.32s cubic-bezier(0.16, 0.84, 0.32, 1);
+}
+
+.about-list li.is-magnified::before {
+  top: clamp(1.2rem, 3vw, 2.5rem);
+  left: clamp(1.2rem, 3vw, 2.5rem);
+  font-size: 0.75rem;
+}
+
+.about-note-copy a {
+  color: inherit;
+  text-decoration-thickness: 0.055em;
+  text-underline-offset: 0.1em;
+}
+
+.about-note-image {
+  display: none;
+}
+
+.about-list li.is-magnified.has-image {
+  grid-template-columns: minmax(0, 1.15fr) minmax(15rem, 0.85fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+  font-size: clamp(1.8rem, 4.2vw, 4.5rem);
+  text-align: left;
+}
+
+.about-list li.is-magnified .about-note-image {
+  display: block;
+  width: 100%;
+  max-height: 58vh;
+  object-fit: contain;
+}
+
+@keyframes about-magnify-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .unlock-page {
@@ -456,6 +514,127 @@ input {
 .note-thanks {
   margin: 0;
   color: var(--mute);
+}
+
+/* —— Sunday Posties —— */
+
+.posties-page {
+  max-width: 42rem;
+}
+
+.posties-lede {
+  max-width: 36rem;
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+  line-height: 1.45;
+}
+
+.posties-privacy {
+  max-width: 31rem;
+  margin: 0 0 2rem;
+  color: var(--mute);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.posties-form {
+  display: grid;
+  gap: 1.4rem;
+  max-width: 29rem;
+}
+
+.posties-form > label,
+.posties-form fieldset {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.posties-form > label > span,
+.posties-form legend {
+  color: var(--mute);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.posties-form input[type="text"],
+.posties-form input:not([type]),
+.posties-form fieldset > input,
+.posties-form textarea {
+  width: 100%;
+  padding: 0.5rem 0;
+  color: var(--ink);
+  font: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.28);
+  border-radius: 0;
+  resize: vertical;
+}
+
+.posties-form input:focus,
+.posties-form textarea:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.posties-platforms {
+  display: flex;
+  gap: 1rem;
+  margin: 0.15rem 0;
+}
+
+.posties-platforms label,
+.posties-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.posties-platforms input,
+.posties-consent input {
+  margin-top: 0.18em;
+  accent-color: var(--ink);
+}
+
+.posties-consent span {
+  color: var(--ink) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+.posties-form button {
+  width: fit-content;
+  padding: 0;
+  color: var(--ink);
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.posties-form button:disabled {
+  color: var(--mute);
+  cursor: wait;
+}
+
+.posties-honey {
+  position: absolute;
+  left: -10000px;
+}
+
+.posties-thanks {
+  max-width: 27rem;
+  margin: 2rem 0 0;
+  font-size: 1.2rem;
+  line-height: 1.5;
 }
 
 /* —— Poetry —— */
@@ -968,6 +1147,24 @@ input {
     cursor: auto;
   }
 
+  .about-list li.is-magnified {
+    width: calc(100vw - 1.5rem);
+    min-height: 72dvh;
+    max-height: calc(100dvh - 1.5rem);
+    padding: 3.25rem 1.5rem 2rem;
+    font-size: clamp(1.8rem, 9vw, 3.4rem);
+  }
+
+  .about-list li.is-magnified.has-image {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    font-size: clamp(1.45rem, 7vw, 2.6rem);
+  }
+
+  .about-list li.is-magnified .about-note-image {
+    max-height: 38dvh;
+  }
+
   .poetry-index a {
     display: flex;
     align-items: center;
@@ -1011,7 +1208,9 @@ input {
   .volume textarea,
   .unlock-form input,
   .note-letter input,
-  .note-letter textarea {
+  .note-letter textarea,
+  .posties-form input,
+  .posties-form textarea {
     font-size: 16px;
   }
 
