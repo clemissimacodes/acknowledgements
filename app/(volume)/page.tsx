@@ -12,6 +12,7 @@ const works = [
   { title: "Poetry", href: "/poetry" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Sunday Posties", href: "/sunday-posties" },
+  { title: "Clemi Radar", href: "/radar" },
 ];
 
 export default function HomePage() {
@@ -104,6 +105,9 @@ export default function HomePage() {
             />
           </svg>
         </MailLink>
+        <Link className="index-privacy" href="/privacy">
+          privacy
+        </Link>
       </nav>
     </main>
   );

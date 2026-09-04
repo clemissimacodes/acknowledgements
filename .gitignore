@@ -9,3 +9,5 @@ out
 _unpublished
 *.tsbuildinfo
 .data
+.agents
+skills-lock.json

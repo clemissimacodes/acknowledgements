@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { EB_Garamond } from "next/font/google";
 import { SiteAnchor } from "@/components/SiteAnchor";
+import { VisitTracker } from "@/components/VisitTracker";
 import "./globals.css";
 
 const bookSerif = EB_Garamond({
@@ -35,15 +37,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={bookSerif.variable} suppressHydrationWarning>
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("ack-theme");if(t==="light"||t==="dark"||t==="aquamarine")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
-          }}
-        />
-        <header className="site-masthead">
-          <SiteAnchor />
-        </header>
-        {children}
+        <ClerkProvider dynamic>
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var t=localStorage.getItem("ack-theme");if(t==="light"||t==="dark"||t==="aquamarine")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
+            }}
+          />
+          <header className="site-masthead">
+            <SiteAnchor />
+          </header>
+          {children}
+          <VisitTracker />
+        </ClerkProvider>
       </body>
     </html>
   );

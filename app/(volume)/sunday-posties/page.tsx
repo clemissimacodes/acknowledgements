@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PostiesForm } from "@/components/posties/PostiesForm";
 
 export const metadata = {
@@ -16,7 +17,8 @@ export default function SundayPostiesPage() {
       </p>
       <p className="posties-privacy">
         Your mailing address stays private. Your social profile is only so I
-        know I am sending mail to a real friendly, not a weirdie.
+        know I am sending mail to a real friendly, not a weirdie.{" "}
+        <Link href="/privacy">Read the privacy note.</Link>
       </p>
       <PostiesForm />
     </main>

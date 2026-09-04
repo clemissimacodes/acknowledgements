@@ -40,41 +40,52 @@ export default function PoetryIndexPage() {
     <main className="poetry-page">
       <div className="poetry-inner">
         <h1>Poetry</h1>
-        <p className="poetry-lede">
-          My writing kaleidoscopes my being. Please, read with great care.
-        </p>
-        <ol className="poetry-index">
-          {poems.map((poem) => (
-            <li key={poem.slug}>
-              <Link href={`/poetry/${poem.slug}`}>{poem.title}</Link>
-            </li>
-          ))}
-        </ol>
-        <section className="poetry-adored" aria-labelledby="poetry-adored-title">
-          <h2 id="poetry-adored-title">poems i adore</h2>
-          <ul className="poetry-adored-list">
-            {adoredPoems.map((poem) => (
-              <li key={`${poem.title}-${poem.author}`}>
-                <span className="poetry-adored-name">
-                  <a href={poem.href} target="_blank" rel="noreferrer">
-                    {poem.title}
-                  </a>
-                  {"alternateTitle" in poem ? (
-                    <a
-                      href={poem.alternateHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      lang="zh-Hans"
-                    >
-                      {poem.alternateTitle}
+        <div className="poetry-columns">
+          <section
+            className="poetry-written"
+            aria-labelledby="poetry-written-title"
+          >
+            <h2 id="poetry-written-title">poems i wrote</h2>
+            <p className="poetry-lede">
+              My writing kaleidoscopes my being. Please, read with great care.
+            </p>
+            <ol className="poetry-index">
+              {poems.map((poem) => (
+                <li key={poem.slug}>
+                  <Link href={`/poetry/${poem.slug}`}>{poem.title}</Link>
+                </li>
+              ))}
+            </ol>
+          </section>
+          <section
+            className="poetry-adored"
+            aria-labelledby="poetry-adored-title"
+          >
+            <h2 id="poetry-adored-title">poems i adore</h2>
+            <ul className="poetry-adored-list">
+              {adoredPoems.map((poem) => (
+                <li key={`${poem.title}-${poem.author}`}>
+                  <span className="poetry-adored-name">
+                    <a href={poem.href} target="_blank" rel="noreferrer">
+                      {poem.title}
                     </a>
-                  ) : null}
-                </span>
-                <span className="poetry-adored-author">by {poem.author}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+                    {"alternateTitle" in poem ? (
+                      <a
+                        href={poem.alternateHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        lang="zh-Hans"
+                      >
+                        {poem.alternateTitle}
+                      </a>
+                    ) : null}
+                  </span>
+                  <span className="poetry-adored-author">by {poem.author}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </div>
     </main>
   );

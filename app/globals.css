@@ -381,8 +381,8 @@ input {
   z-index: 0;
   width: max-content;
   max-width: min(24rem, 90vw);
-  margin: 0 0 0.85rem;
-  padding-left: 0.85rem;
+  margin: 0;
+  padding: 0.65rem 0 0.65rem 0.85rem;
   font-size: 0.42rem;
   line-height: 1.5;
   counter-increment: about;
@@ -392,6 +392,7 @@ input {
 .about-list li::before {
   content: counter(about) ".";
   position: absolute;
+  top: 0.65rem;
   left: 0;
   color: var(--mute);
 }
@@ -767,6 +768,22 @@ input {
   max-width: 34rem;
 }
 
+.poetry-page:not(.poetry-read) .poetry-inner {
+  max-width: 72rem;
+}
+
+.poetry-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: start;
+}
+
+.poetry-written,
+.poetry-adored {
+  min-width: 0;
+}
+
 .poetry-kicker {
   margin: 0 0 2.4rem;
   font-size: 0.72rem;
@@ -818,11 +835,12 @@ input {
 }
 
 .poetry-adored {
-  margin-top: 4rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(22, 20, 18, 0.16);
+  margin: 0;
+  padding-left: clamp(2rem, 4vw, 4rem);
+  border-left: 1px solid rgba(22, 20, 18, 0.16);
 }
 
+.poetry-written h2,
 .poetry-adored h2 {
   margin: 0 0 1.5rem;
   color: var(--mute);
@@ -1334,6 +1352,17 @@ input {
     align-items: center;
     min-height: 2.75rem;
     padding: 0.2rem 0;
+  }
+
+  .poetry-columns {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .poetry-adored {
+    padding: 2rem 0 0;
+    border-top: 1px solid rgba(22, 20, 18, 0.16);
+    border-left: 0;
   }
 
   .poem-head {
@@ -2809,5 +2838,519 @@ html[data-theme="dark"] .appearance button.is-active {
 
   .meta .chevron {
     display: none;
+  }
+}
+
+/* —— Clemi Radar, privacy, and the private burrow —— */
+
+.elsewhere .index-privacy {
+  width: auto;
+  margin: 0 0 0 0.35rem;
+  align-items: center;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.radar-page {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.8fr) minmax(20rem, 1.2fr);
+  align-items: center;
+  gap: clamp(2.5rem, 8vw, 8rem);
+  min-height: 100dvh;
+  padding: var(--site-content-top) 6vw 8vh;
+  color: #183c2b;
+  background:
+    radial-gradient(circle at 75% 55%, rgba(78, 138, 92, 0.16), transparent 40%),
+    #edf0df;
+}
+
+html:has(.radar-page),
+html:has(.radar-page) body,
+html:has(.radar-page) .volume {
+  background: #edf0df;
+}
+
+html:has(.radar-page) .site-anchor {
+  background: #edf0df;
+}
+
+.radar-copy {
+  max-width: 29rem;
+}
+
+.radar-kicker,
+.admin-eyebrow {
+  margin: 0 0 0.75rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.58;
+}
+
+.radar-page h1 {
+  margin: 0 0 1.3rem;
+  font-size: clamp(2.4rem, 5.5vw, 5rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.radar-status {
+  margin: 0 0 0.9rem;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  line-height: 1.4;
+}
+
+.radar-note {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-style: italic;
+}
+
+.radar-time {
+  max-width: 28rem;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  opacity: 0.62;
+}
+
+.radar-scope {
+  position: relative;
+  width: min(58vw, 38rem);
+  aspect-ratio: 1;
+  justify-self: center;
+  overflow: hidden;
+  border: 1px solid rgba(24, 60, 43, 0.42);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(101, 159, 103, 0.12), transparent 68%),
+    repeating-radial-gradient(
+      circle,
+      transparent 0 16.3%,
+      rgba(24, 60, 43, 0.07) 16.6% 16.9%
+    );
+  box-shadow:
+    inset 0 0 4rem rgba(24, 60, 43, 0.12),
+    0 1.5rem 5rem rgba(24, 60, 43, 0.08);
+}
+
+.radar-cross,
+.radar-ring,
+.radar-sweep {
+  position: absolute;
+  pointer-events: none;
+}
+
+.radar-cross {
+  background: rgba(24, 60, 43, 0.15);
+}
+
+.radar-cross-x {
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+}
+
+.radar-cross-y {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+.radar-ring {
+  inset: 50%;
+  border: 1px solid rgba(24, 60, 43, 0.16);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.radar-ring-one {
+  width: 33%;
+  height: 33%;
+}
+
+.radar-ring-two {
+  width: 66%;
+  height: 66%;
+}
+
+.radar-ring-three {
+  width: 99%;
+  height: 99%;
+}
+
+.radar-sweep {
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 82%,
+    rgba(61, 137, 74, 0.03) 86%,
+    rgba(61, 137, 74, 0.28) 99.5%,
+    rgba(61, 137, 74, 0.58) 100%
+  );
+  animation: radar-sweep 7s linear infinite;
+}
+
+.radar-blip {
+  position: absolute;
+  left: var(--radar-x);
+  top: var(--radar-y);
+  display: grid;
+  width: clamp(2.2rem, 6vw, 3.6rem);
+  aspect-ratio: 1;
+  place-items: center;
+  color: #f5f0df;
+  font-size: 1.25rem;
+  font-style: italic;
+  background: #ba3a2f;
+  border: 0.3rem double #f5f0df;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 0.55rem rgba(186, 58, 47, 0.14),
+    0 0 2rem rgba(186, 58, 47, 0.65);
+  transform: translate(-50%, -50%);
+  animation: radar-ping 2.1s ease-out infinite;
+}
+
+@keyframes radar-sweep {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes radar-ping {
+  50% {
+    box-shadow:
+      0 0 0 1.1rem rgba(186, 58, 47, 0),
+      0 0 2.8rem rgba(186, 58, 47, 0.8);
+  }
+}
+
+.privacy-page {
+  max-width: 42rem;
+  min-height: 100dvh;
+  padding: var(--site-content-top) 6vw 16vh;
+}
+
+.privacy-page h1 {
+  margin: 0 0 2rem;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.privacy-page section {
+  margin: 0 0 1.8rem;
+}
+
+.privacy-page h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.privacy-page p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.admin-page {
+  min-height: 100dvh;
+  padding: var(--site-content-top) 6vw 14vh;
+  color: #1c231e;
+  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
+  background: #edf0e6;
+}
+
+html:has(.admin-page),
+html:has(.admin-page) body {
+  background: #edf0e6;
+}
+
+html:has(.admin-page) .site-anchor {
+  background: #edf0e6;
+}
+
+.admin-login {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+}
+
+.admin-login h1,
+.admin-login p {
+  margin: 0;
+}
+
+.admin-login > div:last-child {
+  margin-top: 1rem;
+}
+
+.admin-google-signin .cl-formFieldRow,
+.admin-google-signin .cl-dividerRow,
+.admin-google-signin .cl-formButtonPrimary,
+.admin-google-signin .cl-footer {
+  display: none;
+}
+
+.admin-signout {
+  width: fit-content;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.admin-head h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.admin-radar {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.75fr) minmax(18rem, 1.25fr);
+  gap: 1.5rem clamp(2rem, 5vw, 5rem);
+  margin-bottom: 2rem;
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+  border: 1px solid rgba(28, 35, 30, 0.18);
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.admin-radar h2,
+.admin-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.admin-radar p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.admin-radar form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-radar label {
+  display: grid;
+  gap: 0.3rem;
+  color: rgba(28, 35, 30, 0.68);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.admin-radar input {
+  width: 100%;
+  padding: 0.55rem 0;
+  color: #1c231e;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(28, 35, 30, 0.35);
+  border-radius: 0;
+}
+
+.admin-radar button {
+  width: fit-content;
+  padding: 0.55rem 0.85rem;
+  color: #edf0e6;
+  background: #244a34;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-radar-live {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(28, 35, 30, 0.14);
+}
+
+.admin-radar-live form {
+  display: block;
+}
+
+.admin-radar-live a {
+  text-underline-offset: 0.18em;
+}
+
+.admin-muted,
+.admin-private {
+  color: rgba(28, 35, 30, 0.62);
+  font-size: 0.82rem;
+}
+
+.admin-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 4rem;
+}
+
+.admin-counts a {
+  display: grid;
+  gap: 0.15rem;
+  padding: 1rem;
+  text-decoration: none;
+  border: 1px solid rgba(28, 35, 30, 0.15);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.admin-counts strong {
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.admin-section {
+  margin: 0 0 4.5rem;
+  scroll-margin-top: var(--site-content-top);
+}
+
+.admin-section > h2 {
+  margin-bottom: 0.25rem;
+}
+
+.admin-private {
+  margin: 0 0 1.2rem;
+}
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+}
+
+.admin-cards-small {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.admin-card {
+  min-width: 0;
+  padding: 1.2rem;
+  overflow-wrap: anywhere;
+  border: 1px solid rgba(28, 35, 30, 0.16);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.admin-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-card h3,
+.admin-card p {
+  margin: 0;
+}
+
+.admin-card h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.admin-card time,
+.admin-card-head time {
+  color: rgba(28, 35, 30, 0.58);
+  font-size: 0.72rem;
+}
+
+.admin-card address {
+  margin-top: 1rem;
+  font-style: normal;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(28, 35, 30, 0.16);
+  border-radius: 0.85rem;
+}
+
+.admin-table-wrap table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.admin-table-wrap th,
+.admin-table-wrap td {
+  padding: 0.8rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(28, 35, 30, 0.12);
+}
+
+.admin-table-wrap th {
+  color: rgba(28, 35, 30, 0.64);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-table-wrap td {
+  font-size: 0.88rem;
+}
+
+.admin-table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .radar-page {
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 2.5rem;
+    padding: var(--site-content-top) 1.25rem 4rem;
+  }
+
+  .radar-scope {
+    width: min(92vw, 30rem);
+  }
+
+  .privacy-page,
+  .admin-page {
+    padding: var(--site-content-top) 1.25rem
+      max(4rem, env(safe-area-inset-bottom));
+  }
+
+  .admin-radar {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
