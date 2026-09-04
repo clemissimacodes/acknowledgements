@@ -318,7 +318,8 @@ input {
     flex-direction: column;
     padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
       max(0.55rem, env(safe-area-inset-bottom));
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .index::before {
@@ -326,15 +327,14 @@ input {
   }
 
   .index-portrait {
-    position: relative;
-    left: auto;
-    right: auto;
-    top: auto;
+    position: static;
     width: min(92vw, 18rem);
-    max-width: 18rem;
-    height: auto;
-    max-height: min(34vh, 16rem);
+    max-width: 100%;
+    height: min(34vh, 16rem);
+    max-height: none;
     margin: 0.25rem auto 1rem;
+    object-fit: contain;
+    object-position: center;
     transform: none;
     align-self: center;
   }
