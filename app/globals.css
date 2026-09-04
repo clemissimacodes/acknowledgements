@@ -355,34 +355,18 @@ input {
   color: var(--mute);
 }
 
-.about-list li.is-magnified {
+.about-magnified {
   position: fixed;
   z-index: 30;
-  top: 50%;
-  left: 50%;
+  inset: 7vh 7vw;
   display: grid;
-  place-content: center;
-  width: min(86vw, 68rem);
-  max-width: none;
-  min-height: min(68vh, 44rem);
-  max-height: 88vh;
-  margin: 0;
-  padding: clamp(2.2rem, 6vw, 5.5rem);
-  overflow: auto;
+  place-items: center;
+  pointer-events: none;
   font-size: clamp(2.1rem, 5.5vw, 5.5rem);
   line-height: 1.04;
+  text-align: center;
   text-wrap: balance;
-  background: var(--paper);
-  border: 1px solid rgba(22, 20, 18, 0.12);
-  box-shadow: 0 2rem 6rem rgba(22, 20, 18, 0.2);
-  transform: translate(-50%, -50%);
-  animation: about-magnify-in 0.32s cubic-bezier(0.16, 0.84, 0.32, 1);
-}
-
-.about-list li.is-magnified::before {
-  top: clamp(1.2rem, 3vw, 2.5rem);
-  left: clamp(1.2rem, 3vw, 2.5rem);
-  font-size: 0.75rem;
+  animation: about-text-in 0.2s ease-out;
 }
 
 .about-note-copy a {
@@ -391,33 +375,27 @@ input {
   text-underline-offset: 0.1em;
 }
 
-.about-note-image {
-  display: none;
-}
-
-.about-list li.is-magnified.has-image {
+.about-magnified.has-image {
   grid-template-columns: minmax(0, 1.15fr) minmax(15rem, 0.85fr);
   gap: clamp(1.5rem, 4vw, 4rem);
-  align-items: center;
   font-size: clamp(1.8rem, 4.2vw, 4.5rem);
   text-align: left;
 }
 
-.about-list li.is-magnified .about-note-image {
-  display: block;
+.about-magnified img {
   width: 100%;
   max-height: 58vh;
   object-fit: contain;
 }
 
-@keyframes about-magnify-in {
+@keyframes about-text-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -48%) scale(0.94);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -523,10 +501,10 @@ input {
 }
 
 .posties-lede {
-  max-width: 36rem;
+  max-width: 28em;
   margin: 0 0 0.75rem;
-  font-size: clamp(1.15rem, 2.2vw, 1.55rem);
-  line-height: 1.45;
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
 .posties-privacy {
@@ -1147,21 +1125,19 @@ input {
     cursor: auto;
   }
 
-  .about-list li.is-magnified {
-    width: calc(100vw - 1.5rem);
-    min-height: 72dvh;
-    max-height: calc(100dvh - 1.5rem);
-    padding: 3.25rem 1.5rem 2rem;
+  .about-magnified {
+    inset: 5vh 1rem;
     font-size: clamp(1.8rem, 9vw, 3.4rem);
   }
 
-  .about-list li.is-magnified.has-image {
+  .about-magnified.has-image {
     grid-template-columns: 1fr;
     gap: 1.2rem;
     font-size: clamp(1.45rem, 7vw, 2.6rem);
+    text-align: center;
   }
 
-  .about-list li.is-magnified .about-note-image {
+  .about-magnified img {
     max-height: 38dvh;
   }
 
