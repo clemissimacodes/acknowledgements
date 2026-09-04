@@ -16,9 +16,7 @@ const works = [
 export default function HomePage() {
   return (
     <main className="index">
-      <h1 className="index-title">
-        <Link href="/about">Clementine Kay Shao</Link>
-      </h1>
+      <h1 className="visually-hidden">Clementine Kay Shao</h1>
       <img
         className="index-portrait"
         src="/clementine.png"

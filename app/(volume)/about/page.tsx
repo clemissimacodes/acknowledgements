@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AboutList, type AboutNote } from "@/components/about/AboutList";
 
 export const metadata = {
@@ -30,9 +29,6 @@ const notes: AboutNote[] = [
 export default function AboutPage() {
   return (
     <main className="about-page">
-      <p className="poetry-kicker">
-        <Link href="/">Clementine Kay Shao</Link>
-      </p>
       <h1>teeny tiny things about me</h1>
       <AboutList notes={notes} />
     </main>

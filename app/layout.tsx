@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { EB_Garamond } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const bookSerif = EB_Garamond({
@@ -39,6 +40,11 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem("ack-theme");if(t==="light"||t==="dark"||t==="aquamarine")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();`,
           }}
         />
+        <header className="site-masthead">
+          <Link className="site-anchor" href="/">
+            Clementine Kay Shao
+          </Link>
+        </header>
         {children}
       </body>
     </html>

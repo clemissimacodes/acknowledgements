@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { IntroductionForm } from "@/components/IntroductionForm";
 
@@ -10,9 +9,6 @@ export const metadata = {
 export default function IntroducePage() {
   return (
     <main className="unlock-page intro-page">
-      <p className="poetry-kicker">
-        <Link href="/">Clementine Kay Shao</Link>
-      </p>
       <h1>before you come in</h1>
       <p className="intro-lede">
         I put a lot of myself in here. It feels nicer if we are introduced

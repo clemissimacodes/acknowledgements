@@ -9,9 +9,6 @@ export default function PoetryIndexPage() {
   return (
     <main className="poetry-page">
       <div className="poetry-inner">
-        <p className="poetry-kicker">
-          <Link href="/">Clementine Kay Shao</Link>
-        </p>
         <h1>Poetry</h1>
         <p className="poetry-lede">
           My writing kaleidoscopes my being. Please, read with great care.

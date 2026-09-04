@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PostiesForm } from "@/components/posties/PostiesForm";
 
 export const metadata = {
@@ -9,9 +8,6 @@ export const metadata = {
 export default function SundayPostiesPage() {
   return (
     <main className="unlock-page posties-page">
-      <p className="poetry-kicker">
-        <Link href="/">Clementine Kay Shao</Link>
-      </p>
       <h1>Sunday Posties</h1>
       <p className="posties-lede">
         Sundays are for writing posties to families and friendlies. Sometimes

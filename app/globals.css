@@ -1,4 +1,5 @@
 :root {
+  --site-masthead-height: clamp(8.5rem, 21vh, 12.5rem);
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -105,6 +106,51 @@ body {
   min-height: 100dvh;
 }
 
+.site-masthead {
+  position: fixed;
+  z-index: 100;
+  inset: 0 0 auto;
+  height: var(--site-masthead-height);
+  color: #161412;
+  font-family: var(--font-book), "Palatino Linotype", Palatino, "Times New Roman", serif;
+  background: #f6f1e8;
+}
+
+.site-anchor {
+  position: absolute;
+  top: clamp(2.75rem, 7vh, 4.75rem);
+  left: 6vw;
+  width: fit-content;
+  color: inherit;
+  font-size: clamp(2.5rem, 4.2vw, 4.25rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-anchor:hover,
+.site-anchor:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+html:has(.poetry-page) .site-masthead {
+  background: #f4efe4;
+}
+
+html:has(.dandelion-page) .site-masthead {
+  color: #f6f1e8;
+  background: #000;
+}
+
+html:has(.shell) .site-masthead {
+  color: var(--label);
+  background: var(--thread-bg);
+}
+
 a {
   color: inherit;
 }
@@ -143,29 +189,9 @@ input {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: 12vh 6vw max(0.55rem, env(safe-area-inset-bottom));
+  padding: calc(var(--site-masthead-height) + 1rem) 6vw
+    max(0.55rem, env(safe-area-inset-bottom));
   overflow: hidden;
-}
-
-.index-title {
-  position: relative;
-  z-index: 1;
-  margin: 0 0 1.15rem;
-  font-size: 1.65rem;
-  font-style: normal;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-
-.index-title a {
-  text-decoration: none;
-}
-
-.index-title a:hover,
-.index-title a:focus-visible {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  text-decoration-thickness: 1px;
 }
 
 .index-portrait {
@@ -269,16 +295,23 @@ input {
 }
 
 @media (max-width: 767px) {
+  :root {
+    --site-masthead-height: 7.5rem;
+  }
+
+  .site-anchor {
+    top: max(2.25rem, env(safe-area-inset-top));
+    left: 1.25rem;
+    max-width: calc(100vw - 2.5rem);
+    font-size: clamp(1.85rem, 8.5vw, 2.75rem);
+  }
+
   .index {
     display: flex;
     flex-direction: column;
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: calc(var(--site-masthead-height) + 0.5rem) 1.25rem
       max(0.55rem, env(safe-area-inset-bottom));
     overflow: visible;
-  }
-
-  .index-title {
-    font-size: 1.45rem;
   }
 
   .index-portrait {
@@ -316,7 +349,7 @@ input {
 
 .about-page {
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
   max-width: 40rem;
 }
 
@@ -358,14 +391,17 @@ input {
 .about-magnified {
   position: fixed;
   z-index: 30;
-  inset: 7vh 7vw;
+  inset: 0;
   display: grid;
   place-items: center;
+  padding: clamp(8rem, 20vh, 13rem) 7vw 6vh;
+  overflow-y: auto;
   pointer-events: none;
   font-size: clamp(2.1rem, 5.5vw, 5.5rem);
   line-height: 1.04;
   text-align: center;
   text-wrap: balance;
+  background: var(--paper);
   animation: about-text-in 0.2s ease-out;
 }
 
@@ -401,7 +437,7 @@ input {
 
 .unlock-page {
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
   max-width: 36rem;
 }
 
@@ -739,7 +775,7 @@ input {
 .poetry-page {
   position: relative;
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: calc(var(--site-masthead-height) + 1rem) 6vw 16vh;
   background: #f4efe4;
   overflow-x: hidden;
 }
@@ -1232,7 +1268,7 @@ input {
   .about-page,
   .unlock-page,
   .poetry-page {
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: calc(var(--site-masthead-height) + 0.5rem) 1.25rem
       max(3.5rem, env(safe-area-inset-bottom));
   }
 
@@ -1245,7 +1281,8 @@ input {
   }
 
   .about-magnified {
-    inset: 5vh 1rem;
+    inset: 0;
+    padding: 18vh 1rem 5vh;
     font-size: clamp(1.8rem, 9vw, 3.4rem);
   }
 
@@ -1318,6 +1355,43 @@ input {
   }
 }
 
+@media (max-height: 600px) {
+  .about-magnified {
+    place-items: start center;
+    padding: calc(var(--site-masthead-height) + 0.75rem) 5vw 1rem;
+    font-size: clamp(1.2rem, min(4.8vw, 8vh), 2.8rem);
+    line-height: 1.08;
+  }
+
+  .about-magnified.has-image {
+    align-items: center;
+    grid-template-columns: minmax(0, 1.15fr) minmax(10rem, 0.85fr);
+    gap: 1.5rem;
+    font-size: clamp(1.1rem, min(3.5vw, 7vh), 2.25rem);
+  }
+
+  .about-magnified img {
+    max-height: calc(100dvh - var(--site-masthead-height) - 1.75rem);
+  }
+}
+
+@media (max-width: 767px) and (max-height: 600px) {
+  .about-magnified {
+    padding: calc(var(--site-masthead-height) + 0.5rem) 1rem 1rem;
+  }
+
+  .about-magnified.has-image {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    font-size: clamp(1.1rem, 5.2vw, 1.75rem);
+    text-align: center;
+  }
+
+  .about-magnified img {
+    max-height: 30dvh;
+  }
+}
+
 /* —— Dandelion —— */
 
 .dandelion-page {
@@ -1326,7 +1400,7 @@ input {
   flex-direction: column;
   min-height: 100dvh;
   height: 100dvh;
-  padding: 6vh 6vw 3vh;
+  padding: calc(var(--site-masthead-height) + 0.5rem) 6vw 3vh;
   overflow: hidden;
   background: #000;
   color: #f6f1e8;
@@ -1653,7 +1727,7 @@ input {
 
 @media (max-width: 767px) {
   .dandelion-page {
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: calc(var(--site-masthead-height) + 0.25rem) 1.25rem
       max(2rem, env(safe-area-inset-bottom));
   }
 
@@ -1706,8 +1780,9 @@ input {
 
 .shell {
   display: flex;
-  height: 100dvh;
-  height: 100svh;
+  height: calc(100dvh - var(--site-masthead-height));
+  height: calc(100svh - var(--site-masthead-height));
+  margin-top: var(--site-masthead-height);
   background: var(--shell-wash);
   color: var(--label);
   font-family: var(--messages-ui);
