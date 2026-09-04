@@ -1,5 +1,5 @@
 :root {
-  --site-masthead-height: clamp(8.5rem, 21vh, 12.5rem);
+  --site-masthead-height: clamp(6.5rem, 16vh, 9rem);
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -122,7 +122,7 @@ body {
   left: 6vw;
   width: fit-content;
   color: inherit;
-  font-size: clamp(2.5rem, 4.2vw, 4.25rem);
+  font-size: 1.65rem;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0.01em;
@@ -296,14 +296,14 @@ input {
 
 @media (max-width: 767px) {
   :root {
-    --site-masthead-height: 7.5rem;
+    --site-masthead-height: 5.75rem;
   }
 
   .site-anchor {
     top: max(2.25rem, env(safe-area-inset-top));
     left: 1.25rem;
     max-width: calc(100vw - 2.5rem);
-    font-size: clamp(1.85rem, 8.5vw, 2.75rem);
+    font-size: 1.45rem;
   }
 
   .index {
