@@ -1,5 +1,7 @@
 :root {
-  --site-masthead-height: calc(12vh + 3rem);
+  --site-anchor-top: clamp(2.25rem, 8vh, 4rem);
+  --site-content-top: calc(var(--site-anchor-top) + 3rem);
+  --site-masthead-height: var(--site-content-top);
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -118,7 +120,7 @@ body {
 
 .site-anchor {
   position: absolute;
-  top: 12vh;
+  top: var(--site-anchor-top);
   left: 6vw;
   width: fit-content;
   padding-right: 0.25rem;
@@ -192,13 +194,8 @@ input {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: 12vh 6vw max(0.55rem, env(safe-area-inset-bottom));
+  padding: var(--site-content-top) 6vw max(0.55rem, env(safe-area-inset-bottom));
   overflow: hidden;
-}
-
-.index::before {
-  flex: 0 0 3.15rem;
-  content: "";
 }
 
 .index-portrait {
@@ -303,11 +300,10 @@ input {
 
 @media (max-width: 767px) {
   :root {
-    --site-masthead-height: calc(max(2.25rem, env(safe-area-inset-top)) + 3rem);
+    --site-anchor-top: max(2.25rem, env(safe-area-inset-top));
   }
 
   .site-anchor {
-    top: max(2.25rem, env(safe-area-inset-top));
     left: 1.25rem;
     max-width: calc(100vw - 2.5rem);
     font-size: 1.45rem;
@@ -316,14 +312,10 @@ input {
   .index {
     display: flex;
     flex-direction: column;
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: var(--site-content-top) 1.25rem
       max(0.55rem, env(safe-area-inset-bottom));
     overflow-x: hidden;
     overflow-y: visible;
-  }
-
-  .index::before {
-    flex-basis: 2.9rem;
   }
 
   .index-portrait {
@@ -360,22 +352,20 @@ input {
 
 .about-page {
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: var(--site-content-top) 6vw 16vh;
   max-width: 40rem;
-}
-
-.about-page::before,
-.unlock-page::before {
-  display: block;
-  height: 3.3rem;
-  content: "";
 }
 
 .about-page h1 {
   margin: 0 0 1.6rem;
-  font-size: 1.85rem;
+  width: max-content;
+  max-width: min(24rem, 90vw);
+  font-size: 0.55rem;
   font-style: italic;
   font-weight: 400;
+  line-height: 1.5;
+  cursor: url("/loupe.svg") 13 13, zoom-in;
+  outline: none;
 }
 
 .about-list {
@@ -455,7 +445,7 @@ input {
 
 .unlock-page {
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: var(--site-content-top) 6vw 16vh;
   max-width: 36rem;
 }
 
@@ -617,7 +607,6 @@ input {
   z-index: 0;
   isolation: isolate;
   max-width: 42rem;
-  padding-top: calc(8vh + 3.3rem);
 }
 
 .posties-page::before {
@@ -767,7 +756,7 @@ input {
 .poetry-page {
   position: relative;
   min-height: 100dvh;
-  padding: 8vh 6vw 16vh;
+  padding: var(--site-content-top) 6vw 16vh;
   background: #f4efe4;
   overflow-x: hidden;
 }
@@ -776,12 +765,6 @@ input {
   position: relative;
   z-index: 1;
   max-width: 34rem;
-}
-
-.poetry-page .poetry-inner::before {
-  display: block;
-  height: 3.3rem;
-  content: "";
 }
 
 .poetry-kicker {
@@ -867,35 +850,21 @@ input {
   line-height: 1.35;
 }
 
+.poetry-adored-name a {
+  color: inherit;
+  text-underline-offset: 0.18em;
+}
+
 .poetry-adored-name [lang="zh-Hans"] {
+  display: block;
   margin-top: 0.12rem;
   font-family: "Songti SC", "STSong", serif;
 }
 
-.poetry-adored-author,
-.poetry-adored-pending,
-.poetry-adored-sources {
+.poetry-adored-author {
   margin-top: 0.18rem;
   color: var(--mute);
   font-size: 0.82rem;
-  line-height: 1.45;
-}
-
-.poetry-adored-sources {
-  display: flex;
-  gap: 0.8rem;
-}
-
-.poetry-adored-sources a {
-  color: var(--ink);
-  text-underline-offset: 0.18em;
-}
-
-.poetry-adored-note {
-  max-width: 28rem;
-  margin: 2rem 0 0;
-  color: var(--mute);
-  font-size: 0.78rem;
   line-height: 1.45;
 }
 
@@ -1331,12 +1300,8 @@ input {
   .about-page,
   .unlock-page,
   .poetry-page {
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: var(--site-content-top) 1.25rem
       max(3.5rem, env(safe-area-inset-bottom));
-  }
-
-  .unlock-page.posties-page {
-    padding-top: calc(max(2.25rem, env(safe-area-inset-top)) + 3.3rem);
   }
 
   .about-page {
@@ -1466,15 +1431,10 @@ input {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: 6vh 6vw 3vh;
+  padding: var(--site-content-top) 6vw 3vh;
   overflow-x: hidden;
   background: #000;
   color: #f6f1e8;
-}
-
-.dandelion-page::before {
-  flex: 0 0 3.3rem;
-  content: "";
 }
 
 .dandelion-page .poetry-kicker,
@@ -1798,7 +1758,7 @@ input {
 
 @media (max-width: 767px) {
   .dandelion-page {
-    padding: max(2.25rem, env(safe-area-inset-top)) 1.25rem
+    padding: var(--site-content-top) 1.25rem
       max(2rem, env(safe-area-inset-bottom));
   }
 
@@ -1853,6 +1813,7 @@ input {
   display: flex;
   height: 100dvh;
   height: 100svh;
+  padding-top: var(--site-content-top);
   background: var(--shell-wash);
   color: var(--label);
   font-family: var(--messages-ui);

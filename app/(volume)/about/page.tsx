@@ -29,8 +29,7 @@ const notes: AboutNote[] = [
 export default function AboutPage() {
   return (
     <main className="about-page">
-      <h1>teeny tiny things about me</h1>
-      <AboutList notes={notes} />
+      <AboutList title="teeny tiny things about me" notes={notes} />
     </main>
   );
 }

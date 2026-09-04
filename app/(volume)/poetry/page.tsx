@@ -5,52 +5,29 @@ const adoredPoems = [
   {
     title: "The Quiet World",
     author: "Jeffrey McDaniel",
-    sources: [
-      {
-        label: "read",
-        href: "https://www.poetryfoundation.org/poems/49238/the-quiet-world",
-      },
-    ],
+    href: "https://www.poetryfoundation.org/poems/49238/the-quiet-world",
   },
   {
     title: "The Vase",
     author: "Jeffrey McDaniel",
-    sources: [],
+    href: "https://www.are.na/block/45010448",
   },
   {
     title: "Crossing Half of China to Sleep with You",
     alternateTitle: "穿过大半个中国去睡你",
+    alternateHref: "https://baike.so.com/doc/7927612-32387111.html",
     author: "Yu Xiuhua 余秀华",
-    sources: [
-      {
-        label: "English",
-        href: "https://onbeing.org/poetry/crossing-half-of-china-to-sleep-with-you/",
-      },
-      {
-        label: "中文",
-        href: "https://baike.so.com/doc/7927612-32387111.html",
-      },
-    ],
+    href: "https://onbeing.org/poetry/crossing-half-of-china-to-sleep-with-you/",
   },
   {
     title: "Zazen on Ching-t’ing Mountain",
     author: "Li Po, translated by Sam Hamill",
-    sources: [
-      {
-        label: "read",
-        href: "https://www.poetryfoundation.org/poems/48711/zazen-on-ching-ting-mountain",
-      },
-    ],
+    href: "https://www.poetryfoundation.org/poems/48711/zazen-on-ching-ting-mountain",
   },
   {
     title: "[love is more thicker than forget]",
     author: "E. E. Cummings",
-    sources: [
-      {
-        label: "read",
-        href: "https://www.poetryfoundation.org/poetrymagazine/poems/22224/love-is-more-thicker-than-forget",
-      },
-    ],
+    href: "https://www.poetryfoundation.org/poetrymagazine/poems/22224/love-is-more-thicker-than-forget",
   },
 ] as const;
 
@@ -79,38 +56,24 @@ export default function PoetryIndexPage() {
             {adoredPoems.map((poem) => (
               <li key={`${poem.title}-${poem.author}`}>
                 <span className="poetry-adored-name">
-                  {poem.title}
+                  <a href={poem.href} target="_blank" rel="noreferrer">
+                    {poem.title}
+                  </a>
                   {"alternateTitle" in poem ? (
-                    <span lang="zh-Hans">{poem.alternateTitle}</span>
+                    <a
+                      href={poem.alternateHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      lang="zh-Hans"
+                    >
+                      {poem.alternateTitle}
+                    </a>
                   ) : null}
                 </span>
                 <span className="poetry-adored-author">by {poem.author}</span>
-                {poem.sources.length ? (
-                  <span className="poetry-adored-sources">
-                    {poem.sources.map((source) => (
-                      <a
-                        key={source.href}
-                        href={source.href}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {source.label}
-                        <span aria-hidden="true"> ↗</span>
-                      </a>
-                    ))}
-                  </span>
-                ) : (
-                  <span className="poetry-adored-pending">
-                    send me the poem link
-                  </span>
-                )}
               </li>
             ))}
           </ul>
-          <p className="poetry-adored-note">
-            Official copies open beside this site because Poetry Foundation
-            does not permit embedded readers.
-          </p>
         </section>
       </div>
     </main>
