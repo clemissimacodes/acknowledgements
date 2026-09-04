@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
 
 const works = [
@@ -17,11 +18,7 @@ export default function HomePage() {
   return (
     <main className="index">
       <h1 className="visually-hidden">Clementine Kay Shao</h1>
-      <img
-        className="index-portrait"
-        src="/clementine.png"
-        alt="A drawing of Clementine in a clementine hood with rabbit ears"
-      />
+      <Clemi />
       <p className="index-bio">
         I am a being of high happiness. Frank and Elaine hatched me into the
         world some time ago and I now frolic across great green parks in San
