@@ -14,6 +14,14 @@ export function PostiesForm() {
     setSending(true);
 
     const form = new FormData(event.currentTarget);
+    const mailingAddress = [
+      form.get("streetAddress"),
+      form.get("cityRegionPostal"),
+      form.get("country"),
+    ]
+      .map((line) => String(line ?? "").trim())
+      .filter(Boolean)
+      .join("\n");
     const response = await fetch("/api/sunday-posties", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -21,7 +29,7 @@ export function PostiesForm() {
         name: form.get("name"),
         platform,
         social: form.get("social"),
-        mailingAddress: form.get("mailingAddress"),
+        mailingAddress,
         consent: form.get("consent") === "yes",
         website: form.get("website"),
       }),
@@ -101,18 +109,35 @@ export function PostiesForm() {
         />
       </fieldset>
 
-      <label>
-        <span>where should the postie go?</span>
-        <textarea
-          name="mailingAddress"
-          required
-          minLength={10}
-          maxLength={600}
-          rows={4}
-          autoComplete="street-address"
-          placeholder={"Street address\nCity, state, postal code\nCountry"}
-        />
-      </label>
+      <fieldset className="posties-address">
+        <legend>where should the postie go?</legend>
+        <div className="posties-address-lines">
+          <input
+            name="streetAddress"
+            required
+            maxLength={200}
+            autoComplete="address-line1"
+            placeholder="Street address"
+            aria-label="Street address"
+          />
+          <input
+            name="cityRegionPostal"
+            required
+            maxLength={200}
+            autoComplete="off"
+            placeholder="City, state, postal code"
+            aria-label="City, state, and postal code"
+          />
+          <input
+            name="country"
+            required
+            maxLength={100}
+            autoComplete="country-name"
+            placeholder="Country"
+            aria-label="Country"
+          />
+        </div>
+      </fieldset>
 
       <label className="posties-consent">
         <input name="consent" type="checkbox" value="yes" required />

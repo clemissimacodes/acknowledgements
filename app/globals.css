@@ -559,6 +559,22 @@ input {
   border-color: var(--ink);
 }
 
+.posties-address-lines {
+  display: grid;
+  padding: 0.35rem 0 0.5rem;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.28);
+}
+
+.posties-form .posties-address-lines input {
+  padding: 0.08rem 0;
+  border-bottom: 0;
+  line-height: 1.45;
+}
+
+.posties-address-lines:focus-within {
+  border-color: var(--ink);
+}
+
 .posties-platforms {
   display: flex;
   gap: 1rem;
