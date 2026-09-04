@@ -10,6 +10,8 @@ const notes = [
   "My best friends are William and Daniel.",
   "I stare often. I find all people beautiful.",
   "Costco croissants, toasted eight minutes at 350°, are supreme. I grew up poor, so my palate does not fancy fancier alternatives.",
+  "Sumo mandarins are the best citrus variety and this is an objective truth.",
+  "I spent my very first paycheck on a $2,000 teacup yorkie from Craigslist. Kuzma unfortunately was picked up by a coyote, and I am still waiting to heal from this wound.",
 ];
 
 export default function AboutPage() {
