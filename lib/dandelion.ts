@@ -6,9 +6,9 @@ import type { Wish, WishExtras } from "@/lib/dandelion-types";
 
 export type { Wish, WishExtras } from "@/lib/dandelion-types";
 
-export const DANDELION_COOKIE = "dandelion_ok";
+export const DANDELION_COOKIE = "dandelion_ok_v2";
 export const DANDELION_COOKIE_VALUE = "open";
-export const DANDELION_COUNT_COOKIE = "dandelion_n";
+export const DANDELION_COUNT_COOKIE = "dandelion_n_v2";
 export const DANDELION_MAX_WISHES = 20;
 export const DANDELION_WISH_MAX = 100;
 export const DANDELION_LOCATION_MAX = 40;
