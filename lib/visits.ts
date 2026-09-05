@@ -54,7 +54,13 @@ export async function recordVisit(request: Request, payload: {
   if (!url) return false;
 
   const path = cleanLine(payload.path, 180);
-  if (!path.startsWith("/") || path.startsWith("/admin")) return false;
+  if (
+    !path.startsWith("/") ||
+    path.startsWith("/admin") ||
+    path.startsWith("/controlroom")
+  ) {
+    return false;
+  }
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ip = request.headers.get("x-real-ip")?.trim() || forwarded || "";

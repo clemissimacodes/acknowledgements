@@ -9,8 +9,9 @@ import {
 export default clerkMiddleware(async (auth, request) => {
   const pathname = request.nextUrl.pathname;
   const isAdmin =
-    pathname === "/admin" ||
-    (pathname.startsWith("/admin/") && pathname !== "/admin/login");
+    pathname === "/controlroom" ||
+    (pathname.startsWith("/controlroom/") &&
+      pathname !== "/controlroom/login");
   const isPoetry = pathname === "/poetry" || pathname.startsWith("/poetry/");
   const isAcknowledgements =
     pathname === "/acknowledgements" ||
@@ -19,7 +20,7 @@ export default clerkMiddleware(async (auth, request) => {
   if (isAdmin) {
     const { userId } = await auth();
     if (!userId) {
-      const login = new URL("/admin/login", request.url);
+      const login = new URL("/controlroom/login", request.url);
       return NextResponse.redirect(login);
     }
   }

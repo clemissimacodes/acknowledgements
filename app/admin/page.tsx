@@ -2,9 +2,19 @@ import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { DeviceRadar } from "@/components/admin/DeviceRadar";
 import { getAdminData, isAdminUser } from "@/lib/admin";
-import { removeRadar, updateRadar } from "./actions";
+import {
+  removeAllVisits,
+  removeRadar,
+  removeRecord,
+  saveIntroductionRecord,
+  savePostiesRecord,
+  saveWishRecord,
+  togglePostiesSent,
+  updateRadar,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +30,7 @@ export default async function AdminPage() {
   const user = await currentUser();
 
   if (!user) {
-    redirect("/admin/login");
+    redirect("/controlroom/login");
   }
 
   if (!isAdminUser(user)) {
@@ -120,10 +130,72 @@ export default async function AdminPage() {
                 <h3>{signup.name}</h3>
                 <time dateTime={signup.createdAt}>{date(signup.createdAt)}</time>
               </div>
+              <p className="admin-record-status">
+                {signup.sentAt ? `Sent ${date(signup.sentAt)}` : "Waiting to be sent"}
+              </p>
               <a href={signup.socialUrl} target="_blank" rel="noreferrer">
                 {signup.platform}: {signup.socialUrl}
               </a>
               <address>{signup.mailingAddress}</address>
+              <div className="admin-record-actions">
+                <form action={togglePostiesSent}>
+                  <input type="hidden" name="id" value={signup.id} />
+                  <input
+                    type="hidden"
+                    name="sent"
+                    value={signup.sentAt ? "true" : "false"}
+                  />
+                  <button type="submit">
+                    {signup.sentAt ? "Mark unsent" : "Mark sent"}
+                  </button>
+                </form>
+                <details>
+                  <summary>Edit</summary>
+                  <form className="admin-edit-form" action={savePostiesRecord}>
+                    <input type="hidden" name="id" value={signup.id} />
+                    <label>
+                      Name
+                      <input name="name" defaultValue={signup.name} required />
+                    </label>
+                    <label>
+                      Platform
+                      <select name="platform" defaultValue={signup.platform}>
+                        <option value="instagram">Instagram</option>
+                        <option value="x">X</option>
+                      </select>
+                    </label>
+                    <label>
+                      Social profile
+                      <input
+                        name="socialUrl"
+                        type="url"
+                        defaultValue={signup.socialUrl}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Mailing address
+                      <textarea
+                        name="mailingAddress"
+                        defaultValue={signup.mailingAddress}
+                        rows={5}
+                        required
+                      />
+                    </label>
+                    <button type="submit">Save changes</button>
+                  </form>
+                </details>
+                <form action={removeRecord}>
+                  <input type="hidden" name="kind" value="posties" />
+                  <input type="hidden" name="id" value={signup.id} />
+                  <ConfirmButton
+                    className="admin-danger"
+                    message={`Permanently delete ${signup.name}’s Posties signup and mailing address?`}
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              </div>
             </article>
           ))}
           {data.posties.length === 0 ? <p>No posties yet.</p> : null}
@@ -141,6 +213,7 @@ export default async function AdminPage() {
                 <th>Gender</th>
                 <th>Age</th>
                 <th>Received</th>
+                <th>Manage</th>
               </tr>
             </thead>
             <tbody>
@@ -151,6 +224,52 @@ export default async function AdminPage() {
                   <td>{wish.gender ?? "—"}</td>
                   <td>{wish.age ?? "—"}</td>
                   <td>{date(wish.createdAt)}</td>
+                  <td>
+                    <details className="admin-row-manage">
+                      <summary>Edit</summary>
+                      <form className="admin-edit-form" action={saveWishRecord}>
+                        <input type="hidden" name="id" value={wish.id} />
+                        <label>
+                          Wish
+                          <textarea
+                            name="body"
+                            defaultValue={wish.body}
+                            maxLength={100}
+                            required
+                          />
+                        </label>
+                        <label>
+                          Location
+                          <input
+                            name="location"
+                            defaultValue={wish.location ?? ""}
+                          />
+                        </label>
+                        <label>
+                          Gender
+                          <input
+                            name="gender"
+                            defaultValue={wish.gender ?? ""}
+                          />
+                        </label>
+                        <label>
+                          Age
+                          <input name="age" defaultValue={wish.age ?? ""} />
+                        </label>
+                        <button type="submit">Save</button>
+                      </form>
+                    </details>
+                    <form action={removeRecord}>
+                      <input type="hidden" name="kind" value="wish" />
+                      <input type="hidden" name="id" value={wish.id} />
+                      <ConfirmButton
+                        className="admin-danger"
+                        message="Permanently delete this dandelion wish?"
+                      >
+                        Delete
+                      </ConfirmButton>
+                    </form>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -167,6 +286,41 @@ export default async function AdminPage() {
               <time dateTime={introduction.createdAt}>
                 {date(introduction.createdAt)}
               </time>
+              <div className="admin-record-actions">
+                <details>
+                  <summary>Edit</summary>
+                  <form
+                    className="admin-edit-form"
+                    action={saveIntroductionRecord}
+                  >
+                    <input
+                      type="hidden"
+                      name="id"
+                      value={introduction.id}
+                    />
+                    <label>
+                      Tiny thing
+                      <textarea
+                        name="tinyThing"
+                        defaultValue={introduction.tinyThing}
+                        maxLength={400}
+                        required
+                      />
+                    </label>
+                    <button type="submit">Save</button>
+                  </form>
+                </details>
+                <form action={removeRecord}>
+                  <input type="hidden" name="kind" value="introduction" />
+                  <input type="hidden" name="id" value={introduction.id} />
+                  <ConfirmButton
+                    className="admin-danger"
+                    message="Permanently delete this tiny introduction?"
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              </div>
             </article>
           ))}
         </div>
@@ -178,6 +332,16 @@ export default async function AdminPage() {
           Privacy-safe: page, time, referring site, device, coarse
           city/country, and a one-way IP hash. Raw IP addresses are never stored.
         </p>
+        {data.visits.length > 0 ? (
+          <form className="admin-clear-visits" action={removeAllVisits}>
+            <ConfirmButton
+              className="admin-danger"
+              message="Permanently delete every visitor analytics record?"
+            >
+              Clear all visit records
+            </ConfirmButton>
+          </form>
+        ) : null}
         <div className="admin-table-wrap">
           <table>
             <thead>
@@ -188,6 +352,7 @@ export default async function AdminPage() {
                 <th>Referrer</th>
                 <th>Anonymous visitor</th>
                 <th>Time</th>
+                <th>Manage</th>
               </tr>
             </thead>
             <tbody>
@@ -201,6 +366,18 @@ export default async function AdminPage() {
                   <td>{visit.referrerHost ?? "direct"}</td>
                   <td>{visit.ipHash?.slice(0, 12) ?? "unknown"}</td>
                   <td>{date(visit.createdAt)}</td>
+                  <td>
+                    <form action={removeRecord}>
+                      <input type="hidden" name="kind" value="visit" />
+                      <input type="hidden" name="id" value={visit.id} />
+                      <ConfirmButton
+                        className="admin-danger"
+                        message="Permanently delete this visit record?"
+                      >
+                        Delete
+                      </ConfirmButton>
+                    </form>
+                  </td>
                 </tr>
               ))}
             </tbody>

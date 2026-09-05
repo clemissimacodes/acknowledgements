@@ -7,7 +7,13 @@ export function VisitTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!pathname || pathname.startsWith("/admin")) return;
+    if (
+      !pathname ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/controlroom")
+    ) {
+      return;
+    }
     const key = `visit:${pathname}`;
     try {
       if (sessionStorage.getItem(key)) return;

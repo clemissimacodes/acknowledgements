@@ -15,6 +15,7 @@ export type PostiesRow = {
   platform: string;
   socialUrl: string;
   mailingAddress: string;
+  sentAt: string | null;
   createdAt: string;
 };
 
@@ -74,7 +75,7 @@ export function isAdminUser(user: ClerkUser | null) {
   const verifiedGoogleOwner = user.externalAccounts.some(
     ({ provider, emailAddress, verification }) =>
       provider === "google" &&
-      verification?.status === "verified" &&
+      (verification === null || verification.status === "verified") &&
       emailAddress.toLowerCase() === ownerEmail,
   );
   if (!verifiedGoogleOwner) return false;
@@ -91,8 +92,13 @@ async function ensureTables() {
       platform TEXT NOT NULL,
       social_url TEXT NOT NULL,
       mailing_address TEXT NOT NULL,
+      sent_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+  await sql`
+    ALTER TABLE sunday_posties
+    ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ
   `;
   await sql`
     CREATE TABLE IF NOT EXISTS dandelion_wishes (
@@ -148,7 +154,7 @@ export async function getAdminData() {
 
   const [posties, wishes, introductions, visits, radar] = await Promise.all([
     sql`
-      SELECT id, name, platform, social_url, mailing_address, created_at
+      SELECT id, name, platform, social_url, mailing_address, sent_at, created_at
       FROM sunday_posties
       ORDER BY created_at DESC
       LIMIT 250
@@ -185,6 +191,7 @@ export async function getAdminData() {
       platform: String(row.platform),
       socialUrl: String(row.social_url),
       mailingAddress: String(row.mailing_address),
+      sentAt: row.sent_at ? iso(row.sent_at as string | Date) : null,
       createdAt: iso(row.created_at as string | Date),
     })) as PostiesRow[],
     wishes: wishes.map((row) => ({
@@ -341,4 +348,122 @@ export async function setRadarFromCoordinates(
 export async function clearRadar() {
   await ensureTables();
   await db()`DELETE FROM clemi_radar WHERE id = 1`;
+}
+
+function cleanId(value: unknown) {
+  const id = String(value ?? "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new Error("Invalid record.");
+  return id;
+}
+
+function cleanRecordLine(value: unknown, max: number) {
+  return String(value ?? "")
+    .replace(/\0/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
+}
+
+export async function updatePostiesRecord(input: {
+  id: unknown;
+  name: unknown;
+  platform: unknown;
+  socialUrl: unknown;
+  mailingAddress: unknown;
+}) {
+  const id = cleanId(input.id);
+  const name = cleanRecordLine(input.name, 80);
+  const platform =
+    input.platform === "instagram" || input.platform === "x"
+      ? input.platform
+      : null;
+  const mailingAddress = String(input.mailingAddress ?? "")
+    .replace(/\0/g, "")
+    .trim()
+    .slice(0, 600);
+  let socialUrl: URL;
+  try {
+    socialUrl = new URL(cleanRecordLine(input.socialUrl, 200));
+  } catch {
+    throw new Error("Invalid social profile.");
+  }
+  const host = socialUrl.hostname.toLowerCase().replace(/^www\./, "");
+  const socialMatches =
+    platform === "instagram"
+      ? host === "instagram.com"
+      : host === "x.com" || host === "twitter.com";
+  if (name.length < 2 || mailingAddress.length < 10 || !socialMatches) {
+    throw new Error("Invalid Posties record.");
+  }
+  await db()`
+    UPDATE sunday_posties
+    SET
+      name = ${name},
+      platform = ${platform},
+      social_url = ${socialUrl.toString()},
+      mailing_address = ${mailingAddress}
+    WHERE id = ${id}
+  `;
+}
+
+export async function setPostiesSent(idValue: unknown, sent: boolean) {
+  const id = cleanId(idValue);
+  await db()`
+    UPDATE sunday_posties
+    SET sent_at = ${sent ? new Date().toISOString() : null}
+    WHERE id = ${id}
+  `;
+}
+
+export async function updateWishRecord(input: {
+  id: unknown;
+  body: unknown;
+  location: unknown;
+  gender: unknown;
+  age: unknown;
+}) {
+  const id = cleanId(input.id);
+  const body = cleanRecordLine(input.body, 100);
+  if (!body) throw new Error("A wish cannot be empty.");
+  await db()`
+    UPDATE dandelion_wishes
+    SET
+      body = ${body},
+      location = ${cleanRecordLine(input.location, 40) || null},
+      gender = ${cleanRecordLine(input.gender, 24) || null},
+      age = ${cleanRecordLine(input.age, 12) || null}
+    WHERE id = ${id}
+  `;
+}
+
+export async function updateIntroductionRecord(idValue: unknown, value: unknown) {
+  const id = cleanId(idValue);
+  const tinyThing = cleanRecordLine(value, 400);
+  if (tinyThing.length < 3) throw new Error("An introduction is too short.");
+  await db()`
+    UPDATE visitor_introductions
+    SET tiny_thing = ${tinyThing}
+    WHERE id = ${id}
+  `;
+}
+
+export async function deleteAdminRecord(
+  kind: "posties" | "wish" | "introduction" | "visit",
+  idValue: unknown,
+) {
+  const id = cleanId(idValue);
+  const sql = db();
+  if (kind === "posties") {
+    await sql`DELETE FROM sunday_posties WHERE id = ${id}`;
+  } else if (kind === "wish") {
+    await sql`DELETE FROM dandelion_wishes WHERE id = ${id}`;
+  } else if (kind === "introduction") {
+    await sql`DELETE FROM visitor_introductions WHERE id = ${id}`;
+  } else {
+    await sql`DELETE FROM site_visits WHERE id = ${id}`;
+  }
+}
+
+export async function clearVisitRecords() {
+  await db()`DELETE FROM site_visits`;
 }

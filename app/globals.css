@@ -3322,6 +3322,98 @@ html:has(.admin-page) .site-anchor {
   white-space: pre-line;
 }
 
+.admin-record-status {
+  margin-bottom: 0.55rem !important;
+  color: rgba(28, 35, 30, 0.62);
+  font-size: 0.78rem;
+}
+
+.admin-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 1rem;
+  margin-top: 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(28, 35, 30, 0.12);
+}
+
+.admin-record-actions details {
+  flex-basis: 100%;
+}
+
+.admin-record-actions summary,
+.admin-row-manage summary {
+  width: fit-content;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.admin-record-actions button,
+.admin-row-manage button,
+.admin-clear-visits button {
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.admin-record-actions .admin-danger,
+.admin-row-manage .admin-danger,
+.admin-clear-visits .admin-danger {
+  color: #8b241d;
+}
+
+.admin-edit-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+  padding: 0.9rem;
+  background: rgba(255, 255, 255, 0.38);
+  border-radius: 0.6rem;
+}
+
+.admin-edit-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: rgba(28, 35, 30, 0.65);
+  font-size: 0.72rem;
+}
+
+.admin-edit-form input,
+.admin-edit-form textarea,
+.admin-edit-form select {
+  width: 100%;
+  padding: 0.4rem;
+  color: #1c231e;
+  font: inherit;
+  background: #fff;
+  border: 1px solid rgba(28, 35, 30, 0.22);
+  border-radius: 0.3rem;
+}
+
+.admin-edit-form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.admin-row-manage {
+  min-width: 13rem;
+}
+
+.admin-row-manage + form {
+  margin-top: 0.5rem;
+}
+
+.admin-clear-visits {
+  margin: -0.6rem 0 1rem;
+}
+
 .admin-table-wrap {
   overflow-x: auto;
   border: 1px solid rgba(28, 35, 30, 0.16);

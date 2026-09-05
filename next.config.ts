@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/controlroom/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0",
+          },
+        ],
+      },
     ];
   },
   async redirects() {
@@ -36,6 +45,11 @@ const nextConfig: NextConfig = {
       { source: "/contents", destination: "/", permanent: true },
       { source: "/foreword", destination: "/", permanent: true },
       { source: "/poetry/admin", destination: "/poetry", permanent: false },
+      {
+        source: "/admin/:path*",
+        destination: "/controlroom/:path*",
+        permanent: true,
+      },
     ];
   },
 };

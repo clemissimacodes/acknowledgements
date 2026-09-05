@@ -9,7 +9,7 @@ export default async function AdminLoginPage() {
   const user = await currentUser();
 
   if (isAdminUser(user)) {
-    redirect("/admin");
+    redirect("/controlroom");
   }
 
   if (user) {
@@ -35,8 +35,8 @@ export default async function AdminLoginPage() {
       <div className="admin-google-signin">
         <SignIn
           routing="hash"
-          forceRedirectUrl="/admin"
-          signUpForceRedirectUrl="/admin"
+          forceRedirectUrl="/controlroom"
+          signUpForceRedirectUrl="/controlroom"
         />
       </div>
     </main>
