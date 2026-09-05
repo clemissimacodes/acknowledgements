@@ -2,9 +2,12 @@ import { neon } from "@neondatabase/serverless";
 
 type ClerkUser = {
   id: string;
+  primaryEmailAddress: {
+    emailAddress: string;
+    verification: { status: string } | null;
+  } | null;
   externalAccounts: Array<{
     provider: string;
-    emailAddress: string;
     verification: { status: string } | null;
   }>;
 };
@@ -72,13 +75,15 @@ export function isAdminUser(user: ClerkUser | null) {
   const ownerEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   if (!ownerEmail) return false;
 
-  const verifiedGoogleOwner = user.externalAccounts.some(
-    ({ provider, emailAddress, verification }) =>
-      provider === "google" &&
-      (verification === null || verification.status === "verified") &&
-      emailAddress.toLowerCase() === ownerEmail,
+  const verifiedOwnerEmail =
+    user.primaryEmailAddress?.verification?.status === "verified" &&
+    user.primaryEmailAddress.emailAddress.toLowerCase() === ownerEmail;
+  const hasGoogleIdentity = user.externalAccounts.some(
+    ({ provider, verification }) =>
+      (provider === "google" || provider === "oauth_google") &&
+      (verification === null || verification.status === "verified"),
   );
-  if (!verifiedGoogleOwner) return false;
+  if (!verifiedOwnerEmail || !hasGoogleIdentity) return false;
 
   return ownerId ? user.id === ownerId : true;
 }
