@@ -141,9 +141,22 @@ export function PostiesForm() {
 
       <label className="posties-consent">
         <input name="consent" type="checkbox" value="yes" required />
-        <span>
-          I will doodle or caboodle back. Clementine may privately use this
-          address only to send me posties.
+        <span className="posties-consent-copy">
+          I understand that
+          <span className="posties-consent-list">
+            <span>
+              1) Clementine will privately use this address only to send me
+              posties.
+            </span>
+            <span>
+              2) Posties may take between 1–30 business days to arrive,
+              depending on how busy Clementine is.
+            </span>
+            <span>
+              3) I must send a postie back (those who cannot afford stamps are
+              exempt from this duty).
+            </span>
+          </span>
         </span>
       </label>
 
