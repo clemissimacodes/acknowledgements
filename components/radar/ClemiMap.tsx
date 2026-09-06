@@ -117,35 +117,35 @@ export function ClemiMap({
       <div className="clemi-map" ref={container} />
       <aside className="clemi-map-panel" aria-label="Clemi locations">
         <div className="clemi-map-panel-head">
-          <span className="clemi-map-fruit" aria-hidden="true">
-            c
-          </span>
-          <div>
-            <h1>Clemi Tracker</h1>
-            <p>soft signals from the clemiverse</p>
-          </div>
+          <h1>Clemi</h1>
         </div>
         <section className="clemi-map-current">
-          <h2>Now</h2>
-          {current ? (
-            <>
-              <strong>{current.city}</strong>
-              <span>{current.country}</span>
-              <small>from the location on her current Google Calendar event</small>
-            </>
-          ) : (
-            <>
-              <strong>Off radar</strong>
-              <small>No located GCal event is happening right now.</small>
-            </>
-          )}
+          <span className="clemi-map-avatar" aria-hidden="true" />
+          <span className="clemi-map-current-copy">
+            <strong>Clementine</strong>
+            {current ? (
+              <>
+                <span>
+                  {current.city}, {current.country}
+                </span>
+                <small>Now</small>
+              </>
+            ) : (
+              <>
+                <span>No Location Found</span>
+                <small>Offline</small>
+              </>
+            )}
+          </span>
         </section>
         <section className="clemi-map-history">
-          <h2>Places Clemi has wandered</h2>
+          <h2>Places</h2>
           <ol>
             {places.map((place) => (
               <li key={place.id}>
-                <span className="clemi-map-place-dot" aria-hidden="true" />
+                <span className="clemi-map-place-icon" aria-hidden="true">
+                  c
+                </span>
                 <span>
                   <strong>{place.city}</strong>
                   <small>
@@ -155,13 +155,8 @@ export function ClemiMap({
               </li>
             ))}
           </ol>
-          {places.length === 0 ? (
-            <p>Her approved travel constellation is still being assembled.</p>
-          ) : null}
+          {places.length === 0 ? <p>No saved places</p> : null}
         </section>
-        <p className="clemi-map-privacy">
-          City-level only. Calendar details and exact addresses stay private.
-        </p>
       </aside>
     </div>
   );

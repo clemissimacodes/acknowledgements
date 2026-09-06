@@ -139,8 +139,8 @@ export function PostiesForm() {
         </div>
       </fieldset>
 
-      <label className="posties-consent">
-        <input name="consent" type="checkbox" value="yes" required />
+      <div className="posties-consent">
+        <input name="consent" type="hidden" value="yes" />
         <span className="posties-consent-copy">
           I understand that
           <span className="posties-consent-list">
@@ -158,7 +158,7 @@ export function PostiesForm() {
             </span>
           </span>
         </span>
-      </label>
+      </div>
 
       <label className="posties-honey" aria-hidden="true">
         Website

@@ -21,7 +21,8 @@ import {
 
 async function requireOwner() {
   const user = await currentUser();
-  if (!user || !isAdminUser(user)) throw new Error("Not authorized.");
+  if (!user) throw new Error("Not authorized.");
+  if (!isAdminUser(user)) throw new Error("Not authorized.");
   return user;
 }
 
