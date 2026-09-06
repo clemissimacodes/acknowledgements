@@ -90,12 +90,12 @@ export function cleanExtras(raw: {
   );
   const gender = cleanLine(String(raw.gender ?? ""), DANDELION_GENDER_MAX);
   const age = Number(String(raw.age ?? "").trim());
+  const validLocation =
+    location &&
+    (/^\d{1,2}(?:\.\d)° [NS], \d{1,3}(?:\.\d)° [EW]$/.test(location) ||
+      /^[\p{L}\p{M}0-9 .,'’()-]{2,40}$/u.test(location));
   return {
-    location:
-      location &&
-      /^\d{1,2}(?:\.\d)° [NS], \d{1,3}(?:\.\d)° [EW]$/.test(location)
-        ? location
-        : undefined,
+    location: validLocation ? location : undefined,
     gender: DANDELION_GENDERS.includes(
       gender as (typeof DANDELION_GENDERS)[number],
     )

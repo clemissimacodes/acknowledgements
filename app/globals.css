@@ -1558,6 +1558,12 @@ input {
   color: rgba(246, 241, 232, 0.48);
 }
 
+.dandelion-form > input {
+  border-bottom: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
 .dandelion-map-field {
   width: 100%;
   margin-top: 0.7rem;

@@ -30,6 +30,29 @@ function openField(response: NextResponse, count: number) {
   response.cookies.set(DANDELION_COUNT_COOKIE, String(count), cookieOptions());
 }
 
+function decodedHeader(value: string | null) {
+  if (!value) return "";
+  try {
+    return decodeURIComponent(value).replace(/\s+/g, " ").trim();
+  } catch {
+    return value.replace(/\s+/g, " ").trim();
+  }
+}
+
+function visitorLocation(request: Request) {
+  const city = decodedHeader(request.headers.get("x-vercel-ip-city")).slice(
+    0,
+    30,
+  );
+  const country = decodedHeader(
+    request.headers.get("x-vercel-ip-country"),
+  )
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "")
+    .slice(0, 2);
+  return [city, country].filter(Boolean).join(", ");
+}
+
 export async function GET() {
   const jar = await cookies();
   const opened = hasBlown(jar.get(DANDELION_COOKIE)?.value);
@@ -53,7 +76,6 @@ export async function GET() {
 export async function POST(request: Request) {
   const payload = (await request.json()) as {
     wish?: string;
-    location?: string;
     gender?: string;
     age?: string;
   };
@@ -61,10 +83,13 @@ export async function POST(request: Request) {
   if (!wish) {
     return NextResponse.json({ error: "Whisper a little more." }, { status: 400 });
   }
-  const extras = cleanExtras(payload);
-  if (!extras.location || !extras.gender || !extras.age) {
+  const extras = cleanExtras({
+    ...payload,
+    location: visitorLocation(request),
+  });
+  if (!extras.gender || !extras.age) {
     return NextResponse.json(
-      { error: "Drop a pin, then choose your gender and age." },
+      { error: "Choose your gender and age." },
       { status: 400 },
     );
   }

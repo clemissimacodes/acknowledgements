@@ -19,8 +19,10 @@ export default function PrivacyPage() {
         <h2>Wishes and introductions</h2>
         <p>
           Dandelion wishes and tiny introductions are saved so the site can
-          display its shared little world. Optional wish details may be visible
-          to people who have contributed a wish.
+          display its shared little world. A wish is automatically labeled with
+          the approximate city and country supplied by the website host; raw IP
+          addresses are not attached to wishes. Wish details may be visible to
+          people who have contributed a wish.
         </p>
       </section>
       <section>
