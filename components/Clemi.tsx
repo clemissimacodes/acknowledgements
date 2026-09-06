@@ -22,7 +22,12 @@ const POSES = [
 
 type PoseId = (typeof POSES)[number]["id"];
 
+const STORAGE_KEY = "clemi-pose";
 const CHANGE_INTERVAL = 8_000;
+
+function isPoseId(value: string | null): value is PoseId {
+  return POSES.some((pose) => pose.id === value);
+}
 
 function pickNextPose(current: PoseId): PoseId {
   const choices = POSES.filter((pose) => pose.id !== current);
@@ -38,12 +43,20 @@ export function Clemi() {
     let lastChange = Date.now();
     let loading = false;
     let cancelled = false;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const changePose = () => {
-      if (loading || reducedMotion.matches) return;
+      if (loading) return;
       loading = true;
-      const next = pickNextPose(currentPose.current);
+      let previous = currentPose.current;
+
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (isPoseId(stored)) previous = stored;
+      } catch {
+        // Persistence is optional.
+      }
+
+      const next = pickNextPose(previous);
       const nextPose = POSES.find((pose) => pose.id === next);
       if (!nextPose) {
         loading = false;
@@ -57,6 +70,11 @@ export function Clemi() {
         currentPose.current = next;
         lastChange = Date.now();
         setPoseId(next);
+        try {
+          localStorage.setItem(STORAGE_KEY, next);
+        } catch {
+          // Persistence is optional.
+        }
       };
       image.onerror = () => {
         loading = false;
@@ -66,7 +84,6 @@ export function Clemi() {
 
     const scheduleChange = () => {
       window.clearTimeout(timeoutId);
-      if (reducedMotion.matches) return;
       timeoutId = window.setTimeout(() => {
         if (document.visibilityState === "visible") changePose();
         scheduleChange();
@@ -76,7 +93,7 @@ export function Clemi() {
     const changeAfterReturning = () => {
       if (
         document.visibilityState === "visible" &&
-        Date.now() - lastChange >= CHANGE_INTERVAL
+        Date.now() - lastChange > 500
       ) {
         changePose();
         scheduleChange();
@@ -85,22 +102,16 @@ export function Clemi() {
       }
     };
 
-    const handleMotionPreference = () => {
-      window.clearTimeout(timeoutId);
-      if (!reducedMotion.matches) scheduleChange();
-    };
-
+    changePose();
     scheduleChange();
     document.addEventListener("visibilitychange", changeAfterReturning);
     window.addEventListener("pageshow", changeAfterReturning);
-    reducedMotion.addEventListener("change", handleMotionPreference);
 
     return () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
       document.removeEventListener("visibilitychange", changeAfterReturning);
       window.removeEventListener("pageshow", changeAfterReturning);
-      reducedMotion.removeEventListener("change", handleMotionPreference);
     };
   }, []);
 
