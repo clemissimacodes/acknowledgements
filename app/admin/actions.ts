@@ -3,21 +3,26 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import {
-  clearRadar,
   clearVisitRecords,
   deleteAdminRecord,
   isAdminUser,
-  setRadar,
-  setRadarFromCoordinates,
   setPostiesSent,
   updateIntroductionRecord,
   updatePostiesRecord,
   updateWishRecord,
 } from "@/lib/admin";
+import {
+  clearCurrentLocation,
+  deleteTravelPlace,
+  saveTravelPlace,
+  setTravelPlaceStatus,
+  syncGoogleCalendar,
+} from "@/lib/tracker";
 
 async function requireOwner() {
   const user = await currentUser();
-  if (!isAdminUser(user)) throw new Error("Not authorized.");
+  if (!user || !isAdminUser(user)) throw new Error("Not authorized.");
+  return user;
 }
 
 function refreshControlRoom() {
@@ -86,42 +91,45 @@ export async function removeAllVisits() {
   refreshControlRoom();
 }
 
-export async function updateRadar(formData: FormData) {
-  await requireOwner();
-  await setRadar(formData.get("area"), formData.get("note"));
+export async function syncCalendarNow() {
+  const user = await requireOwner();
+  const result = await syncGoogleCalendar(user.id);
   revalidatePath("/controlroom");
   revalidatePath("/radar");
-}
-
-export async function updateRadarFromDevice(input: {
-  latitude: number;
-  longitude: number;
-  note: string;
-}) {
-  await requireOwner();
-  try {
-    const area = await setRadarFromCoordinates(
-      input.latitude,
-      input.longitude,
-      input.note,
-    );
-    revalidatePath("/controlroom");
-    revalidatePath("/radar");
-    return { ok: true as const, area };
-  } catch (error) {
-    return {
-      ok: false as const,
-      error:
-        error instanceof Error
-          ? error.message
-          : "The radar could not catch that signal.",
-    };
-  }
+  return result;
 }
 
 export async function removeRadar() {
   await requireOwner();
-  await clearRadar();
+  await clearCurrentLocation();
+  revalidatePath("/controlroom");
+  revalidatePath("/radar");
+}
+
+export async function savePlace(formData: FormData) {
+  await requireOwner();
+  await saveTravelPlace({
+    id: formData.get("id") || undefined,
+    city: formData.get("city"),
+    country: formData.get("country"),
+    firstYear: formData.get("firstYear"),
+    lastYear: formData.get("lastYear"),
+    status: formData.get("status"),
+  });
+  revalidatePath("/controlroom");
+  revalidatePath("/radar");
+}
+
+export async function changePlaceStatus(formData: FormData) {
+  await requireOwner();
+  await setTravelPlaceStatus(formData.get("id"), formData.get("status"));
+  revalidatePath("/controlroom");
+  revalidatePath("/radar");
+}
+
+export async function removePlace(formData: FormData) {
+  await requireOwner();
+  await deleteTravelPlace(formData.get("id"));
   revalidatePath("/controlroom");
   revalidatePath("/radar");
 }

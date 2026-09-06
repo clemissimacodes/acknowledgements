@@ -723,6 +723,12 @@ input {
   text-transform: none !important;
 }
 
+.posties-consent-list {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+
 .posties-form button {
   width: fit-content;
   padding: 0;
@@ -2846,8 +2852,9 @@ html[data-theme="dark"] .appearance button.is-active {
 .elsewhere .index-privacy {
   width: auto;
   margin: 0 0 0 0.35rem;
-  align-items: center;
+  align-items: flex-end;
   font-size: 0.72rem;
+  line-height: 18px;
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
@@ -3451,6 +3458,236 @@ html:has(.admin-page) .site-anchor {
   border-bottom: 0;
 }
 
+.clemi-map-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  min-height: 100dvh;
+  padding-top: var(--site-content-top);
+  color: #283226;
+  background: #e9eddf;
+}
+
+html:has(.clemi-map-shell),
+html:has(.clemi-map-shell) body {
+  background: #e9eddf;
+}
+
+html:has(.clemi-map-shell) .site-anchor {
+  background: rgba(233, 237, 223, 0.9);
+  backdrop-filter: blur(7px);
+}
+
+.clemi-map {
+  min-height: calc(100dvh - var(--site-content-top));
+}
+
+.clemi-map-panel {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: calc(100dvh - var(--site-content-top));
+  padding: clamp(1.25rem, 3vw, 2.4rem);
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(224, 108, 58, 0.13), transparent 25%),
+    #f7f5ea;
+  box-shadow: -1rem 0 3rem rgba(48, 58, 43, 0.08);
+}
+
+.clemi-map-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.clemi-map-fruit {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  color: #fff8e9;
+  font: 700 1.3rem/1 var(--font-book-serif), Georgia, serif;
+  background: #e36f3e;
+  border-radius: 48% 52% 46% 54%;
+  transform: rotate(-8deg);
+  box-shadow: 0 0.25rem 0.8rem rgba(112, 57, 32, 0.18);
+}
+
+.clemi-map-panel h1,
+.clemi-map-panel h2,
+.clemi-map-panel p {
+  margin: 0;
+}
+
+.clemi-map-panel h1 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.clemi-map-panel-head p {
+  margin-top: 0.3rem;
+  color: rgba(40, 50, 38, 0.58);
+  font-size: 0.78rem;
+}
+
+.clemi-map-current {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1.1rem;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(53, 76, 48, 0.12);
+  border-radius: 1rem;
+}
+
+.clemi-map-current h2,
+.clemi-map-history h2 {
+  margin-bottom: 0.45rem;
+  color: rgba(40, 50, 38, 0.55);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.clemi-map-current strong {
+  color: #d85f31;
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+.clemi-map-current span,
+.clemi-map-current small {
+  color: rgba(40, 50, 38, 0.68);
+}
+
+.clemi-map-current small {
+  margin-top: 0.55rem;
+  line-height: 1.35;
+}
+
+.clemi-map-history ol {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clemi-map-history li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.clemi-map-history li > span:last-child {
+  display: grid;
+}
+
+.clemi-map-history li strong {
+  font-weight: 500;
+}
+
+.clemi-map-history li small {
+  color: rgba(40, 50, 38, 0.58);
+}
+
+.clemi-map-place-dot {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.35rem;
+  background: #e36f3e;
+  border-radius: 50%;
+}
+
+.clemi-map-privacy {
+  margin-top: auto !important;
+  color: rgba(40, 50, 38, 0.48);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.clemi-map-marker {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  background: #e36f3e;
+  border: 2px solid #fffaf0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 0.28rem rgba(227, 111, 62, 0.2),
+    0 0.25rem 0.8rem rgba(63, 58, 43, 0.3);
+  cursor: pointer;
+}
+
+.clemi-map-marker.is-current {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: #f8efe0 url("/icon.png") center / 88% auto no-repeat;
+  border: 3px solid #e36f3e;
+  box-shadow:
+    0 0 0 0.55rem rgba(227, 111, 62, 0.16),
+    0 0.4rem 1.2rem rgba(63, 58, 43, 0.28);
+  animation: clemi-map-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes clemi-map-pulse {
+  50% {
+    box-shadow:
+      0 0 0 0.85rem rgba(227, 111, 62, 0.04),
+      0 0.4rem 1.2rem rgba(63, 58, 43, 0.2);
+  }
+}
+
+.maplibregl-popup-content {
+  padding: 0.6rem 0.75rem;
+  color: #283226;
+  font: 0.75rem/1.35 var(--font-book-serif), Georgia, serif;
+  background: #fffaf0;
+  border-radius: 0.65rem;
+  box-shadow: 0 0.3rem 1.2rem rgba(47, 53, 42, 0.18);
+}
+
+.admin-calendar-sync {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.admin-calendar-sync small {
+  max-width: 42rem;
+  color: rgba(28, 35, 30, 0.55);
+  line-height: 1.4;
+}
+
+.admin-add-place {
+  margin: 1rem 0 1.25rem;
+}
+
+.admin-add-place summary {
+  width: fit-content;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.admin-place-status {
+  color: rgba(28, 35, 30, 0.55);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-place-status.is-approved {
+  color: #36653b;
+}
+
+.admin-place-status.is-rejected {
+  color: #8b241d;
+}
+
 @media (max-width: 767px) {
   .radar-page {
     grid-template-columns: 1fr;
@@ -3479,5 +3716,25 @@ html:has(.admin-page) .site-anchor {
 
   .admin-counts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .clemi-map-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .clemi-map {
+    min-height: 58dvh;
+  }
+
+  .clemi-map-panel {
+    max-height: none;
+    padding-bottom: max(3rem, env(safe-area-inset-bottom));
+    box-shadow: 0 -1rem 3rem rgba(48, 58, 43, 0.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clemi-map-marker.is-current {
+    animation: none;
   }
 }

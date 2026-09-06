@@ -48,13 +48,6 @@ export type VisitRow = {
   createdAt: string;
 };
 
-export type RadarStatus = {
-  area: string;
-  note: string | null;
-  updatedAt: string;
-  expiresAt: string;
-};
-
 function databaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
 }
@@ -141,15 +134,6 @@ async function ensureTables() {
     CREATE INDEX IF NOT EXISTS site_visits_created_at_idx
     ON site_visits (created_at DESC)
   `;
-  await sql`
-    CREATE TABLE IF NOT EXISTS clemi_radar (
-      id SMALLINT PRIMARY KEY CHECK (id = 1),
-      area TEXT NOT NULL,
-      note TEXT,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      expires_at TIMESTAMPTZ NOT NULL
-    )
-  `;
 }
 
 export async function getAdminData() {
@@ -157,7 +141,7 @@ export async function getAdminData() {
   const sql = db();
   await sql`DELETE FROM site_visits WHERE created_at < NOW() - INTERVAL '30 days'`;
 
-  const [posties, wishes, introductions, visits, radar] = await Promise.all([
+  const [posties, wishes, introductions, visits] = await Promise.all([
     sql`
       SELECT id, name, platform, social_url, mailing_address, sent_at, created_at
       FROM sunday_posties
@@ -181,11 +165,6 @@ export async function getAdminData() {
       FROM site_visits
       ORDER BY created_at DESC
       LIMIT 500
-    `,
-    sql`
-      SELECT area, note, updated_at, expires_at
-      FROM clemi_radar
-      WHERE id = 1 AND expires_at > NOW()
     `,
   ]);
 
@@ -222,137 +201,7 @@ export async function getAdminData() {
       ipHash: row.ip_hash ? String(row.ip_hash) : null,
       createdAt: iso(row.created_at as string | Date),
     })) as VisitRow[],
-    radar: radar[0]
-      ? ({
-          area: String(radar[0].area),
-          note: radar[0].note ? String(radar[0].note) : null,
-          updatedAt: iso(radar[0].updated_at as string | Date),
-          expiresAt: iso(radar[0].expires_at as string | Date),
-        } satisfies RadarStatus)
-      : null,
   };
-}
-
-export async function getActiveRadar(): Promise<RadarStatus | null> {
-  try {
-    await ensureTables();
-    const rows = await db()`
-      SELECT area, note, updated_at, expires_at
-      FROM clemi_radar
-      WHERE id = 1 AND expires_at > NOW()
-    `;
-    if (!rows[0]) return null;
-    return {
-      area: String(rows[0].area),
-      note: rows[0].note ? String(rows[0].note) : null,
-      updatedAt: iso(rows[0].updated_at as string | Date),
-      expiresAt: iso(rows[0].expires_at as string | Date),
-    };
-  } catch {
-    return null;
-  }
-}
-
-export async function setRadar(areaValue: unknown, noteValue: unknown) {
-  const area = String(areaValue ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
-  const note = String(noteValue ?? "").replace(/\s+/g, " ").trim().slice(0, 140);
-  if (area.length < 2) throw new Error("Add a city or neighborhood.");
-  await ensureTables();
-  await db()`
-    INSERT INTO clemi_radar (id, area, note, updated_at, expires_at)
-    VALUES (1, ${area}, ${note || null}, NOW(), NOW() + INTERVAL '12 hours')
-    ON CONFLICT (id) DO UPDATE SET
-      area = EXCLUDED.area,
-      note = EXCLUDED.note,
-      updated_at = NOW(),
-      expires_at = NOW() + INTERVAL '12 hours'
-  `;
-}
-
-function coarseCoordinates(latitude: number, longitude: number) {
-  const latitudeStep = 0.04;
-  const longitudeStep =
-    latitudeStep /
-    Math.max(0.25, Math.cos((latitude * Math.PI) / 180));
-  return {
-    latitude: Math.round(latitude / latitudeStep) * latitudeStep,
-    longitude: Math.round(longitude / longitudeStep) * longitudeStep,
-  };
-}
-
-async function areaFromCoordinates(latitude: number, longitude: number) {
-  const coarse = coarseCoordinates(latitude, longitude);
-  const params = new URLSearchParams({
-    format: "jsonv2",
-    lat: coarse.latitude.toFixed(5),
-    lon: coarse.longitude.toFixed(5),
-    zoom: "12",
-    addressdetails: "1",
-  });
-  const response = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?${params}`,
-    {
-      headers: {
-        Accept: "application/json",
-        "Accept-Language": "en",
-        "User-Agent":
-          "Clemi-Radar/1.0 (https://clemissima.vercel.app/privacy)",
-      },
-      signal: AbortSignal.timeout(6_000),
-      cache: "no-store",
-    },
-  );
-  if (!response.ok) throw new Error("Could not name this fuzzy location.");
-  const payload = (await response.json()) as {
-    address?: Record<string, string | undefined>;
-  };
-  const address = payload.address ?? {};
-  const neighborhood =
-    address.neighbourhood ??
-    address.suburb ??
-    address.city_district ??
-    address.borough;
-  const city =
-    address.city ??
-    address.town ??
-    address.village ??
-    address.municipality ??
-    address.county;
-  const parts = [neighborhood, city]
-    .filter((part, index, all): part is string =>
-      Boolean(part && all.indexOf(part) === index),
-    )
-    .slice(0, 2);
-  if (parts.length === 0 && address.state) parts.push(address.state);
-  if (parts.length === 0) throw new Error("Could not name this fuzzy location.");
-  return parts.join(", ");
-}
-
-export async function setRadarFromCoordinates(
-  latitudeValue: unknown,
-  longitudeValue: unknown,
-  noteValue: unknown,
-) {
-  const latitude = Number(latitudeValue);
-  const longitude = Number(longitudeValue);
-  if (
-    !Number.isFinite(latitude) ||
-    !Number.isFinite(longitude) ||
-    latitude < -90 ||
-    latitude > 90 ||
-    longitude < -180 ||
-    longitude > 180
-  ) {
-    throw new Error("That location signal was not valid.");
-  }
-  const area = await areaFromCoordinates(latitude, longitude);
-  await setRadar(area, noteValue);
-  return area;
-}
-
-export async function clearRadar() {
-  await ensureTables();
-  await db()`DELETE FROM clemi_radar WHERE id = 1`;
 }
 
 function cleanId(value: unknown) {

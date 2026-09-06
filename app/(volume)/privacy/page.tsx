@@ -33,13 +33,14 @@ export default function PrivacyPage() {
         </p>
       </section>
       <section>
-        <h2>Clemi Radar</h2>
+        <h2>Clemi Tracker</h2>
         <p>
-          Radar can use a location permission granted on Clementine’s laptop or
-          phone. Precise coordinates are immediately reduced to roughly a
-          two-mile area before lookup and are never saved. The approximate
-          status disappears after 12 hours and replaces the previous one, so no
-          location history is retained.
+          The tracker reads location fields from Clementine’s Google Calendar
+          with read-only permission. An event happening now may publish its city
+          and country. Past locations become private drafts and appear on the
+          public map only after Clementine approves them. Event titles,
+          attendees, descriptions, event IDs, and exact addresses are not
+          stored or published.
         </p>
       </section>
       <p>

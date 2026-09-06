@@ -2,18 +2,21 @@ import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CalendarSync } from "@/components/admin/CalendarSync";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
-import { DeviceRadar } from "@/components/admin/DeviceRadar";
 import { getAdminData, isAdminUser } from "@/lib/admin";
+import { getTrackerAdminData } from "@/lib/tracker";
 import {
+  changePlaceStatus,
   removeAllVisits,
+  removePlace,
   removeRadar,
   removeRecord,
+  savePlace,
   saveIntroductionRecord,
   savePostiesRecord,
   saveWishRecord,
   togglePostiesSent,
-  updateRadar,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +47,10 @@ export default async function AdminPage() {
     );
   }
 
-  const data = await getAdminData();
+  const [data, tracker] = await Promise.all([
+    getAdminData(),
+    getTrackerAdminData(),
+  ]);
   const uniqueVisitors = new Set(
     data.visits.map((visit) => visit.ipHash).filter(Boolean),
   ).size;
@@ -56,47 +62,35 @@ export default async function AdminPage() {
           <p className="admin-eyebrow">private burrow</p>
           <h1>Clemi control room</h1>
         </div>
-        <UserButton />
+        <UserButton
+          userProfileProps={{
+            additionalOAuthScopes: {
+              google: ["https://www.googleapis.com/auth/calendar.readonly"],
+            },
+          }}
+        />
       </header>
 
       <section className="admin-radar" aria-labelledby="radar-control-title">
         <div>
           <h2 id="radar-control-title">Clemi Radar</h2>
           <p>
-            Catch this device’s fuzzy location, or enter a neighborhood
-            manually. It vanishes after 12 hours and replaces the prior status.
+            Google Calendar is the tracker. An event happening now supplies the
+            public city; past event locations become private drafts below.
           </p>
         </div>
-        <form action={updateRadar}>
-          <label>
-            City or neighborhood
-            <input
-              name="area"
-              maxLength={80}
-              required
-              defaultValue={data.radar?.area ?? ""}
-              placeholder="the Lower East Side"
-            />
-          </label>
-          <label>
-            Radar transmission
-            <input
-              name="note"
-              maxLength={140}
-              defaultValue={data.radar?.note ?? ""}
-              placeholder="foraging for perfect citrus"
-            />
-          </label>
-          <button type="submit">Transmit for 12 hours</button>
-        </form>
-        <DeviceRadar />
-        {data.radar ? (
+        <CalendarSync
+          connected={tracker.connected}
+          lastSyncedAt={tracker.lastSyncedAt}
+          lastSyncError={tracker.lastSyncError}
+        />
+        {tracker.current ? (
           <div className="admin-radar-live">
             <p>
-              Live: <strong>{data.radar.area}</strong>
-              {data.radar.note ? ` — ${data.radar.note}` : ""}
+              Current GCal city: <strong>{tracker.current.city}</strong>,{" "}
+              {tracker.current.country}
             </p>
-            <p>Expires {date(data.radar.expiresAt)} PT.</p>
+            <p>Signal checked {date(tracker.current.updatedAt)} PT.</p>
             <form action={removeRadar}>
               <button type="submit">Take Clemi off radar</button>
             </form>
@@ -105,6 +99,121 @@ export default async function AdminPage() {
         ) : (
           <p className="admin-muted">Clemi is currently off radar.</p>
         )}
+      </section>
+
+      <section className="admin-section" id="travel-places">
+        <h2>Travel places</h2>
+        <p className="admin-private">
+          Calendar locations stay private drafts until you approve them. The
+          public map shows city and year only.
+        </p>
+        <details className="admin-add-place">
+          <summary>Add a city yourself</summary>
+          <form className="admin-edit-form" action={savePlace}>
+            <label>
+              City
+              <input name="city" required />
+            </label>
+            <label>
+              Country
+              <input name="country" required />
+            </label>
+            <label>
+              First year
+              <input name="firstYear" type="number" min="1900" max="2100" required />
+            </label>
+            <label>
+              Last year
+              <input name="lastYear" type="number" min="1900" max="2100" required />
+            </label>
+            <input type="hidden" name="status" value="draft" />
+            <button type="submit">Add private draft</button>
+          </form>
+        </details>
+        <div className="admin-cards admin-travel-cards">
+          {tracker.places.map((place) => (
+            <article className="admin-card" key={place.id}>
+              <div className="admin-card-head">
+                <h3>{place.city}</h3>
+                <span className={`admin-place-status is-${place.status}`}>
+                  {place.status}
+                </span>
+              </div>
+              <p>
+                {place.country} ·{" "}
+                {place.firstYear === place.lastYear
+                  ? place.firstYear
+                  : `${place.firstYear}–${place.lastYear}`}
+              </p>
+              <div className="admin-record-actions">
+                {place.status !== "approved" ? (
+                  <form action={changePlaceStatus}>
+                    <input type="hidden" name="id" value={place.id} />
+                    <input type="hidden" name="status" value="approved" />
+                    <button type="submit">Approve for map</button>
+                  </form>
+                ) : null}
+                {place.status !== "rejected" ? (
+                  <form action={changePlaceStatus}>
+                    <input type="hidden" name="id" value={place.id} />
+                    <input type="hidden" name="status" value="rejected" />
+                    <button type="submit">Hide</button>
+                  </form>
+                ) : null}
+                <details>
+                  <summary>Edit</summary>
+                  <form className="admin-edit-form" action={savePlace}>
+                    <input type="hidden" name="id" value={place.id} />
+                    <input type="hidden" name="status" value={place.status} />
+                    <label>
+                      City
+                      <input name="city" defaultValue={place.city} required />
+                    </label>
+                    <label>
+                      Country
+                      <input
+                        name="country"
+                        defaultValue={place.country}
+                        required
+                      />
+                    </label>
+                    <label>
+                      First year
+                      <input
+                        name="firstYear"
+                        type="number"
+                        defaultValue={place.firstYear}
+                        required
+                      />
+                    </label>
+                    <label>
+                      Last year
+                      <input
+                        name="lastYear"
+                        type="number"
+                        defaultValue={place.lastYear}
+                        required
+                      />
+                    </label>
+                    <button type="submit">Save</button>
+                  </form>
+                </details>
+                <form action={removePlace}>
+                  <input type="hidden" name="id" value={place.id} />
+                  <ConfirmButton
+                    className="admin-danger"
+                    message={`Permanently delete ${place.city} from Clemi Tracker?`}
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              </div>
+            </article>
+          ))}
+          {tracker.places.length === 0 ? (
+            <p>Sync GCal to find private travel drafts.</p>
+          ) : null}
+        </div>
       </section>
 
       <nav className="admin-counts" aria-label="Database counts">
