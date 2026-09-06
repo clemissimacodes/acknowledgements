@@ -156,7 +156,7 @@ export function Dandelion() {
     <div className={`dandelion-field is-${phase}${opened ? " is-open" : ""}`}>
       <img
         className="dandelion-art"
-        src="/dandelion/clemi-blow.png?v=hd3"
+        src="/dandelion/clemi-blow.png?v=hd4"
         alt="Clementine blowing a fat dandelion"
       />
       {mounted && phase === "blowing"
