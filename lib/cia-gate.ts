@@ -5,18 +5,20 @@ export function hasCiaCookie(value: string | undefined): boolean {
   return value === CIA_COOKIE_VALUE;
 }
 
-export function safeCiaNext(next: string | null): string {
+export function safeProtectedNext(next: string | null): string {
   const fallback = "/cia";
   if (!next || next.includes("\\")) return fallback;
 
   try {
     const base = new URL("https://cia.local");
     const destination = new URL(next, base);
-    const isCiaPath =
+    const isProtectedPath =
       destination.pathname === "/cia" ||
-      destination.pathname.startsWith("/cia/");
+      destination.pathname.startsWith("/cia/") ||
+      destination.pathname === "/acknowledgements" ||
+      destination.pathname.startsWith("/acknowledgements/");
 
-    if (destination.origin !== base.origin || !isCiaPath) return fallback;
+    if (destination.origin !== base.origin || !isProtectedPath) return fallback;
 
     return `${destination.pathname}${destination.search}${destination.hash}`;
   } catch {

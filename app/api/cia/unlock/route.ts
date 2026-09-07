@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   response.cookies.set(CIA_COOKIE, CIA_COOKIE_VALUE, {
     httpOnly: true,
     sameSite: "lax",
-    path: "/cia",
+    path: "/",
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 30,
   });

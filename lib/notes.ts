@@ -69,12 +69,9 @@ function rowToNote(row: AcknowledgementRow): Note {
 }
 
 function sortNotes(notes: Note[]): Note[] {
-  return [...notes].sort((a, b) => {
-    const aTime = a.date ? Date.parse(a.date) : 0;
-    const bTime = b.date ? Date.parse(b.date) : 0;
-    if (bTime !== aTime) return bTime - aTime;
-    return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-  });
+  return [...notes].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+  );
 }
 
 export async function getNotes(): Promise<Note[]> {

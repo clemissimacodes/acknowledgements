@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { safeCiaNext } from "@/lib/cia-gate";
+import { safeProtectedNext } from "@/lib/cia-gate";
 
 export function CiaUnlockForm() {
   const search = useSearchParams();
@@ -27,7 +27,7 @@ export function CiaUnlockForm() {
         return;
       }
 
-      window.location.assign(safeCiaNext(search.get("next")));
+      window.location.assign(safeProtectedNext(search.get("next")));
     } catch {
       setError("The clearance desk is unavailable.");
     } finally {

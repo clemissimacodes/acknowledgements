@@ -1,18 +1,14 @@
-import { Suspense } from "react";
-import { UnlockForm } from "@/components/UnlockForm";
+import { redirect } from "next/navigation";
+import { safeProtectedNext } from "@/lib/cia-gate";
 
-export const metadata = {
-  title: "Acknowledgements",
-};
-
-export default function UnlockPage() {
-  return (
-    <main className="unlock-page">
-      <h1>Acknowledgements</h1>
-      <p className="unlock-lede">only 2 people have this password.. for now..</p>
-      <Suspense>
-        <UnlockForm />
-      </Suspense>
-    </main>
+export default async function UnlockPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
+  const next = (await searchParams).next;
+  const destination = safeProtectedNext(
+    typeof next === "string" ? next : "/acknowledgements",
   );
+  redirect(`/cia/unlock?next=${encodeURIComponent(destination)}`);
 }
