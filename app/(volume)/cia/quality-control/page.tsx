@@ -1,7 +1,7 @@
 import { CiaExhibit } from "@/components/cia/CiaExhibit";
 import { getPublishedCiaEntries } from "@/lib/cia";
 
-export const metadata = { title: "Quality Control Bureau · CIA" };
+export const metadata = { title: "Quality Control Bureau · Secrets" };
 
 export default async function QualityControlPage() {
   const entries = await getPublishedCiaEntries("quality-control");

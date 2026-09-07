@@ -37,7 +37,7 @@ function refreshControlRoom() {
 }
 
 function refreshCia(project?: FormDataEntryValue | null) {
-  revalidatePath("/cia");
+  revalidatePath("/secrets");
   if (
     project === "saas-inflation" ||
     project === "startup-graveyard" ||

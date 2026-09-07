@@ -1,7 +1,7 @@
 import { CiaExhibit } from "@/components/cia/CiaExhibit";
 import { getPublishedCiaEntries } from "@/lib/cia";
 
-export const metadata = { title: "Founder Apology Archive · CIA" };
+export const metadata = { title: "Founder Apology Archive · Secrets" };
 
 export default async function FounderApologiesPage() {
   const entries = await getPublishedCiaEntries("founder-apologies");

@@ -10,5 +10,5 @@ export default async function UnlockPage({
   const destination = safeProtectedNext(
     typeof next === "string" ? next : "/acknowledgements",
   );
-  redirect(`/cia/unlock?next=${encodeURIComponent(destination)}`);
+  redirect(`/secrets/unlock?next=${encodeURIComponent(destination)}`);
 }

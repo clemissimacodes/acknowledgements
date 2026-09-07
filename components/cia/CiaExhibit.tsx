@@ -83,9 +83,9 @@ export function CiaExhibit({
         </p>
         <h1>{projectLabels[project]}</h1>
         <p className="cia-deck">{projectDescriptions[project]}</p>
-        <nav aria-label="CIA exhibits">
-          <Link href="/cia">Return to headquarters</Link>
-          <Link href="/privacy#cia-records">Methods & corrections</Link>
+        <nav aria-label="Secrets exhibits">
+          <Link href="/secrets">Return to Secrets</Link>
+          <Link href="/privacy#secrets-records">Methods & corrections</Link>
         </nav>
       </header>
 
@@ -130,7 +130,7 @@ export function CiaExhibit({
                       </li>
                     ))}
                   </ul>
-                  <Link href="/privacy#cia-records">Request a correction</Link>
+                  <Link href="/privacy#secrets-records">Request a correction</Link>
                 </footer>
               </article>
             ))}

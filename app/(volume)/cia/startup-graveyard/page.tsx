@@ -1,7 +1,7 @@
 import { CiaExhibit } from "@/components/cia/CiaExhibit";
 import { getPublishedCiaEntries } from "@/lib/cia";
 
-export const metadata = { title: "Startup Graveyard · CIA" };
+export const metadata = { title: "Startup Graveyard · Secrets" };
 
 export default async function StartupGraveyardPage() {
   const entries = await getPublishedCiaEntries("startup-graveyard");

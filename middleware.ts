@@ -11,9 +11,12 @@ export default clerkMiddleware(async (auth, request) => {
   const isAcknowledgements =
     pathname === "/acknowledgements" ||
     pathname.startsWith("/acknowledgements/");
+  const isSecrets =
+    pathname === "/secrets" || pathname.startsWith("/secrets/");
   const isCia = pathname === "/cia" || pathname.startsWith("/cia/");
-  const isCiaUnlock = pathname === "/cia/unlock";
-  const isPasswordProtected = isCia || isAcknowledgements;
+  const isSecretsUnlock =
+    pathname === "/secrets/unlock" || pathname === "/cia/unlock";
+  const isPasswordProtected = isSecrets || isCia || isAcknowledgements;
 
   if (isAdmin) {
     const { userId } = await auth();
@@ -23,12 +26,12 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  if (isPasswordProtected && !isCiaUnlock) {
+  if (isPasswordProtected && !isSecretsUnlock) {
     if (hasCiaCookie(request.cookies.get(CIA_COOKIE)?.value)) {
       return NextResponse.next();
     }
 
-    const unlock = new URL("/cia/unlock", request.url);
+    const unlock = new URL("/secrets/unlock", request.url);
     unlock.searchParams.set(
       "next",
       request.nextUrl.pathname + request.nextUrl.search,

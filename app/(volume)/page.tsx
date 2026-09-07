@@ -3,7 +3,6 @@ import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
 
 const works = [
-  { title: "Acknowledgements", href: "/acknowledgements" },
   {
     title: "Modeling",
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
@@ -13,7 +12,7 @@ const works = [
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Sunday Posties", href: "/sunday-posties" },
   { title: "Clemi Radar", href: "/radar" },
-  { title: "Clementine Intelligence Agency", href: "/cia" },
+  { title: "Secrets", href: "/secrets" },
 ];
 
 export default function HomePage() {

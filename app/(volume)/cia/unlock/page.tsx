@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { CiaUnlockForm } from "@/components/CiaUnlockForm";
 
 export const metadata = {
-  title: "CIA Clearance",
+  title: "Secrets · Unlock",
 };
 
 export default function CiaUnlockPage() {
@@ -11,7 +11,7 @@ export default function CiaUnlockPage() {
       <section className="cia-unlock-card">
         <p className="cia-classification">Restricted files</p>
         <p className="cia-file-number">
-          Clementine Intelligence Agency · clearance desk
+          Secrets · clearance desk
         </p>
         <h1>Present the phrase.</h1>
         <p className="cia-deck">

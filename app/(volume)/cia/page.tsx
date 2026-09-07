@@ -29,8 +29,8 @@ const exhibits = [
 ] as const;
 
 export const metadata = {
-  title: "Clementine Intelligence Agency",
-  description: "Four small, sourced investigations from Clementine.",
+  title: "Secrets",
+  description: "Private acknowledgements and sourced investigations from Clementine.",
 };
 
 export default async function CiaPage() {
@@ -43,7 +43,7 @@ export default async function CiaPage() {
   return (
     <main className="cia-page cia-hq">
       <header className="cia-hero">
-        <p className="cia-classification">Clementine Intelligence Agency</p>
+        <p className="cia-classification">Secrets</p>
         <p className="cia-file-number">Headquarters memorandum · public copy</p>
         <h1>Small facts, thoroughly peeled.</h1>
         <p className="cia-deck">
@@ -55,13 +55,13 @@ export default async function CiaPage() {
 
       <section className="cia-directorates" aria-labelledby="directorates-title">
         <div className="cia-section-title">
-          <h2 id="directorates-title">Active directorates</h2>
-          <span>Public index</span>
+          <h2 id="directorates-title">Inside Secrets</h2>
+          <span>Protected index</span>
         </div>
         <ol>
           {exhibits.map((exhibit) => (
             <li key={exhibit.slug}>
-              <Link href={`/cia/${exhibit.slug}`}>
+              <Link href={`/secrets/${exhibit.slug}`}>
                 <span className="cia-directorate-number">{exhibit.number}</span>
                 <span>
                   <strong>{exhibit.title}</strong>
@@ -73,6 +73,16 @@ export default async function CiaPage() {
               </Link>
             </li>
           ))}
+          <li>
+            <Link href="/acknowledgements">
+              <span className="cia-directorate-number">05</span>
+              <span>
+                <strong>Acknowledgements</strong>
+                <small>Private notes and messages kept within Secrets.</small>
+              </span>
+              <span className="cia-file-count">protected</span>
+            </Link>
+          </li>
         </ol>
       </section>
 
@@ -82,7 +92,7 @@ export default async function CiaPage() {
           Drafts, rejected leads, and withdrawn records are private. Public
           files expose only the exact revision that passed owner review.
         </p>
-        <Link href="/privacy#cia-records">Read the sourcing policy</Link>
+        <Link href="/privacy#secrets-records">Read the sourcing policy</Link>
       </aside>
     </main>
   );

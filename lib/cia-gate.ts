@@ -6,13 +6,15 @@ export function hasCiaCookie(value: string | undefined): boolean {
 }
 
 export function safeProtectedNext(next: string | null): string {
-  const fallback = "/cia";
+  const fallback = "/secrets";
   if (!next || next.includes("\\")) return fallback;
 
   try {
     const base = new URL("https://cia.local");
     const destination = new URL(next, base);
     const isProtectedPath =
+      destination.pathname === "/secrets" ||
+      destination.pathname.startsWith("/secrets/") ||
       destination.pathname === "/cia" ||
       destination.pathname.startsWith("/cia/") ||
       destination.pathname === "/acknowledgements" ||
@@ -20,7 +22,8 @@ export function safeProtectedNext(next: string | null): string {
 
     if (destination.origin !== base.origin || !isProtectedPath) return fallback;
 
-    return `${destination.pathname}${destination.search}${destination.hash}`;
+    const pathname = destination.pathname.replace(/^\/cia(?=\/|$)/, "/secrets");
+    return `${pathname}${destination.search}${destination.hash}`;
   } catch {
     return fallback;
   }

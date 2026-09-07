@@ -3,7 +3,7 @@ import { getNotes } from "@/lib/notes";
 import { MessagesShell } from "@/components/messages/MessagesShell";
 
 export const metadata: Metadata = {
-  title: "Messages",
+  title: "Acknowledgements · Secrets",
 };
 
 export const revalidate = 60;
