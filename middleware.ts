@@ -1,10 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ACK_COOKIE, hasAcknowledgementsCookie } from "@/lib/ack-gate";
-import {
-  hasIntroductionCookie,
-  INTRO_COOKIE,
-} from "@/lib/intro-gate";
+import { CIA_COOKIE, hasCiaCookie } from "@/lib/cia-gate";
 
 export default clerkMiddleware(async (auth, request) => {
   const pathname = request.nextUrl.pathname;
@@ -16,6 +13,8 @@ export default clerkMiddleware(async (auth, request) => {
   const isAcknowledgements =
     pathname === "/acknowledgements" ||
     pathname.startsWith("/acknowledgements/");
+  const isCia = pathname === "/cia" || pathname.startsWith("/cia/");
+  const isCiaUnlock = pathname === "/cia/unlock";
 
   if (isAdmin) {
     const { userId } = await auth();
@@ -25,17 +24,21 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  if (!isPoetry && !isAcknowledgements) {
-    return NextResponse.next();
-  }
+  if (isCia && !isCiaUnlock) {
+    if (hasCiaCookie(request.cookies.get(CIA_COOKIE)?.value)) {
+      return NextResponse.next();
+    }
 
-  if (!hasIntroductionCookie(request.cookies.get(INTRO_COOKIE)?.value)) {
-    const introduction = new URL("/introduce", request.url);
-    introduction.searchParams.set(
+    const unlock = new URL("/cia/unlock", request.url);
+    unlock.searchParams.set(
       "next",
       request.nextUrl.pathname + request.nextUrl.search,
     );
-    return NextResponse.redirect(introduction);
+    return NextResponse.redirect(unlock);
+  }
+
+  if (!isPoetry && !isAcknowledgements) {
+    return NextResponse.next();
   }
 
   if (!isAcknowledgements) {
