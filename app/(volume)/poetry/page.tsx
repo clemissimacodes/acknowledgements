@@ -45,9 +45,9 @@ export default function PoetryIndexPage() {
             className="poetry-written"
             aria-labelledby="poetry-written-title"
           >
-            <h2 id="poetry-written-title">poems i wrote</h2>
+            <h2 id="poetry-written-title">OLDER POEMS I WROTE</h2>
             <p className="poetry-lede">
-              My writing kaleidoscopes my being. Please, read with great care.
+              To read me is to know me. Read me with great care!
             </p>
             <ol className="poetry-index">
               {poems.map((poem) => (
