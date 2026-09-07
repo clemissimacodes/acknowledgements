@@ -1,5 +1,6 @@
-export const CIA_COOKIE = "cia_ok";
-export const CIA_COOKIE_VALUE = "cleared";
+export const CIA_COOKIE = "cia_ok_v2";
+export const CIA_COOKIE_VALUE = "cleared_v2";
+export const LEGACY_CIA_COOKIE = "cia_ok";
 
 export function hasCiaCookie(value: string | undefined): boolean {
   return value === CIA_COOKIE_VALUE;

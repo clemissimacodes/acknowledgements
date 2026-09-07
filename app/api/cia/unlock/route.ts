@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   CIA_COOKIE,
   CIA_COOKIE_VALUE,
+  LEGACY_CIA_COOKIE,
 } from "@/lib/cia-gate";
 
 export async function POST(request: Request) {
@@ -31,6 +32,13 @@ export async function POST(request: Request) {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24 * 30,
+  });
+  response.cookies.set(LEGACY_CIA_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
   });
   return response;
 }

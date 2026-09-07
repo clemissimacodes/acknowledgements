@@ -3844,36 +3844,25 @@ html:has(.cia-page) .site-anchor {
   display: grid;
   align-items: center;
   padding-bottom: var(--site-content-top);
+  background: #f7f4ed;
 }
 
 .cia-unlock-card {
-  width: min(100%, 38rem);
-  padding: clamp(1.5rem, 5vw, 3.5rem);
-  border: 1px solid var(--cia-rule);
-  background: var(--cia-paper);
-  box-shadow: 0.7rem 0.8rem 0 rgba(71, 59, 38, 0.08);
+  width: min(100%, 28rem);
+  padding: 0;
 }
 
 .cia-unlock-card h1 {
-  margin-bottom: 1rem;
-  font-size: clamp(2.6rem, 7vw, 5.25rem);
-  font-style: italic;
+  margin: 0;
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 1.15;
 }
 
 .cia-unlock-form {
   display: grid;
   max-width: 20rem;
-  margin-top: 2rem;
-}
-
-.cia-unlock-form label {
-  margin-bottom: 0.45rem;
-  color: var(--cia-muted);
-  font: 0.66rem/1.4 ui-monospace, "SFMono-Regular", Menlo, monospace;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  margin-top: 1.5rem;
 }
 
 .cia-unlock-form input {
@@ -3892,12 +3881,10 @@ html:has(.cia-page) .site-anchor {
 .cia-unlock-form button {
   width: fit-content;
   padding: 0.5rem 0.7rem;
-  color: #f7f0dc;
-  font: 0.7rem/1.4 ui-monospace, "SFMono-Regular", Menlo, monospace;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 0;
-  background: #7c3028;
+  color: inherit;
+  font: inherit;
+  border: 1px solid currentColor;
+  background: transparent;
   cursor: pointer;
 }
 

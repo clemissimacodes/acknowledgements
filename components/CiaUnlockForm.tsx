@@ -23,13 +23,13 @@ export function CiaUnlockForm() {
       });
 
       if (!response.ok) {
-        setError("Clearance denied.");
+        setError("why would u even try");
         return;
       }
 
       window.location.assign(safeProtectedNext(search.get("next")));
     } catch {
-      setError("The clearance desk is unavailable.");
+      setError("why would u even try");
     } finally {
       setBusy(false);
     }
@@ -37,19 +37,20 @@ export function CiaUnlockForm() {
 
   return (
     <form className="cia-unlock-form" onSubmit={onSubmit}>
-      <label htmlFor="cia-password">Clearance phrase</label>
+      <label className="visually-hidden" htmlFor="cia-password">
+        Password
+      </label>
       <input
         id="cia-password"
         type="password"
         name="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
-        placeholder="enter phrase"
         autoComplete="current-password"
         autoFocus
       />
       <button type="submit" disabled={busy}>
-        {busy ? "Checking…" : "Request access"}
+        open sesame
       </button>
       {error ? (
         <p className="cia-unlock-error" role="alert">

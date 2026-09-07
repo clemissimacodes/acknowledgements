@@ -9,14 +9,7 @@ export default function CiaUnlockPage() {
   return (
     <main className="cia-page cia-unlock-page">
       <section className="cia-unlock-card">
-        <p className="cia-classification">Restricted files</p>
-        <p className="cia-file-number">
-          Secrets · clearance desk
-        </p>
-        <h1>Present the phrase.</h1>
-        <p className="cia-deck">
-          These records are available only to readers with current clearance.
-        </p>
+        <h1>what do u thin kthe password is?</h1>
         <Suspense>
           <CiaUnlockForm />
         </Suspense>
