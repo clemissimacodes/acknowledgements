@@ -45,9 +45,27 @@ export default function PrivacyPage() {
           stored or published.
         </p>
       </section>
+      <section id="cia-records">
+        <h2>CIA records, sourcing, and corrections</h2>
+        <p>
+          The Clementine Intelligence Agency publishes only owner-reviewed
+          records with links to original or credible public sources, retrieval
+          dates, and confidence labels. Automated checks are limited to a short
+          list of official pricing pages and can create private draft alerts,
+          but can never approve or publish them. The archive avoids private
+          individuals, sensitive personal data, speculation, copied full pages,
+          and humiliating rankings. Short quotations are attributed and linked
+          to their original context. Citrus photographs are owner-authored;
+          location and device metadata (including EXIF) must be removed before
+          publication. Clementine may correct or withdraw a file while keeping
+          its earlier approved revision private for accountability. Use the
+          envelope on the home page to request a correction, removal, or source
+          review.
+        </p>
+      </section>
       <p>
-        To ask for your Sunday Posties information to be corrected or deleted,
-        email Clementine using the envelope on the home page.
+        To ask for your information to be corrected or deleted, email
+        Clementine using the envelope on the home page.
       </p>
     </main>
   );

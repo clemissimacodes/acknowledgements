@@ -3,6 +3,12 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import {
+  ciaProjectPath,
+  deleteCiaEntry,
+  moderateCiaEntry,
+  saveCiaEntry,
+} from "@/lib/cia";
+import {
   clearVisitRecords,
   deleteAdminRecord,
   isAdminUser,
@@ -28,6 +34,61 @@ async function requireOwner() {
 
 function refreshControlRoom() {
   revalidatePath("/controlroom");
+}
+
+function refreshCia(project?: FormDataEntryValue | null) {
+  revalidatePath("/cia");
+  if (
+    project === "saas-inflation" ||
+    project === "startup-graveyard" ||
+    project === "founder-apologies" ||
+    project === "quality-control"
+  ) {
+    revalidatePath(ciaProjectPath(project));
+  }
+}
+
+export async function saveCiaRecord(formData: FormData) {
+  const user = await requireOwner();
+  await saveCiaEntry(
+    {
+      id: formData.get("id") || undefined,
+      project: formData.get("project"),
+      title: formData.get("title"),
+      slug: formData.get("slug"),
+      summary: formData.get("summary"),
+      occurredOn: formData.get("occurredOn"),
+      confidence: formData.get("confidence"),
+      sourceUrl: formData.get("sourceUrl"),
+      sourceLabel: formData.get("sourceLabel"),
+      publisher: formData.get("publisher"),
+      sourceType: formData.get("sourceType"),
+      metadata: formData.get("metadata"),
+      moderationRationale: formData.get("moderationRationale"),
+    },
+    user.id,
+  );
+  refreshControlRoom();
+  refreshCia(formData.get("project"));
+}
+
+export async function moderateCiaRecord(formData: FormData) {
+  const user = await requireOwner();
+  await moderateCiaEntry({
+    id: formData.get("id"),
+    status: formData.get("status"),
+    rationale: formData.get("rationale"),
+    actorId: user.id,
+  });
+  refreshControlRoom();
+  refreshCia(formData.get("project"));
+}
+
+export async function removeCiaRecord(formData: FormData) {
+  await requireOwner();
+  await deleteCiaEntry(formData.get("id"));
+  refreshControlRoom();
+  refreshCia(formData.get("project"));
 }
 
 export async function savePostiesRecord(formData: FormData) {

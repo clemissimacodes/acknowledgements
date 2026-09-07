@@ -3813,3 +3813,366 @@ html:has(.clemi-map-shell) .site-anchor {
     animation: none;
   }
 }
+
+/* —— Clementine Intelligence Agency —— */
+
+html:has(.cia-page),
+html:has(.cia-page) body,
+html:has(.cia-page) .volume {
+  background: #e8e1cf;
+}
+
+html:has(.cia-page) .site-anchor {
+  color: #231f18;
+  background: #e8e1cf;
+}
+
+.cia-page {
+  --cia-ink: #231f18;
+  --cia-muted: #706858;
+  --cia-rule: rgba(35, 31, 24, 0.28);
+  --cia-paper: #f5f0e3;
+  min-height: 100dvh;
+  padding: var(--site-content-top) 6vw 10vh;
+  color: var(--cia-ink);
+  background:
+    linear-gradient(90deg, transparent 0 49.8%, rgba(72, 61, 42, 0.035) 50% 50.2%, transparent 50.2%),
+    #e8e1cf;
+}
+
+.cia-page h1,
+.cia-page h2,
+.cia-page p {
+  margin-top: 0;
+}
+
+.cia-classification,
+.cia-file-number,
+.cia-section-title,
+.cia-record-topline,
+.cia-stamp {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.cia-classification {
+  width: fit-content;
+  margin-bottom: 0.8rem;
+  padding: 0.32rem 0.5rem;
+  color: #f7f0dc;
+  font-size: 0.7rem;
+  background: #7c3028;
+  transform: rotate(-0.7deg);
+}
+
+.cia-file-number {
+  margin-bottom: 1.25rem;
+  color: var(--cia-muted);
+  font-size: 0.67rem;
+}
+
+.cia-hero,
+.cia-file-head {
+  max-width: 62rem;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border: 1px solid var(--cia-rule);
+  background: var(--cia-paper);
+  box-shadow: 0.7rem 0.8rem 0 rgba(71, 59, 38, 0.08);
+}
+
+.cia-hero h1,
+.cia-file-head h1 {
+  max-width: 12em;
+  margin-bottom: 1.25rem;
+  font-size: clamp(2.6rem, 7vw, 6.8rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 0.91;
+  text-wrap: balance;
+}
+
+.cia-file-head h1 {
+  max-width: 16em;
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
+}
+
+.cia-deck {
+  max-width: 38rem;
+  margin-bottom: 0;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  line-height: 1.55;
+}
+
+.cia-file-head nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.84rem;
+}
+
+.cia-directorates,
+.cia-docket {
+  max-width: 72rem;
+  margin-top: clamp(3rem, 7vw, 6rem);
+}
+
+.cia-section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 2px solid var(--cia-ink);
+  font-size: 0.7rem;
+}
+
+.cia-section-title h2 {
+  margin: 0;
+  font: inherit;
+}
+
+.cia-directorates ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--cia-rule);
+}
+
+.cia-directorates a {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: center;
+  min-height: 8rem;
+  padding: 1.2rem 0.6rem;
+  text-decoration: none;
+  border-top: 1px solid var(--cia-rule);
+}
+
+.cia-directorates a:hover,
+.cia-directorates a:focus-visible {
+  background: rgba(245, 240, 227, 0.6);
+}
+
+.cia-directorate-number,
+.cia-file-count {
+  color: var(--cia-muted);
+  font: 0.7rem/1.4 ui-monospace, "SFMono-Regular", Menlo, monospace;
+  text-transform: uppercase;
+}
+
+.cia-directorates strong,
+.cia-directorates small {
+  display: block;
+}
+
+.cia-directorates strong {
+  margin-bottom: 0.3rem;
+  font-size: clamp(1.35rem, 2.7vw, 2.2rem);
+  font-weight: 400;
+}
+
+.cia-directorates small {
+  max-width: 40rem;
+  color: var(--cia-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.cia-method-note,
+.cia-empty {
+  max-width: 34rem;
+  margin-top: 3rem;
+  padding: 1.4rem;
+  border: 1px dashed var(--cia-rule);
+  background: rgba(245, 240, 227, 0.45);
+}
+
+.cia-stamp {
+  width: fit-content;
+  margin-bottom: 0.8rem;
+  padding: 0.35rem 0.55rem;
+  color: #7c3028;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border: 2px solid #7c3028;
+  transform: rotate(-1.4deg);
+}
+
+.cia-method-note p:not(.cia-stamp),
+.cia-empty p:not(.cia-stamp) {
+  line-height: 1.55;
+}
+
+.cia-records {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.cia-record {
+  min-width: 0;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  overflow-wrap: anywhere;
+  border: 1px solid var(--cia-rule);
+  background: var(--cia-paper);
+  box-shadow: 0.35rem 0.45rem 0 rgba(71, 59, 38, 0.07);
+}
+
+.cia-record-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--cia-muted);
+  font-size: 0.62rem;
+}
+
+.cia-record h2 {
+  margin-bottom: 0.4rem;
+  font-size: clamp(1.45rem, 3vw, 2.15rem);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.cia-record time {
+  color: var(--cia-muted);
+  font: 0.7rem/1.4 ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+.cia-record > p {
+  margin: 1.15rem 0;
+  line-height: 1.55;
+}
+
+.cia-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1.2rem 0;
+  border-top: 1px solid var(--cia-rule);
+  border-left: 1px solid var(--cia-rule);
+}
+
+.cia-facts div {
+  padding: 0.65rem;
+  border-right: 1px solid var(--cia-rule);
+  border-bottom: 1px solid var(--cia-rule);
+}
+
+.cia-facts dt {
+  color: var(--cia-muted);
+  font: 0.58rem/1.3 ui-monospace, "SFMono-Regular", Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cia-facts dd {
+  margin: 0.2rem 0 0;
+}
+
+.cia-record footer {
+  padding-top: 1rem;
+  border-top: 1px dashed var(--cia-rule);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.cia-record footer p,
+.cia-record footer ul {
+  margin: 0 0 0.65rem;
+}
+
+.cia-record footer ul {
+  padding-left: 1.1rem;
+}
+
+.admin-cia-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.admin-cia-filters a {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  text-decoration: none;
+  border: 1px solid rgba(28, 35, 30, 0.22);
+  border-radius: 999px;
+}
+
+.admin-cia-source {
+  margin-top: 0.9rem !important;
+  padding-top: 0.7rem;
+  font-size: 0.76rem;
+  border-top: 1px dashed rgba(28, 35, 30, 0.2);
+}
+
+.admin-cia-card .admin-record-actions > form {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 12rem;
+}
+
+.admin-cia-rationale {
+  display: grid;
+  gap: 0.2rem;
+  color: rgba(28, 35, 30, 0.65);
+  font-size: 0.68rem;
+}
+
+.admin-cia-rationale input {
+  width: 100%;
+  padding: 0.35rem;
+  color: #1c231e;
+  background: #fff;
+  border: 1px solid rgba(28, 35, 30, 0.22);
+  border-radius: 0.25rem;
+}
+
+.admin-place-status.is-published {
+  color: #24563a;
+}
+
+.admin-place-status.is-withdrawn,
+.admin-place-status.is-corrected {
+  color: #7c3028;
+}
+
+@media (max-width: 767px) {
+  .cia-page {
+    padding: var(--site-content-top) 1.25rem
+      max(4rem, env(safe-area-inset-bottom));
+    background: #e8e1cf;
+  }
+
+  .cia-hero,
+  .cia-file-head {
+    padding: 1.3rem;
+    box-shadow: 0.35rem 0.45rem 0 rgba(71, 59, 38, 0.08);
+  }
+
+  .cia-directorates a {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    min-height: 7rem;
+  }
+
+  .cia-file-count {
+    grid-column: 2;
+  }
+
+  .cia-records {
+    grid-template-columns: 1fr;
+  }
+
+  .cia-record-topline {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .admin-cia-card .admin-record-actions > form {
+    width: 100%;
+  }
+}

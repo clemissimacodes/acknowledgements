@@ -13,6 +13,7 @@ const works = [
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Sunday Posties", href: "/sunday-posties" },
   { title: "Clemi Radar", href: "/radar" },
+  { title: "Clementine Intelligence Agency", href: "/cia" },
 ];
 
 export default function HomePage() {
