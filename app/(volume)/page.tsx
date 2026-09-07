@@ -3,7 +3,6 @@ import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
 
 const works = [
-  { title: "Clemi Store", href: "/shop" },
   {
     title: "Modeling",
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",

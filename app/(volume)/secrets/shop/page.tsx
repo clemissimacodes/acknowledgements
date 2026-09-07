@@ -37,7 +37,7 @@ export default async function StorePage() {
 
           return (
             <li className="store-card" key={product.id}>
-              <Link href={`/shop/${product.slug}`}>
+              <Link href={`/secrets/shop/${product.slug}`}>
                 <span className="store-card-number">
                   {String(index + 1).padStart(2, "0")}
                 </span>

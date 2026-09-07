@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { safeProtectedNext } from "@/lib/cia-gate";
 
 export function CiaUnlockForm() {
   const search = useSearchParams();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function showError() {
+    setError("why would u even try");
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -23,13 +32,13 @@ export function CiaUnlockForm() {
       });
 
       if (!response.ok) {
-        setError("why would u even try");
+        showError();
         return;
       }
 
       window.location.assign(safeProtectedNext(search.get("next")));
     } catch {
-      setError("why would u even try");
+      showError();
     } finally {
       setBusy(false);
     }
@@ -41,6 +50,7 @@ export function CiaUnlockForm() {
         Password
       </label>
       <input
+        ref={inputRef}
         id="cia-password"
         type="password"
         name="password"
@@ -48,15 +58,21 @@ export function CiaUnlockForm() {
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="current-password"
         autoFocus
+        placeholder="…"
+        aria-invalid={Boolean(error)}
+        aria-describedby="cia-unlock-feedback"
       />
       <button type="submit" disabled={busy}>
         open sesame
       </button>
-      {error ? (
-        <p className="cia-unlock-error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <p
+        id="cia-unlock-feedback"
+        className={error ? "cia-unlock-feedback cia-unlock-error" : "cia-unlock-feedback"}
+        role={error ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {busy ? "…" : error}
+      </p>
     </form>
   );
 }

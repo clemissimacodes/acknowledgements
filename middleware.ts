@@ -16,7 +16,9 @@ export default clerkMiddleware(async (auth, request) => {
   const isCia = pathname === "/cia" || pathname.startsWith("/cia/");
   const isSecretsUnlock =
     pathname === "/secrets/unlock" || pathname === "/cia/unlock";
-  const isPasswordProtected = isSecrets || isCia || isAcknowledgements;
+  const isStoreCheckout = pathname === "/api/shop/checkout";
+  const isPasswordProtected =
+    isSecrets || isCia || isAcknowledgements || isStoreCheckout;
 
   if (isAdmin) {
     const { userId } = await auth();

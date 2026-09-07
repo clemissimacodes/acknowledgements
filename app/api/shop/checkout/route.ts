@@ -46,8 +46,8 @@ export async function POST(request: Request) {
     const session = await stripeClient().checkout.sessions.create({
       mode: "payment",
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-      success_url: `${origin}/shop/reveal?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/shop/${product.slug}?cancelled=1`,
+      success_url: `${origin}/secrets/shop/reveal?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/secrets/shop/${product.slug}?cancelled=1`,
       client_reference_id: product.id,
       metadata: {
         productId: product.id,

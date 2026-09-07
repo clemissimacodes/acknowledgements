@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/shop/reveal",
+        source: "/secrets/shop/reveal",
         headers: [
           {
             key: "Cache-Control",
@@ -64,6 +64,11 @@ const nextConfig: NextConfig = {
       { source: "/poetry/admin", destination: "/poetry", permanent: false },
       { source: "/radar", destination: "/secrets/radar", permanent: true },
       { source: "/cia", destination: "/secrets", permanent: true },
+      {
+        source: "/shop/:path*",
+        destination: "/secrets/shop/:path*",
+        permanent: true,
+      },
       {
         source: "/cia/:path*",
         destination: "/secrets/:path*",

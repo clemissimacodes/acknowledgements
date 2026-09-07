@@ -46,7 +46,7 @@ export default async function StoreProductPage({
   return (
     <main className="store-page store-product-page">
       <header className="store-header">
-        <Link className="store-wordmark" href="/shop">
+        <Link className="store-wordmark" href="/secrets/shop">
           CLEMI STORE
         </Link>
         <p className="store-test-label">STRIPE TEST STORE — NO REAL CHARGES</p>

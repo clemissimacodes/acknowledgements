@@ -392,6 +392,7 @@ input {
   );
   aspect-ratio: 1080 / 1358;
   overflow: hidden;
+  background: #f6f1e8;
   isolation: isolate;
 }
 
@@ -4006,10 +4007,14 @@ html:has(.cia-page) .site-anchor {
   opacity: 0.65;
 }
 
-.cia-unlock-error {
+.cia-unlock-feedback {
   margin: 0.9rem 0 0;
-  color: #7c3028;
+  min-height: 1em;
   font-size: 0.82rem;
+}
+
+.cia-unlock-error {
+  color: #7c3028;
 }
 
 .cia-page h1,

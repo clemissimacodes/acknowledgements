@@ -96,6 +96,16 @@ export default async function CiaPage() {
               <span className="cia-file-count">protected</span>
             </Link>
           </li>
+          <li>
+            <Link href="/secrets/shop">
+              <span className="cia-directorate-number">07</span>
+              <span>
+                <strong>Clemi Store</strong>
+                <small>One-of-one personal secrets available for purchase.</small>
+              </span>
+              <span className="cia-file-count">private shop</span>
+            </Link>
+          </li>
         </ol>
       </section>
 
