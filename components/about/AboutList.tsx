@@ -15,12 +15,12 @@ export type AboutNote = {
 type Point = { x: number; y: number };
 
 const INITIAL_CENTERS: Point[] = [
-  { x: 0.37, y: 0.5 },
-  { x: 0.384, y: 0.313 },
+  { x: 0.375, y: 0.32 },
+  { x: 0.25, y: 0.206 },
   { x: 0.792, y: 0.28 },
-  { x: 0.522, y: 0.454 },
-  { x: 0.61, y: 0.623 },
-  { x: 0.219, y: 0.729 },
+  { x: 0.509, y: 0.456 },
+  { x: 0.588, y: 0.643 },
+  { x: 0.218, y: 0.721 },
 ];
 
 function focusBackgroundPosition(point: Point) {
@@ -170,7 +170,8 @@ export function AboutList({
           trackerCanvas.width,
           trackerCanvas.height,
         ).data;
-        const next = centersRef.current.map((point) =>
+        const previous = centersRef.current;
+        const tracked = previous.map((point) =>
           trackCenter(
             pixels,
             trackerCanvas.width,
@@ -178,6 +179,14 @@ export function AboutList({
             point,
           ),
         );
+        const next = tracked.map((point, index) => {
+          const overlapsAnotherFact = tracked.some(
+            (other, otherIndex) =>
+              otherIndex !== index &&
+              Math.hypot(point.x - other.x, point.y - other.y) < 0.075,
+          );
+          return overlapsAnotherFact ? previous[index] ?? point : point;
+        });
         centersRef.current = next;
         setCenters(next);
       }
@@ -254,10 +263,13 @@ export function AboutList({
           disablePictureInPicture
         >
           <source
-            src="/about/elegant-minimal-circles.webm"
+            src="/about/elegant-minimal-circles.webm?v=beige2"
             type="video/webm"
           />
-          <source src="/about/elegant-minimal-circles.m4v" type="video/mp4" />
+          <source
+            src="/about/elegant-minimal-circles.m4v?v=beige2"
+            type="video/mp4"
+          />
         </video>
         <canvas ref={trackerCanvasRef} hidden />
         {notes.map((note, index) => (
