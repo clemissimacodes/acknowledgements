@@ -392,8 +392,7 @@ input {
   );
   aspect-ratio: 1080 / 1358;
   overflow: hidden;
-  background: #f6f1e8;
-  isolation: isolate;
+  background: var(--paper);
 }
 
 .about-orbit-stage video {
