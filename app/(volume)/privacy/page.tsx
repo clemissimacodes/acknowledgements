@@ -40,9 +40,9 @@ export default function PrivacyPage() {
           The tracker reads location fields from Clementine’s Google Calendar
           with read-only permission. An event happening now may publish its city
           and country. Past locations become private drafts and appear on the
-          public map only after Clementine approves them. Event titles,
-          attendees, descriptions, event IDs, and exact addresses are not
-          stored or published.
+          password-protected map only after Clementine approves them. Event
+          titles, attendees, descriptions, event IDs, and exact addresses are
+          not stored or published.
         </p>
       </section>
       <section id="secrets-records">

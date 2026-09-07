@@ -47,9 +47,10 @@ export default async function CiaPage() {
         <p className="cia-file-number">Headquarters memorandum · public copy</p>
         <h1>Small facts, thoroughly peeled.</h1>
         <p className="cia-deck">
-          Four deliberately modest investigations. Every public record has a
-          source, retrieval date, confidence label, and correction path. Robots
-          may notice changes; only Clementine may publish them.
+          In-progress projects and deliberately modest investigations. Every
+          public record has a source, retrieval date, confidence label, and
+          correction path. Robots may notice changes; only Clementine may
+          publish them.
         </p>
       </header>
 
@@ -74,8 +75,20 @@ export default async function CiaPage() {
             </li>
           ))}
           <li>
-            <Link href="/acknowledgements">
+            <Link href="/secrets/radar">
               <span className="cia-directorate-number">05</span>
+              <span>
+                <strong>Clemi Radar</strong>
+                <small>
+                  City-level signals and Clemi’s approved travel constellation.
+                </small>
+              </span>
+              <span className="cia-file-count">in progress</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/acknowledgements">
+              <span className="cia-directorate-number">06</span>
               <span>
                 <strong>Acknowledgements</strong>
                 <small>Private notes and messages kept within Secrets.</small>
