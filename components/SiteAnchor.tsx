@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 export function SiteAnchor() {
   const pathname = usePathname();
-  const href = pathname === "/" ? "/about" : "/";
+  const href = pathname === "/" ? "/teeny-tiny-things" : "/";
 
   return (
     <Link className="site-anchor" href={href}>

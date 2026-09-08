@@ -11,6 +11,7 @@ const works = [
   { title: "Poetry", href: "/poetry" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Sunday Posties", href: "/sunday-posties" },
+  { title: "teeny tiny things about me", href: "/teeny-tiny-things" },
   { title: "Secrets", href: "/secrets" },
 ];
 
