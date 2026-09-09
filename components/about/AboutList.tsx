@@ -36,10 +36,10 @@ function focusBackgroundPosition(point: Point) {
   return `${horizontal}% ${vertical}%`;
 }
 
-function coverPosition(point: Point, container: Size) {
+function containPosition(point: Point, container: Size) {
   if (!container.width || !container.height) return point;
 
-  const scale = Math.max(
+  const scale = Math.min(
     container.width / VIDEO_SIZE.width,
     container.height / VIDEO_SIZE.height,
   );
@@ -48,10 +48,10 @@ function coverPosition(point: Point, container: Size) {
 
   return {
     x:
-      (point.x * renderedWidth - (renderedWidth - container.width) / 2) /
+      (point.x * renderedWidth + (container.width - renderedWidth) / 2) /
       container.width,
     y:
-      (point.y * renderedHeight - (renderedHeight - container.height) / 2) /
+      (point.y * renderedHeight + (container.height - renderedHeight) / 2) /
       container.height,
   };
 }
@@ -301,11 +301,11 @@ export function AboutList({
           disablePictureInPicture
         >
           <source
-            src="/about/elegant-minimal-circles.webm?v=beige3"
+            src="/about/elegant-minimal-circles.webm?v=beige4-hd"
             type="video/webm"
           />
           <source
-            src="/about/elegant-minimal-circles.m4v?v=beige3"
+            src="/about/elegant-minimal-circles.m4v?v=beige4-hd"
             type="video/mp4"
           />
         </video>
@@ -313,7 +313,7 @@ export function AboutList({
         {notes.map((note, index) => {
           const sourceCenter =
             centers[index] ?? INITIAL_CENTERS[index] ?? { x: 0.5, y: 0.5 };
-          const position = coverPosition(sourceCenter, stageSize);
+          const position = containPosition(sourceCenter, stageSize);
 
           return (
             <button
