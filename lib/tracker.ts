@@ -45,6 +45,9 @@ type GeocodedCity = {
 
 const TOKEN_RATE_LIMIT = 12;
 const TOKEN_RATE_WINDOW_MINUTES = 60;
+const CLEMI_LOCATION_ENDPOINT =
+  "https://sam-get-location.nisala.workers.dev/";
+const CLEMI_LOCATION_KEY = "clem_loc";
 
 function databaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
@@ -238,7 +241,8 @@ export async function getPublicTrackerData() {
   try {
     await ensureTrackerTables();
     const sql = db();
-    const [current, places] = await Promise.all([
+    const [remoteCurrent, current, places] = await Promise.all([
+      getRemoteCurrentLocation(),
       sql`
         SELECT city, country, latitude, longitude, updated_at, expires_at
         FROM clemi_current_location
@@ -253,11 +257,67 @@ export async function getPublicTrackerData() {
       `,
     ]);
     return {
-      current: current[0] ? mapCurrent(current[0]) : null,
+      current: remoteCurrent ?? (current[0] ? mapCurrent(current[0]) : null),
       places: places.map(mapPlace),
     };
   } catch {
     return { current: null, places: [] };
+  }
+}
+
+async function getRemoteCurrentLocation(): Promise<CurrentLocation | null> {
+  const password = process.env.CLEMI_LOCATION_READ_PASSWORD?.trim();
+  if (!password) return null;
+
+  try {
+    const query = new URLSearchParams({
+      ppassword: password,
+      key: CLEMI_LOCATION_KEY,
+    });
+    const response = await fetch(`${CLEMI_LOCATION_ENDPOINT}?${query}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) return null;
+
+    const raw = await response.text();
+    const latitude = Number(raw.match(/Latitude:\s*(-?\d+(?:\.\d+)?)/i)?.[1]);
+    const longitude = Number(
+      raw.match(/Longitude:\s*(-?\d+(?:\.\d+)?)/i)?.[1],
+    );
+    if (
+      !Number.isFinite(latitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      !Number.isFinite(longitude) ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return null;
+    }
+
+    const addressLines = raw
+      .replace(/<\/?br\s*\/?>/gi, "\n")
+      .split(/\r?\n/)
+      .map((line) => cleanLine(line, 120))
+      .filter(Boolean);
+    const city = (addressLines[1] ?? "Unknown")
+      .replace(/,\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?$/i, "")
+      .replace(/\s+[A-Z]{2}\s+\d{5}(?:-\d{4})?$/i, "");
+    const country = addressLines[2] ?? "Unknown";
+    const updatedAt = new Date();
+
+    return {
+      city,
+      country,
+      // Keep the public marker at city-level precision.
+      latitude: Math.round(latitude * 10) / 10,
+      longitude: Math.round(longitude * 10) / 10,
+      updatedAt: updatedAt.toISOString(),
+      expiresAt: new Date(updatedAt.getTime() + 3 * 60 * 60 * 1000).toISOString(),
+    };
+  } catch {
+    return null;
   }
 }
 
