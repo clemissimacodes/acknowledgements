@@ -32,20 +32,16 @@ const adoredPoems = [
 ] as const;
 
 export const metadata = {
-  title: "Poetry",
+  title: "old poetry",
 };
 
 export default function PoetryIndexPage() {
   return (
     <main className="poetry-page">
       <div className="poetry-inner">
-        <h1>Poetry</h1>
+        <h1>old poetry</h1>
         <div className="poetry-columns">
-          <section
-            className="poetry-written"
-            aria-labelledby="poetry-written-title"
-          >
-            <h2 id="poetry-written-title">OLDER POEMS I WROTE</h2>
+          <section className="poetry-written" aria-label="Poems I wrote">
             <p className="poetry-lede">
               To read me is to know me. Read me with great care!
             </p>
