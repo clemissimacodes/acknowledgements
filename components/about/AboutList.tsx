@@ -326,8 +326,15 @@ export function AboutList({
             point,
           ),
         );
-        const next = tracked.map((point, index) => {
-          const overlapsAnotherFact = tracked.some(
+        const smoothed = tracked.map((point, index) => {
+          const prior = previous[index] ?? point;
+          return {
+            x: prior.x + (point.x - prior.x) * 0.16,
+            y: prior.y + (point.y - prior.y) * 0.16,
+          };
+        });
+        const next = smoothed.map((point, index) => {
+          const overlapsAnotherFact = smoothed.some(
             (other, otherIndex) =>
               otherIndex !== index &&
               Math.hypot(point.x - other.x, point.y - other.y) < 0.075,
@@ -350,20 +357,13 @@ export function AboutList({
       }
     }
 
-    function resetAtLoopStart() {
-      if (videoElement.currentTime < 0.15) {
-        centersRef.current = INITIAL_CENTERS;
-      }
-    }
-
+    videoElement.playbackRate = 0.55;
     handleMotionPreference();
     reducedMotion.addEventListener("change", handleMotionPreference);
-    videoElement.addEventListener("seeked", resetAtLoopStart);
     animationFrame = window.requestAnimationFrame(followCircles);
     return () => {
       window.cancelAnimationFrame(animationFrame);
       reducedMotion.removeEventListener("change", handleMotionPreference);
-      videoElement.removeEventListener("seeked", resetAtLoopStart);
     };
   }, [active]);
 

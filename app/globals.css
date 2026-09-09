@@ -392,7 +392,11 @@ input {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--paper);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(244, 178, 119, 0.2), transparent 32%),
+    radial-gradient(circle at 84% 24%, rgba(174, 205, 218, 0.24), transparent 34%),
+    radial-gradient(circle at 65% 86%, rgba(246, 196, 143, 0.18), transparent 31%),
+    linear-gradient(145deg, #fbf5ec 0%, #f8eee2 48%, #edf4f4 100%);
 }
 
 .about-orbit-stage video {
@@ -400,7 +404,9 @@ input {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  mix-blend-mode: darken;
+  opacity: 0.72;
+  filter: saturate(0.5) brightness(1.18) contrast(0.76) sepia(0.08);
+  mix-blend-mode: multiply;
   pointer-events: none;
   user-select: none;
 }
@@ -423,6 +429,8 @@ input {
   cursor: url("/loupe.svg") 13 13, zoom-in;
   transform: translate(-50%, -50%);
   transition:
+    left 180ms ease-out,
+    top 180ms ease-out,
     width 160ms ease,
     background 160ms ease,
     outline-width 160ms ease;
@@ -472,11 +480,11 @@ input {
 
 .about-generated-watercolor {
   inset: 0;
-  opacity: 0.68;
+  opacity: 0.58;
   background:
-    radial-gradient(circle at 38% 42%, rgba(230, 107, 102, 0.48), transparent 42%),
-    radial-gradient(circle at 62% 55%, rgba(238, 148, 104, 0.38), transparent 50%),
-    radial-gradient(circle at 48% 48%, rgba(213, 88, 119, 0.24), transparent 68%);
+    radial-gradient(circle at 38% 42%, rgba(242, 158, 91, 0.42), transparent 42%),
+    radial-gradient(circle at 62% 55%, rgba(159, 199, 217, 0.4), transparent 52%),
+    radial-gradient(circle at 48% 48%, rgba(247, 205, 157, 0.26), transparent 68%);
   filter: blur(0.8px);
   mix-blend-mode: multiply;
   transform: rotate(-7deg);
@@ -484,14 +492,14 @@ input {
 
 .about-generated-watercolor::before {
   inset: 8% 3% 2% 10%;
-  background: rgba(241, 163, 129, 0.2);
+  background: rgba(245, 184, 124, 0.2);
   filter: blur(4px);
   transform: rotate(17deg);
 }
 
 .about-generated-watercolor::after {
   inset: 2% 11% 10% 1%;
-  border: 1px solid rgba(184, 96, 107, 0.16);
+  border: 1px solid rgba(125, 173, 194, 0.18);
   filter: blur(1.5px);
   transform: rotate(-13deg);
 }
@@ -503,7 +511,8 @@ input {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  opacity: 0.72;
+  opacity: 0.5;
+  filter: saturate(0.52) brightness(1.2) contrast(0.78) sepia(0.08);
   mix-blend-mode: multiply;
   pointer-events: none;
 }
