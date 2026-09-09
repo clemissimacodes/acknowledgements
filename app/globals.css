@@ -496,6 +496,84 @@ input {
   transform: rotate(-13deg);
 }
 
+.about-decorative-watercolors {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.about-decorative-watercolor,
+.about-decorative-watercolor::before,
+.about-decorative-watercolor::after {
+  position: absolute;
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 43% 57% 51% 49% / 58% 45% 55% 42%;
+  content: "";
+}
+
+.about-decorative-watercolor {
+  translate: -50% -50%;
+  opacity: 0.42;
+  filter: blur(1.2px);
+  mix-blend-mode: multiply;
+  animation: about-decorative-drift 13s ease-in-out infinite alternate;
+}
+
+.about-decorative-watercolor::before {
+  inset: 7% -4% -2% 8%;
+  background: inherit;
+  opacity: 0.5;
+  filter: blur(5px);
+  transform: rotate(21deg);
+}
+
+.about-decorative-watercolor::after {
+  inset: 16% 11% 9% 4%;
+  background: inherit;
+  opacity: 0.34;
+  filter: blur(8px);
+  transform: rotate(-16deg);
+}
+
+.about-decorative-watercolor--rose {
+  background:
+    radial-gradient(circle at 42% 43%, rgba(226, 78, 105, 0.42), transparent 39%),
+    radial-gradient(circle at 58% 55%, rgba(244, 167, 187, 0.5), transparent 66%);
+}
+
+.about-decorative-watercolor--apricot {
+  background:
+    radial-gradient(circle at 48% 45%, rgba(241, 154, 68, 0.42), transparent 38%),
+    radial-gradient(circle at 56% 58%, rgba(250, 202, 122, 0.48), transparent 67%);
+}
+
+.about-decorative-watercolor--blue {
+  background:
+    radial-gradient(circle at 47% 45%, rgba(25, 98, 165, 0.4), transparent 35%),
+    radial-gradient(circle at 57% 57%, rgba(100, 175, 198, 0.44), transparent 66%);
+}
+
+.about-decorative-watercolor--violet {
+  background:
+    radial-gradient(circle at 45% 44%, rgba(101, 65, 154, 0.36), transparent 36%),
+    radial-gradient(circle at 58% 58%, rgba(204, 139, 190, 0.44), transparent 68%);
+}
+
+@keyframes about-decorative-drift {
+  0% {
+    transform: translate3d(-0.6vw, 0.5vh, 0) scale(0.96);
+  }
+  55% {
+    transform: translate3d(0.8vw, -0.7vh, 0) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-0.2vw, 0.9vh, 0) scale(0.99);
+  }
+}
+
 @keyframes about-watercolor-drift {
   0% {
     transform: translate(-50%, -50%) translate3d(-1.1vw, 0.7vh, 0) rotate(-1deg);

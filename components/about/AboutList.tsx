@@ -33,6 +33,16 @@ const GENERATED_CENTERS: Point[] = [
   { x: 0.46, y: 0.82 },
 ];
 
+const DECORATIVE_WATERCOLORS = [
+  { x: 0.09, y: 0.25, size: 12, palette: "rose", delay: -1.4 },
+  { x: 0.91, y: 0.2, size: 15, palette: "apricot", delay: -4.8 },
+  { x: 0.08, y: 0.58, size: 10, palette: "blue", delay: -7.2 },
+  { x: 0.91, y: 0.53, size: 11, palette: "violet", delay: -2.9 },
+  { x: 0.13, y: 0.86, size: 14, palette: "apricot", delay: -6.1 },
+  { x: 0.42, y: 0.9, size: 9, palette: "rose", delay: -3.7 },
+  { x: 0.7, y: 0.91, size: 13, palette: "blue", delay: -8.4 },
+] as const;
+
 function focusBackgroundPosition(point: Point) {
   const heightScale = 3.9;
   const widthScale = heightScale * (1080 / 1358);
@@ -319,6 +329,21 @@ export function AboutList({
           />
         </video>
         <canvas ref={trackerCanvasRef} hidden />
+        <div className="about-decorative-watercolors" aria-hidden="true">
+          {DECORATIVE_WATERCOLORS.map((watercolor, index) => (
+            <span
+              className={`about-decorative-watercolor about-decorative-watercolor--${watercolor.palette}`}
+              key={`${watercolor.x}-${watercolor.y}`}
+              style={{
+                left: `${watercolor.x * 100}%`,
+                top: `${watercolor.y * 100}%`,
+                width: `clamp(5rem, ${watercolor.size}vw, 11rem)`,
+                animationDelay: `${watercolor.delay}s`,
+                rotate: `${(index % 2 ? 1 : -1) * (4 + index)}deg`,
+              }}
+            />
+          ))}
+        </div>
         {notes.slice(0, INITIAL_CENTERS.length).map((note, index) => {
           const sourceCenter =
             centers[index] ?? INITIAL_CENTERS[index] ?? { x: 0.5, y: 0.5 };
