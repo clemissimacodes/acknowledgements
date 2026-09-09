@@ -300,28 +300,6 @@ export function AboutList({
 
       <div className="about-orbit-stage" ref={stageRef}>
         <video
-          className="about-orbit-backdrop"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          disablePictureInPicture
-          onLoadedMetadata={(event) => {
-            event.currentTarget.playbackRate = 0.55;
-          }}
-        >
-          <source
-            src="/about/elegant-minimal-circles.webm?v=beige4-hd"
-            type="video/webm"
-          />
-          <source
-            src="/about/elegant-minimal-circles.m4v?v=beige4-hd"
-            type="video/mp4"
-          />
-        </video>
-        <video
           className="about-orbit-art"
           ref={videoRef}
           autoPlay
