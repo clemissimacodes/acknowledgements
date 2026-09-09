@@ -76,6 +76,11 @@ const nextConfig: NextConfig = {
       { source: "/foreword", destination: "/", permanent: true },
       { source: "/poetry/admin", destination: "/poetry", permanent: false },
       { source: "/radar", destination: "/secrets/radar", permanent: true },
+      {
+        source: "/sunday-posties",
+        destination: "/secrets/sunday-posties",
+        permanent: true,
+      },
       { source: "/cia", destination: "/secrets", permanent: true },
       {
         source: "/shop/:path*",

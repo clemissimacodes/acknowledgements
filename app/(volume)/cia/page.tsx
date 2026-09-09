@@ -106,6 +106,16 @@ export default async function CiaPage() {
               <span className="cia-file-count">private shop</span>
             </Link>
           </li>
+          <li>
+            <Link href="/secrets/sunday-posties">
+              <span className="cia-directorate-number">08</span>
+              <span>
+                <strong>Sunday Posties</strong>
+                <small>Doodles and caboodles mailed to verified friendlies.</small>
+              </span>
+              <span className="cia-file-count">in progress</span>
+            </Link>
+          </li>
         </ol>
       </section>
 

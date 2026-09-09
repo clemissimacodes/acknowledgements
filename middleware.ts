@@ -17,8 +17,13 @@ export default clerkMiddleware(async (auth, request) => {
   const isSecretsUnlock =
     pathname === "/secrets/unlock" || pathname === "/cia/unlock";
   const isStoreCheckout = pathname === "/api/shop/checkout";
+  const isPostiesSubmission = pathname === "/api/sunday-posties";
   const isPasswordProtected =
-    isSecrets || isCia || isAcknowledgements || isStoreCheckout;
+    isSecrets ||
+    isCia ||
+    isAcknowledgements ||
+    isStoreCheckout ||
+    isPostiesSubmission;
 
   if (isAdmin) {
     const { userId } = await auth();
@@ -36,6 +41,10 @@ export default clerkMiddleware(async (auth, request) => {
       )
     ) {
       return NextResponse.next();
+    }
+
+    if (isPostiesSubmission) {
+      return NextResponse.json({ error: "Secrets is locked." }, { status: 401 });
     }
 
     const unlock = new URL("/secrets/unlock", request.url);

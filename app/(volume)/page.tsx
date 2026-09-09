@@ -3,6 +3,7 @@ import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
 
 const works = [
+  { title: "teeny tiny things about me", href: "/teeny-tiny-things" },
   {
     title: "Modeling",
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
@@ -10,8 +11,6 @@ const works = [
   },
   { title: "Poetry", href: "/poetry" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
-  { title: "Sunday Posties", href: "/sunday-posties" },
-  { title: "teeny tiny things about me", href: "/teeny-tiny-things" },
   { title: "Secrets", href: "/secrets" },
 ];
 
@@ -22,9 +21,9 @@ export default function HomePage() {
       <Clemi />
       <p className="index-bio">
         I am a being of high happiness. Frank and Elaine hatched me into the
-        world some time ago and I now frolic across great green parks in San
-        Francisco and New York. I maintain my cardiovascular homeostasis from my
-        eternal pursuit of poetry, play, and friendship with the world.
+        world some time ago and I now frolic across the great greens of San
+        Francisco. I maintain my cardiovascular homeostasis from my eternal
+        pursuit of poetry, play, and friendship with the world.
       </p>
       <nav className="toc" aria-label="Contents">
         <h2>Contents</h2>

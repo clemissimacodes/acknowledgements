@@ -6,11 +6,11 @@ export const metadata = {
 
 const notes: AboutNote[] = [
   {
-    text: "My lucky numbers are those that sum. My birthday is March 25: 3 + 2 = 5.",
+    text: "My lucky numbers are those that sum, in any order (e.g. 325 or 211).",
     label: "3 + 2 = 5",
   },
   {
-    text: "My best friends are William and Daniel.",
+    text: "My best friends are my brothers, William and Daniel.",
     label: "William + Daniel",
   },
   {
@@ -26,12 +26,12 @@ const notes: AboutNote[] = [
     },
   },
   {
-    text: "Dekopons are the best citrus variety and this is an objective truth.",
+    text: "Dekopons are the best citrus variety. God-tier juiciness, I'm telling you.",
     label: "dekopon",
     href: "https://www.thrillist.com/eat/nation/what-is-sumo-citrus-dekopon-mandarins",
   },
   {
-    text: "I spent my very first paycheck on a $2,000 teacup yorkie from Craigslist. Kuzma unfortunately was picked up by a coyote, and I am still waiting to heal from this wound.",
+    text: "I spent my first paycheck on a $2,000 teacup yorkie from Craigslist and raised him in my college dorm. Unfortunately, Kuzma was picked up by a coyote.",
     label: "Kuzma",
   },
 ];
