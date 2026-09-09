@@ -30,6 +30,10 @@ const notes: AboutNote[] = [
     text: "I spent my first paycheck on a $2,000 teacup yorkie from Craigslist and raised him in my college dorm. Unfortunately, Kuzma was picked up by a coyote.",
     label: "Kuzma",
   },
+  {
+    text: "i defer anger. when another does a wrongdoing toward me, the inherent burden of that wrongdoing is on their shoulders. if i anger, that burden now falls to my shoulders.",
+    label: "deferred anger",
+  },
 ];
 
 export default function AboutPage() {

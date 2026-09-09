@@ -24,6 +24,7 @@ const INITIAL_CENTERS: Point[] = [
   { x: 0.509, y: 0.456 },
   { x: 0.588, y: 0.643 },
   { x: 0.218, y: 0.721 },
+  { x: 0.78, y: 0.72 },
 ];
 
 function focusBackgroundPosition(point: Point) {
@@ -284,10 +285,9 @@ export function AboutList({
 
   return (
     <section className="about-orbit" aria-labelledby="about-orbit-title">
-      <div className="about-orbit-heading">
-        <h1 id="about-orbit-title">{title}</h1>
-        <p>select a moving thing to examine it</p>
-      </div>
+      <h1 className="visually-hidden" id="about-orbit-title">
+        {title}
+      </h1>
 
       <div className="about-orbit-stage" ref={stageRef}>
         <video
