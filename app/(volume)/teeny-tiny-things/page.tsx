@@ -1,7 +1,7 @@
 import { AboutList, type AboutNote } from "@/components/about/AboutList";
 
 export const metadata = {
-  title: "teeny tiny things about me",
+  title: "Teeny Tiny Things",
 };
 
 const notes: AboutNote[] = [
@@ -39,7 +39,7 @@ const notes: AboutNote[] = [
 export default function AboutPage() {
   return (
     <main className="about-page">
-      <AboutList title="teeny tiny things about me" notes={notes} />
+      <AboutList title="Teeny Tiny Things" notes={notes} />
     </main>
   );
 }

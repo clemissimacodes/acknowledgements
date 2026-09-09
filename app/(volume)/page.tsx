@@ -3,7 +3,7 @@ import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
 
 const works = [
-  { title: "teeny tiny things about me", href: "/teeny-tiny-things" },
+  { title: "Teeny Tiny Things", href: "/teeny-tiny-things" },
   {
     title: "Modeling",
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
