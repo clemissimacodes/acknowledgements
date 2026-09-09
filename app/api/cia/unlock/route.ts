@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import {
   CIA_COOKIE,
-  CIA_COOKIE_VALUE,
-  LEGACY_CIA_COOKIE,
+  OLD_CIA_COOKIES,
+  createCiaCookieValue,
+  passwordsMatch,
 } from "@/lib/cia-gate";
 
 export async function POST(request: Request) {
@@ -20,25 +21,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const expectedPassword = process.env.CIA_PASSWORD?.trim() || "mmmm";
-  if (password.trim() !== expectedPassword) {
+  const expectedPassword = process.env.CIA_PASSWORD?.trim();
+  if (!expectedPassword) {
+    return NextResponse.json(
+      { error: "Secrets access is not configured." },
+      {
+        status: 503,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
+
+  if (!(await passwordsMatch(password.trim(), expectedPassword))) {
     return NextResponse.json({ error: "Wrong password." }, { status: 401 });
   }
 
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(CIA_COOKIE, CIA_COOKIE_VALUE, {
+  const response = NextResponse.json(
+    { ok: true },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+  response.cookies.set(CIA_COOKIE, await createCiaCookieValue(expectedPassword), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 30,
   });
-  response.cookies.set(LEGACY_CIA_COOKIE, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 0,
-  });
+  for (const oldCookie of OLD_CIA_COOKIES) {
+    response.cookies.set(oldCookie, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 0,
+    });
+  }
   return response;
 }

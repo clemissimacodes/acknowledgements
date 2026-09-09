@@ -1,9 +1,42 @@
-export const CIA_COOKIE = "cia_ok_v2";
-export const CIA_COOKIE_VALUE = "cleared_v2";
-export const LEGACY_CIA_COOKIE = "cia_ok";
+export const CIA_COOKIE = "cia_ok_v3";
+export const OLD_CIA_COOKIES = ["cia_ok", "cia_ok_v2"] as const;
 
-export function hasCiaCookie(value: string | undefined): boolean {
-  return value === CIA_COOKIE_VALUE;
+async function digest(value: string) {
+  const bytes = new TextEncoder().encode(`clemissima-secrets-v3:${value}`);
+  const hash = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hash), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+function constantTimeEqual(left: string, right: string) {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+  return difference === 0;
+}
+
+export async function createCiaCookieValue(password: string) {
+  return `v3.${await digest(password)}`;
+}
+
+export async function hasCiaCookie(
+  value: string | undefined,
+  password: string | undefined,
+) {
+  if (!value || !password) return false;
+  const expected = await createCiaCookieValue(password);
+  return constantTimeEqual(value, expected);
+}
+
+export async function passwordsMatch(provided: string, expected: string) {
+  const [providedDigest, expectedDigest] = await Promise.all([
+    digest(provided),
+    digest(expected),
+  ]);
+  return constantTimeEqual(providedDigest, expectedDigest);
 }
 
 export function safeProtectedNext(next: string | null): string {

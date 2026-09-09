@@ -29,7 +29,12 @@ export default clerkMiddleware(async (auth, request) => {
   }
 
   if (isPasswordProtected && !isSecretsUnlock) {
-    if (hasCiaCookie(request.cookies.get(CIA_COOKIE)?.value)) {
+    if (
+      await hasCiaCookie(
+        request.cookies.get(CIA_COOKIE)?.value,
+        process.env.CIA_PASSWORD?.trim(),
+      )
+    ) {
       return NextResponse.next();
     }
 
