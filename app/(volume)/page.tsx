@@ -9,7 +9,7 @@ const works = [
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
     external: true,
   },
-  { title: "old poetry", href: "/poetry" },
+  { title: "Poetry", href: "/poetry" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Secrets", href: "/secrets" },
 ];

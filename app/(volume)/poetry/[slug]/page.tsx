@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const poem = getPoem((await params).slug);
-  return { title: poem?.title ?? "old poetry" };
+  return { title: poem?.title ?? "Poetry" };
 }
 
 export default async function PoemPage({
