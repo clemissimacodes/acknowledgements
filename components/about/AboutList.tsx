@@ -13,6 +13,9 @@ export type AboutNote = {
 };
 
 type Point = { x: number; y: number };
+type Size = { width: number; height: number };
+
+const VIDEO_SIZE = { width: 1080, height: 1358 };
 
 const INITIAL_CENTERS: Point[] = [
   { x: 0.375, y: 0.32 },
@@ -31,6 +34,26 @@ function focusBackgroundPosition(point: Point) {
   const vertical =
     ((0.5 - point.y * heightScale) / (1 - heightScale)) * 100;
   return `${horizontal}% ${vertical}%`;
+}
+
+function coverPosition(point: Point, container: Size) {
+  if (!container.width || !container.height) return point;
+
+  const scale = Math.max(
+    container.width / VIDEO_SIZE.width,
+    container.height / VIDEO_SIZE.height,
+  );
+  const renderedWidth = VIDEO_SIZE.width * scale;
+  const renderedHeight = VIDEO_SIZE.height * scale;
+
+  return {
+    x:
+      (point.x * renderedWidth - (renderedWidth - container.width) / 2) /
+      container.width,
+    y:
+      (point.y * renderedHeight - (renderedHeight - container.height) / 2) /
+      container.height,
+  };
 }
 
 function trackCenter(
@@ -111,13 +134,28 @@ export function AboutList({
   notes: AboutNote[];
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const trackerCanvasRef = useRef<HTMLCanvasElement>(null);
   const [centers, setCenters] = useState<Point[]>(INITIAL_CENTERS);
+  const [stageSize, setStageSize] = useState<Size>({ width: 0, height: 0 });
   const centersRef = useRef<Point[]>(INITIAL_CENTERS);
   const [active, setActive] = useState<number | null>(null);
   const [snapshot, setSnapshot] = useState("");
   const activeNote = active === null ? null : notes[active];
   const activeCenter = centers[active ?? 0] ?? { x: 0.5, y: 0.5 };
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const updateSize = () => {
+      setStageSize({ width: stage.clientWidth, height: stage.clientHeight });
+    };
+    const observer = new ResizeObserver(updateSize);
+    updateSize();
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     function closeOnEscape(event: KeyboardEvent) {
@@ -251,7 +289,7 @@ export function AboutList({
         <p>select a moving thing to examine it</p>
       </div>
 
-      <div className="about-orbit-stage">
+      <div className="about-orbit-stage" ref={stageRef}>
         <video
           ref={videoRef}
           autoPlay
@@ -272,22 +310,28 @@ export function AboutList({
           />
         </video>
         <canvas ref={trackerCanvasRef} hidden />
-        {notes.map((note, index) => (
-          <button
-            key={note.text}
-            className="about-orbit-target"
-            type="button"
-            style={{
-              left: `${(centers[index]?.x ?? INITIAL_CENTERS[index]?.x ?? 0.5) * 100}%`,
-              top: `${(centers[index]?.y ?? INITIAL_CENTERS[index]?.y ?? 0.5) * 100}%`,
-            }}
-            onClick={() => openNote(index)}
-            aria-label={`Magnify: ${note.text}`}
-          >
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <small>{note.label}</small>
-          </button>
-        ))}
+        {notes.map((note, index) => {
+          const sourceCenter =
+            centers[index] ?? INITIAL_CENTERS[index] ?? { x: 0.5, y: 0.5 };
+          const position = coverPosition(sourceCenter, stageSize);
+
+          return (
+            <button
+              key={note.text}
+              className="about-orbit-target"
+              type="button"
+              style={{
+                left: `${position.x * 100}%`,
+                top: `${position.y * 100}%`,
+              }}
+              onClick={() => openNote(index)}
+              aria-label={`Magnify: ${note.text}`}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <small>{note.label}</small>
+            </button>
+          );
+        })}
       </div>
 
       {activeNote ? (
