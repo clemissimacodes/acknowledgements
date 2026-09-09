@@ -392,23 +392,36 @@ input {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 14% 18%, rgba(244, 178, 119, 0.2), transparent 32%),
-    radial-gradient(circle at 84% 24%, rgba(174, 205, 218, 0.24), transparent 34%),
-    radial-gradient(circle at 65% 86%, rgba(246, 196, 143, 0.18), transparent 31%),
-    linear-gradient(145deg, #fbf5ec 0%, #f8eee2 48%, #edf4f4 100%);
+  background: #f8f1e7;
 }
 
 .about-orbit-stage video {
   display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.about-orbit-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: -5%;
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  opacity: 0.2;
+  filter: blur(30px) saturate(0.68) brightness(1.2) contrast(0.8);
+  transform: scale(1.06);
+}
+
+.about-orbit-art {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.72;
-  filter: saturate(0.5) brightness(1.18) contrast(0.76) sepia(0.08);
+  opacity: 0.88;
+  filter: saturate(0.68) brightness(1.1) contrast(0.86) sepia(0.04);
   mix-blend-mode: multiply;
-  pointer-events: none;
-  user-select: none;
 }
 
 .about-orbit-target {
@@ -502,19 +515,6 @@ input {
   border: 1px solid rgba(125, 173, 194, 0.18);
   filter: blur(1.5px);
   transform: rotate(-13deg);
-}
-
-.about-decorative-watercolors {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  opacity: 0.5;
-  filter: saturate(0.52) brightness(1.2) contrast(0.78) sepia(0.08);
-  mix-blend-mode: multiply;
-  pointer-events: none;
 }
 
 @keyframes about-watercolor-drift {
