@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { CurrentLocation, TravelPlace } from "@/lib/tracker";
 
@@ -8,6 +8,17 @@ function years(place: TravelPlace) {
   return place.firstYear === place.lastYear
     ? String(place.firstYear)
     : `${place.firstYear}–${place.lastYear}`;
+}
+
+function freshness(updatedAt: string) {
+  const elapsedMinutes = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(updatedAt).getTime()) / 60_000),
+  );
+  if (elapsedMinutes < 1) return "Updated just now";
+  if (elapsedMinutes < 60) return `Updated ${elapsedMinutes}m ago`;
+  const hours = Math.floor(elapsedMinutes / 60);
+  return `Updated ${hours}h ago`;
 }
 
 function marker(
@@ -45,6 +56,16 @@ export function ClemiMap({
   places: TravelPlace[];
 }) {
   const container = useRef<HTMLDivElement>(null);
+  const [currentFreshness, setCurrentFreshness] = useState("Updated recently");
+  const currentUpdatedAt = current?.updatedAt;
+
+  useEffect(() => {
+    if (!currentUpdatedAt) return;
+    const update = () => setCurrentFreshness(freshness(currentUpdatedAt));
+    update();
+    const interval = window.setInterval(update, 60_000);
+    return () => window.clearInterval(interval);
+  }, [currentUpdatedAt]);
 
   useEffect(() => {
     if (!container.current) return;
@@ -128,7 +149,7 @@ export function ClemiMap({
                 <span>
                   {current.city}, {current.country}
                 </span>
-                <small>Now</small>
+                <small>{currentFreshness}</small>
               </>
             ) : (
               <>

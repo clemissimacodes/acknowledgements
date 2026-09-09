@@ -19,10 +19,12 @@ import {
 } from "@/lib/admin";
 import {
   clearCurrentLocation,
+  createTrackerToken,
   deleteTravelPlace,
+  goDark,
+  revokeTrackerToken,
   saveTravelPlace,
   setTravelPlaceStatus,
-  syncGoogleCalendar,
 } from "@/lib/tracker";
 
 async function requireOwner() {
@@ -153,19 +155,34 @@ export async function removeAllVisits() {
   refreshControlRoom();
 }
 
-export async function syncCalendarNow() {
-  const user = await requireOwner();
-  const result = await syncGoogleCalendar(user.id);
+function refreshRadar() {
   revalidatePath("/controlroom");
-  revalidatePath("/radar");
+  revalidatePath("/secrets/radar");
+}
+
+export async function createShortcutToken(formData: FormData) {
+  await requireOwner();
+  const result = await createTrackerToken(formData.get("label"));
+  refreshRadar();
   return result;
+}
+
+export async function revokeShortcutToken(formData: FormData) {
+  await requireOwner();
+  await revokeTrackerToken(formData.get("id"));
+  refreshRadar();
 }
 
 export async function removeRadar() {
   await requireOwner();
   await clearCurrentLocation();
-  revalidatePath("/controlroom");
-  revalidatePath("/radar");
+  refreshRadar();
+}
+
+export async function emergencyGoDark() {
+  await requireOwner();
+  await goDark();
+  refreshRadar();
 }
 
 export async function savePlace(formData: FormData) {
@@ -176,22 +193,20 @@ export async function savePlace(formData: FormData) {
     country: formData.get("country"),
     firstYear: formData.get("firstYear"),
     lastYear: formData.get("lastYear"),
-    status: formData.get("status"),
+    confidence: formData.get("confidence"),
+    evidenceCategory: formData.get("evidenceCategory"),
   });
-  revalidatePath("/controlroom");
-  revalidatePath("/radar");
+  refreshRadar();
 }
 
 export async function changePlaceStatus(formData: FormData) {
   await requireOwner();
   await setTravelPlaceStatus(formData.get("id"), formData.get("status"));
-  revalidatePath("/controlroom");
-  revalidatePath("/radar");
+  refreshRadar();
 }
 
 export async function removePlace(formData: FormData) {
   await requireOwner();
   await deleteTravelPlace(formData.get("id"));
-  revalidatePath("/controlroom");
-  revalidatePath("/radar");
+  refreshRadar();
 }

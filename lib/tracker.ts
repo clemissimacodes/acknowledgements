@@ -1,6 +1,9 @@
-import { createHmac, randomUUID } from "crypto";
-import { clerkClient } from "@clerk/nextjs/server";
+import { createHash, randomBytes, randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
+
+export type PlaceStatus = "draft" | "approved" | "rejected";
+export type PlaceConfidence = "high" | "ambiguous";
+export type EvidenceCategory = "flight" | "flight and reservation" | "owner-added";
 
 export type CurrentLocation = {
   city: string;
@@ -19,14 +22,18 @@ export type TravelPlace = {
   longitude: number;
   firstYear: number;
   lastYear: number;
-  status: "draft" | "approved" | "rejected";
+  status: PlaceStatus;
+  confidence: PlaceConfidence;
+  evidenceCategory: EvidenceCategory;
 };
 
-type CalendarEvent = {
-  status?: string;
-  location?: string;
-  start?: { date?: string; dateTime?: string };
-  end?: { date?: string; dateTime?: string };
+export type TrackerToken = {
+  id: string;
+  label: string;
+  status: "active" | "revoked";
+  createdAt: string;
+  lastUsedAt: string | null;
+  revokedAt: string | null;
 };
 
 type GeocodedCity = {
@@ -35,6 +42,9 @@ type GeocodedCity = {
   latitude: number;
   longitude: number;
 };
+
+const TOKEN_RATE_LIMIT = 12;
+const TOKEN_RATE_WINDOW_MINUTES = 60;
 
 function databaseUrl() {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
@@ -56,7 +66,7 @@ function cleanLine(value: unknown, max: number) {
 
 function cleanId(value: unknown) {
   const id = cleanLine(value, 100);
-  if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new Error("Invalid place.");
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw new Error("Invalid record.");
   return id;
 }
 
@@ -72,15 +82,8 @@ function iso(value: string | Date) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-function locationHash(location: string) {
-  const secret =
-    process.env.CALENDAR_LOCATION_HASH_SECRET ??
-    process.env.CLERK_SECRET_KEY ??
-    "";
-  if (!secret) throw new Error("Location hashing is not configured.");
-  return createHmac("sha256", secret)
-    .update(location.toLowerCase().trim())
-    .digest("hex");
+function tokenHash(token: string) {
+  return createHash("sha256").update(token, "utf8").digest("hex");
 }
 
 export async function ensureTrackerTables() {
@@ -106,6 +109,8 @@ export async function ensureTrackerTables() {
       first_year INTEGER NOT NULL,
       last_year INTEGER NOT NULL,
       status TEXT NOT NULL CHECK (status IN ('draft', 'approved', 'rejected')),
+      confidence TEXT NOT NULL DEFAULT 'high',
+      evidence_category TEXT NOT NULL DEFAULT 'owner-added',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE (city, country)
@@ -117,34 +122,69 @@ export async function ensureTrackerTables() {
   `;
   await sql`
     ALTER TABLE clemi_places
-    ADD COLUMN IF NOT EXISTS evidence TEXT DEFAULT 'Google Calendar'
+    ADD COLUMN IF NOT EXISTS evidence_category TEXT DEFAULT 'owner-added'
+  `;
+  await sql`
+    UPDATE clemi_places
+    SET confidence = COALESCE(NULLIF(confidence, ''), 'high'),
+        evidence_category = COALESCE(NULLIF(evidence_category, ''), 'owner-added')
+    WHERE confidence IS NULL OR confidence = ''
+       OR evidence_category IS NULL OR evidence_category = ''
   `;
   await sql`
     CREATE UNIQUE INDEX IF NOT EXISTS clemi_places_city_country_key
     ON clemi_places (city, country)
   `;
   await sql`
-    CREATE TABLE IF NOT EXISTS clemi_calendar_settings (
-      id SMALLINT PRIMARY KEY CHECK (id = 1),
-      owner_user_id TEXT NOT NULL,
-      last_synced_at TIMESTAMPTZ,
-      sync_started_at TIMESTAMPTZ,
-      last_sync_error TEXT
+    CREATE TABLE IF NOT EXISTS clemi_tracker_tokens (
+      id TEXT PRIMARY KEY,
+      label TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'revoked')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_used_at TIMESTAMPTZ,
+      revoked_at TIMESTAMPTZ,
+      rate_window_started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      rate_count INTEGER NOT NULL DEFAULT 0
     )
   `;
   await sql`
-    ALTER TABLE clemi_calendar_settings
-    ADD COLUMN IF NOT EXISTS sync_started_at TIMESTAMPTZ
+    CREATE TABLE IF NOT EXISTS clemi_tracker_migrations (
+      migration_key TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
   `;
   await sql`
-    CREATE TABLE IF NOT EXISTS clemi_location_cache (
-      location_hash TEXT PRIMARY KEY,
-      city TEXT NOT NULL,
-      country TEXT NOT NULL,
-      latitude DOUBLE PRECISION NOT NULL,
-      longitude DOUBLE PRECISION NOT NULL,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    WITH marker AS (
+      INSERT INTO clemi_tracker_migrations (migration_key)
+      VALUES ('travel-seeds-v1')
+      ON CONFLICT (migration_key) DO NOTHING
+      RETURNING migration_key
+    ),
+    seeds (
+      id, city, country, latitude, longitude, first_year, last_year,
+      status, confidence, evidence_category
+    ) AS (
+      VALUES
+        ('seed-los-angeles', 'Los Angeles', 'United States', 34.05369, -118.24277, 2025, 2026, 'draft', 'high', 'flight'),
+        ('seed-burbank', 'Burbank', 'United States', 34.18165, -118.32585, 2025, 2026, 'draft', 'high', 'flight'),
+        ('seed-seoul', 'Seoul', 'South Korea', 37.56668, 126.97829, 2026, 2026, 'draft', 'high', 'flight'),
+        ('seed-hong-kong', 'Hong Kong', 'Hong Kong', 22.27933, 114.16281, 2026, 2026, 'draft', 'high', 'flight'),
+        ('seed-xiamen', 'Xiamen', 'China', 24.48011, 118.08535, 2026, 2026, 'draft', 'high', 'flight'),
+        ('seed-sanya', 'Sanya', 'China', 18.25347, 109.50344, 2026, 2026, 'draft', 'high', 'flight'),
+        ('seed-boston', 'Boston', 'United States', 42.35543, -71.06051, 2024, 2026, 'draft', 'high', 'flight and reservation'),
+        ('seed-portland-maine', 'Portland', 'United States', 43.65776, -70.25887, 2024, 2026, 'draft', 'high', 'flight'),
+        ('seed-copenhagen', 'Copenhagen', 'Denmark', 55.68672, 12.57007, 2026, 2026, 'draft', 'ambiguous', 'flight'),
+        ('seed-chicago', 'Chicago', 'United States', 41.87556, -87.62442, 2026, 2026, 'draft', 'ambiguous', 'flight')
     )
+    INSERT INTO clemi_places (
+      id, city, country, latitude, longitude, first_year, last_year,
+      status, confidence, evidence_category
+    )
+    SELECT seeds.*
+    FROM seeds, marker
+    ON CONFLICT DO NOTHING
   `;
 }
 
@@ -172,6 +212,25 @@ function mapPlace(row: Record<string, unknown>): TravelPlace {
       row.status === "approved" || row.status === "rejected"
         ? row.status
         : "draft",
+    confidence: row.confidence === "ambiguous" ? "ambiguous" : "high",
+    evidenceCategory:
+      row.evidence_category === "flight" ||
+      row.evidence_category === "flight and reservation"
+        ? row.evidence_category
+        : "owner-added",
+  };
+}
+
+function mapToken(row: Record<string, unknown>): TrackerToken {
+  return {
+    id: String(row.id),
+    label: String(row.label),
+    status: row.status === "revoked" ? "revoked" : "active",
+    createdAt: iso(row.created_at as string | Date),
+    lastUsedAt: row.last_used_at
+      ? iso(row.last_used_at as string | Date)
+      : null,
+    revokedAt: row.revoked_at ? iso(row.revoked_at as string | Date) : null,
   };
 }
 
@@ -186,7 +245,8 @@ export async function getPublicTrackerData() {
         WHERE id = 1 AND expires_at > NOW()
       `,
       sql`
-        SELECT id, city, country, latitude, longitude, first_year, last_year, status
+        SELECT id, city, country, latitude, longitude, first_year, last_year,
+               status, confidence, evidence_category
         FROM clemi_places
         WHERE status = 'approved'
         ORDER BY first_year DESC, city ASC
@@ -204,14 +264,15 @@ export async function getPublicTrackerData() {
 export async function getTrackerAdminData() {
   await ensureTrackerTables();
   const sql = db();
-  const [current, places, settings] = await Promise.all([
+  const [current, places, tokens] = await Promise.all([
     sql`
       SELECT city, country, latitude, longitude, updated_at, expires_at
       FROM clemi_current_location
       WHERE id = 1 AND expires_at > NOW()
     `,
     sql`
-      SELECT id, city, country, latitude, longitude, first_year, last_year, status
+      SELECT id, city, country, latitude, longitude, first_year, last_year,
+             status, confidence, evidence_category
       FROM clemi_places
       ORDER BY
         CASE status WHEN 'draft' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
@@ -219,122 +280,95 @@ export async function getTrackerAdminData() {
         city ASC
     `,
     sql`
-      SELECT owner_user_id, last_synced_at, last_sync_error
-      FROM clemi_calendar_settings
-      WHERE id = 1
+      SELECT id, label, status, created_at, last_used_at, revoked_at
+      FROM clemi_tracker_tokens
+      ORDER BY created_at DESC
     `,
   ]);
   return {
     current: current[0] ? mapCurrent(current[0]) : null,
     places: places.map(mapPlace),
-    connected: Boolean(settings[0]?.owner_user_id),
-    lastSyncedAt: settings[0]?.last_synced_at
-      ? iso(settings[0].last_synced_at as string | Date)
-      : null,
-    lastSyncError: settings[0]?.last_sync_error
-      ? String(settings[0].last_sync_error)
-      : null,
+    tokens: tokens.map(mapToken),
   };
 }
 
-async function googleCalendarToken(userId: string) {
-  const client = await clerkClient();
-  const response = await client.users.getUserOauthAccessToken(userId, "google");
-  return response.data[0]?.token ?? null;
-}
-
-async function calendarEvents(token: string) {
-  const events: CalendarEvent[] = [];
-  let pageToken = "";
-  for (let page = 0; page < 5; page += 1) {
-    const params = new URLSearchParams({
-      maxResults: "2500",
-      singleEvents: "true",
-      orderBy: "startTime",
-      timeMin: "2000-01-01T00:00:00.000Z",
-      timeMax: new Date().toISOString(),
-      fields: "items(status,location,start,end),nextPageToken",
-      ...(pageToken ? { pageToken } : {}),
-    });
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(12_000),
-      },
-    );
-    if (!response.ok) {
-      throw new Error(
-        response.status === 403
-          ? "Reconnect Google with Calendar read access."
-          : "Google Calendar could not be read.",
-      );
-    }
-    const payload = (await response.json()) as {
-      items?: CalendarEvent[];
-      nextPageToken?: string;
-    };
-    events.push(...(payload.items ?? []));
-    if (!payload.nextPageToken) break;
-    pageToken = payload.nextPageToken;
-  }
-  return events;
-}
-
-function eventDate(value: CalendarEvent["start"]) {
-  const date = value?.dateTime ?? value?.date;
-  return date ? new Date(date) : null;
-}
-
-async function cachedCity(location: string) {
-  const hash = locationHash(location);
-  const rows = await db()`
-    SELECT city, country, latitude, longitude
-    FROM clemi_location_cache
-    WHERE location_hash = ${hash}
-  `;
-  return rows[0]
-    ? {
-        city: String(rows[0].city),
-        country: String(rows[0].country),
-        latitude: Number(rows[0].latitude),
-        longitude: Number(rows[0].longitude),
-      }
-    : null;
-}
-
-async function geocodeCalendarLocation(locationValue: string) {
-  const location = cleanLine(locationValue, 300);
-  const cached = await cachedCity(location);
-  if (cached) return cached;
-
-  const params = new URLSearchParams({
-    format: "jsonv2",
-    q: location,
-    limit: "1",
-    addressdetails: "1",
-  });
+async function nominatim(
+  path: "reverse" | "search",
+  params: URLSearchParams,
+): Promise<unknown> {
   const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?${params}`,
+    `https://nominatim.openstreetmap.org/${path}?${params}`,
     {
       headers: {
         Accept: "application/json",
         "Accept-Language": "en",
-        "User-Agent": "Clemi-Tracker/1.0 (https://clemissima.com/privacy)",
+        "User-Agent": "Clemi-Tracker/2.0 (https://clemissima.com/privacy)",
       },
       cache: "no-store",
-      signal: AbortSignal.timeout(6_000),
+      signal: AbortSignal.timeout(8_000),
     },
   );
-  if (!response.ok) return null;
-  const rows = (await response.json()) as Array<{
+  if (!response.ok) throw new Error("Location service is unavailable.");
+  return response.json();
+}
+
+async function cityCentroid(cityValue: string, countryValue: string) {
+  const city = cleanLine(cityValue, 80);
+  const country = cleanLine(countryValue, 80);
+  if (city.length < 2 || country.length < 2) {
+    throw new Error("Could not identify a city.");
+  }
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    city,
+    country,
+    limit: "1",
+    addressdetails: "1",
+  });
+  const rows = (await nominatim("search", params)) as Array<{
     lat?: string;
     lon?: string;
     address?: Record<string, string | undefined>;
   }>;
   const row = rows[0];
-  const address = row?.address ?? {};
+  if (!row?.lat || !row.lon) throw new Error("Could not find that city.");
+  const latitude = Number(row.lat);
+  const longitude = Number(row.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error("Could not find that city.");
+  }
+  return {
+    city: cleanLine(
+      row.address?.city ??
+        row.address?.town ??
+        row.address?.village ??
+        row.address?.municipality ??
+        city,
+      80,
+    ),
+    country: cleanLine(row.address?.country ?? country, 80),
+    latitude,
+    longitude,
+  } satisfies GeocodedCity;
+}
+
+export async function geocodeShortcutCoordinates(
+  latitudeValue: unknown,
+  longitudeValue: unknown,
+) {
+  const latitude = numberInRange(latitudeValue, -90, 90);
+  const longitude = numberInRange(longitudeValue, -180, 180);
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    lat: String(latitude),
+    lon: String(longitude),
+    zoom: "10",
+    addressdetails: "1",
+  });
+  const result = (await nominatim("reverse", params)) as {
+    address?: Record<string, string | undefined>;
+  };
+  const address = result.address ?? {};
   const city =
     address.city ??
     address.town ??
@@ -342,55 +376,19 @@ async function geocodeCalendarLocation(locationValue: string) {
     address.municipality ??
     address.county;
   const country = address.country;
-  if (!row?.lat || !row.lon || !city || !country) return null;
-  const result = {
-    city: cleanLine(city, 80),
-    country: cleanLine(country, 80),
-    latitude: Number(row.lat),
-    longitude: Number(row.lon),
-  };
-  await db()`
-    INSERT INTO clemi_location_cache (
-      location_hash, city, country, latitude, longitude
-    )
-    VALUES (
-      ${locationHash(location)}, ${result.city}, ${result.country},
-      ${result.latitude}, ${result.longitude}
-    )
-    ON CONFLICT (location_hash) DO NOTHING
-  `;
-  return result;
+  if (!city || !country) throw new Error("Could not identify a city.");
+  return cityCentroid(city, country);
 }
 
-async function upsertDraft(location: GeocodedCity, year: number) {
+export async function storeCurrentLocation(location: GeocodedCity) {
+  await ensureTrackerTables();
   await db()`
-    INSERT INTO clemi_places (
-      id, city, country, latitude, longitude, first_year, last_year, status
-    )
-    VALUES (
-      ${randomUUID()}, ${location.city}, ${location.country},
-      ${location.latitude}, ${location.longitude}, ${year}, ${year}, 'draft'
-    )
-    ON CONFLICT (city, country) DO UPDATE SET
-      first_year = LEAST(clemi_places.first_year, EXCLUDED.first_year),
-      last_year = GREATEST(clemi_places.last_year, EXCLUDED.last_year),
-      updated_at = NOW()
-  `;
-}
-
-async function storeCurrent(location: GeocodedCity | null) {
-  const sql = db();
-  if (!location) {
-    await sql`DELETE FROM clemi_current_location WHERE id = 1`;
-    return;
-  }
-  await sql`
     INSERT INTO clemi_current_location (
       id, city, country, latitude, longitude, updated_at, expires_at
     )
     VALUES (
       1, ${location.city}, ${location.country}, ${location.latitude},
-      ${location.longitude}, NOW(), NOW() + INTERVAL '90 minutes'
+      ${location.longitude}, NOW(), NOW() + INTERVAL '3 hours'
     )
     ON CONFLICT (id) DO UPDATE SET
       city = EXCLUDED.city,
@@ -398,139 +396,99 @@ async function storeCurrent(location: GeocodedCity | null) {
       latitude = EXCLUDED.latitude,
       longitude = EXCLUDED.longitude,
       updated_at = NOW(),
-      expires_at = NOW() + INTERVAL '90 minutes'
+      expires_at = NOW() + INTERVAL '3 hours'
   `;
 }
 
-export async function syncGoogleCalendar(userId: string) {
-  await ensureTrackerTables();
-  const sql = db();
-  try {
-    const token = await googleCalendarToken(userId);
-    if (!token) throw new Error("Reconnect Google with Calendar read access.");
-    const events = await calendarEvents(token);
-    const now = Date.now();
-    const located = events
-      .filter((event) => event.status !== "cancelled" && event.location)
-      .map((event) => ({
-        location: cleanLine(event.location, 300),
-        start: eventDate(event.start),
-        end: eventDate(event.end),
-      }))
-      .filter(
-        (
-          event,
-        ): event is { location: string; start: Date; end: Date | null } =>
-          Boolean(event.location && event.start),
-      );
-
-    const active = located.find(
-      ({ start, end }) =>
-        start.getTime() <= now && (!end || end.getTime() >= now),
-    );
-    await storeCurrent(
-      active ? await geocodeCalendarLocation(active.location) : null,
-    );
-
-    const unique = new Map<string, { location: string; year: number }>();
-    for (const event of [...located].reverse()) {
-      if (event.start.getTime() > now) continue;
-      const hash = locationHash(event.location);
-      if (!unique.has(hash)) {
-        unique.set(hash, {
-          location: event.location,
-          year: event.start.getUTCFullYear(),
-        });
-      }
-    }
-
-    let processed = 0;
-    let newGeocodes = 0;
-    for (const candidate of unique.values()) {
-      let location = await cachedCity(candidate.location);
-      if (!location) {
-        if (newGeocodes >= 5) continue;
-        if (newGeocodes > 0 || active) {
-          await new Promise((resolve) => setTimeout(resolve, 1_100));
-        }
-        location = await geocodeCalendarLocation(candidate.location);
-        newGeocodes += 1;
-      }
-      if (!location) continue;
-      await upsertDraft(location, candidate.year);
-      processed += 1;
-    }
-
-    await sql`
-      INSERT INTO clemi_calendar_settings (
-        id, owner_user_id, last_synced_at, sync_started_at, last_sync_error
-      )
-      VALUES (1, ${userId}, NOW(), NULL, NULL)
-      ON CONFLICT (id) DO UPDATE SET
-        owner_user_id = EXCLUDED.owner_user_id,
-        last_synced_at = NOW(),
-        sync_started_at = NULL,
-        last_sync_error = NULL
-    `;
-    return { ok: true as const, processed };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Calendar sync failed.";
-    await sql`
-      INSERT INTO clemi_calendar_settings (
-        id, owner_user_id, last_synced_at, sync_started_at, last_sync_error
-      )
-      VALUES (1, ${userId}, NOW(), NULL, ${message})
-      ON CONFLICT (id) DO UPDATE SET
-        owner_user_id = EXCLUDED.owner_user_id,
-        last_synced_at = NOW(),
-        sync_started_at = NULL,
-        last_sync_error = ${message}
-    `;
-    return { ok: false as const, error: message };
-  }
-}
-
-export async function syncStoredCalendarOwner() {
+export async function authorizeTrackerToken(tokenValue: string) {
+  const token = cleanLine(tokenValue, 200);
+  if (!/^radar_[A-Za-z0-9_-]{40,}$/.test(token)) return "invalid" as const;
   await ensureTrackerTables();
   const rows = await db()`
-    SELECT owner_user_id
-    FROM clemi_calendar_settings
-    WHERE id = 1
+    WITH candidate AS (
+      SELECT id
+      FROM clemi_tracker_tokens
+      WHERE token_hash = ${tokenHash(token)} AND status = 'active'
+    ),
+    accepted AS (
+      UPDATE clemi_tracker_tokens AS token
+      SET rate_window_started_at =
+            CASE
+              WHEN token.rate_window_started_at <=
+                   NOW() - (${TOKEN_RATE_WINDOW_MINUTES} * INTERVAL '1 minute')
+              THEN NOW()
+              ELSE token.rate_window_started_at
+            END,
+          rate_count =
+            CASE
+              WHEN token.rate_window_started_at <=
+                   NOW() - (${TOKEN_RATE_WINDOW_MINUTES} * INTERVAL '1 minute')
+              THEN 1
+              ELSE token.rate_count + 1
+            END,
+          last_used_at = NOW()
+      FROM candidate
+      WHERE token.id = candidate.id
+        AND (
+          token.rate_window_started_at <=
+            NOW() - (${TOKEN_RATE_WINDOW_MINUTES} * INTERVAL '1 minute')
+          OR token.rate_count < ${TOKEN_RATE_LIMIT}
+        )
+      RETURNING token.id
+    )
+    SELECT CASE
+      WHEN EXISTS (SELECT 1 FROM accepted) THEN 'ok'
+      WHEN EXISTS (SELECT 1 FROM candidate) THEN 'rate-limited'
+      ELSE 'invalid'
+    END AS result
   `;
-  const userId = rows[0]?.owner_user_id
-    ? String(rows[0].owner_user_id)
-    : null;
-  return userId
-    ? syncGoogleCalendar(userId)
-    : { ok: false as const, error: "Calendar owner is not connected." };
+  const result = rows[0]?.result;
+  return result === "ok"
+    ? ("ok" as const)
+    : result === "rate-limited"
+      ? ("rate-limited" as const)
+      : ("invalid" as const);
 }
 
-export async function maybeSyncStoredCalendarOwner() {
+export async function createTrackerToken(labelValue: unknown) {
   await ensureTrackerTables();
-  const rows = await db()`
-    UPDATE clemi_calendar_settings
-    SET sync_started_at = NOW()
-    WHERE id = 1
-      AND (
-        last_synced_at IS NULL
-        OR last_synced_at < NOW() - INTERVAL '30 minutes'
-      )
-      AND (
-        sync_started_at IS NULL
-        OR sync_started_at < NOW() - INTERVAL '10 minutes'
-      )
-    RETURNING owner_user_id
+  const label = cleanLine(labelValue, 80) || "iPhone Shortcut";
+  const plaintext = `radar_${randomBytes(32).toString("base64url")}`;
+  await db()`
+    INSERT INTO clemi_tracker_tokens (
+      id, label, token_hash
+    )
+    VALUES (
+      ${randomUUID()}, ${label}, ${tokenHash(plaintext)}
+    )
   `;
-  const userId = rows[0]?.owner_user_id
-    ? String(rows[0].owner_user_id)
-    : null;
-  return userId ? syncGoogleCalendar(userId) : null;
+  return { plaintext };
+}
+
+export async function revokeTrackerToken(idValue: unknown) {
+  await ensureTrackerTables();
+  await db()`
+    UPDATE clemi_tracker_tokens
+    SET status = 'revoked', revoked_at = NOW()
+    WHERE id = ${cleanId(idValue)} AND status = 'active'
+  `;
 }
 
 export async function clearCurrentLocation() {
   await ensureTrackerTables();
   await db()`DELETE FROM clemi_current_location WHERE id = 1`;
+}
+
+export async function goDark() {
+  await ensureTrackerTables();
+  await db()`
+    WITH cleared AS (
+      DELETE FROM clemi_current_location WHERE id = 1 RETURNING id
+    )
+    UPDATE clemi_tracker_tokens
+    SET status = 'revoked', revoked_at = NOW()
+    WHERE status = 'active'
+  `;
 }
 
 export async function saveTravelPlace(input: {
@@ -539,41 +497,55 @@ export async function saveTravelPlace(input: {
   country: unknown;
   firstYear: unknown;
   lastYear: unknown;
-  status: unknown;
+  confidence: unknown;
+  evidenceCategory: unknown;
 }) {
   await ensureTrackerTables();
-  const id = input.id ? cleanId(input.id) : randomUUID();
-  const city = cleanLine(input.city, 80);
-  const country = cleanLine(input.country, 80);
+  const existingId = input.id ? cleanId(input.id) : null;
+  const id = existingId ?? randomUUID();
+  const requestedCity = cleanLine(input.city, 80);
+  const requestedCountry = cleanLine(input.country, 80);
   const firstYear = Math.trunc(numberInRange(input.firstYear, 1900, 2100));
   const lastYear = Math.trunc(
     numberInRange(input.lastYear, firstYear, 2100),
   );
-  const status =
-    input.status === "approved" || input.status === "rejected"
-      ? input.status
-      : "draft";
-  if (city.length < 2 || country.length < 2) throw new Error("Invalid city.");
-  const geocoded = await geocodeCalendarLocation(`${city}, ${country}`);
-  if (!geocoded) throw new Error("Could not find that city.");
-  await db()`
-    INSERT INTO clemi_places (
-      id, city, country, latitude, longitude, first_year, last_year, status
-    )
-    VALUES (
-      ${id}, ${city}, ${country},
-      ${geocoded.latitude}, ${geocoded.longitude},
-      ${firstYear}, ${lastYear}, ${status}
-    )
-    ON CONFLICT (id) DO UPDATE SET
-      city = EXCLUDED.city,
-      country = EXCLUDED.country,
-      latitude = EXCLUDED.latitude,
-      longitude = EXCLUDED.longitude,
-      first_year = EXCLUDED.first_year,
-      last_year = EXCLUDED.last_year,
-      status = EXCLUDED.status,
-      updated_at = NOW()
+  const confidence: PlaceConfidence =
+    input.confidence === "ambiguous" ? "ambiguous" : "high";
+  const evidenceCategory: EvidenceCategory =
+    input.evidenceCategory === "flight" ||
+    input.evidenceCategory === "flight and reservation"
+      ? input.evidenceCategory
+      : "owner-added";
+  const geocoded = await cityCentroid(requestedCity, requestedCountry);
+  const sql = db();
+
+  if (!existingId) {
+    await sql`
+      INSERT INTO clemi_places (
+        id, city, country, latitude, longitude, first_year, last_year,
+        status, confidence, evidence_category
+      )
+      VALUES (
+        ${id}, ${geocoded.city}, ${geocoded.country},
+        ${geocoded.latitude}, ${geocoded.longitude},
+        ${firstYear}, ${lastYear}, 'draft', ${confidence}, ${evidenceCategory}
+      )
+    `;
+    return;
+  }
+
+  await sql`
+    UPDATE clemi_places
+    SET city = ${geocoded.city},
+        country = ${geocoded.country},
+        latitude = ${geocoded.latitude},
+        longitude = ${geocoded.longitude},
+        first_year = ${firstYear},
+        last_year = ${lastYear},
+        confidence = ${confidence},
+        evidence_category = ${evidenceCategory},
+        updated_at = NOW()
+    WHERE id = ${id}
   `;
 }
 
@@ -582,6 +554,7 @@ export async function setTravelPlaceStatus(idValue: unknown, status: unknown) {
   if (status !== "draft" && status !== "approved" && status !== "rejected") {
     throw new Error("Invalid place status.");
   }
+  await ensureTrackerTables();
   await db()`
     UPDATE clemi_places
     SET status = ${status}, updated_at = NOW()
@@ -590,5 +563,6 @@ export async function setTravelPlaceStatus(idValue: unknown, status: unknown) {
 }
 
 export async function deleteTravelPlace(idValue: unknown) {
+  await ensureTrackerTables();
   await db()`DELETE FROM clemi_places WHERE id = ${cleanId(idValue)}`;
 }

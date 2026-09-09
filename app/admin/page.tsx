@@ -2,19 +2,21 @@ import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CalendarSync } from "@/components/admin/CalendarSync";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
 import { getTrackerAdminData } from "@/lib/tracker";
 import {
   changePlaceStatus,
+  emergencyGoDark,
   moderateCiaRecord,
   removeAllVisits,
   removeCiaRecord,
   removePlace,
   removeRadar,
   removeRecord,
+  revokeShortcutToken,
   saveCiaRecord,
   savePlace,
   saveIntroductionRecord,
@@ -95,50 +97,71 @@ export default async function AdminPage({
           <p className="admin-eyebrow">private burrow</p>
           <h1>Clemi control room</h1>
         </div>
-        <UserButton
-          userProfileProps={{
-            additionalOAuthScopes: {
-              google: ["https://www.googleapis.com/auth/calendar.readonly"],
-            },
-          }}
-        />
+        <UserButton />
       </header>
 
       <section className="admin-radar" aria-labelledby="radar-control-title">
         <div>
           <h2 id="radar-control-title">Clemi Radar</h2>
           <p>
-            Google Calendar is the tracker. An event happening now supplies the
-            public city; past event locations become private drafts below.
+            An authenticated iPhone Shortcut sends coordinates for immediate
+            city-only lookup. Raw coordinates are discarded; the signal expires
+            after three hours.
           </p>
         </div>
-        <CalendarSync
-          connected={tracker.connected}
-          lastSyncedAt={tracker.lastSyncedAt}
-          lastSyncError={tracker.lastSyncError}
-        />
+        <ShortcutTokenManager />
+        <div className="admin-cards admin-cards-small">
+          {tracker.tokens.map((token) => (
+            <article className="admin-card" key={token.id}>
+              <div className="admin-card-head">
+                <h3>{token.label}</h3>
+                <span className={`admin-place-status is-${token.status}`}>
+                  {token.status}
+                </span>
+              </div>
+              <p>
+                Created {date(token.createdAt)}
+                {token.lastUsedAt ? ` · last used ${date(token.lastUsedAt)}` : ""}
+              </p>
+              {token.status === "active" ? (
+                <form action={revokeShortcutToken}>
+                  <input type="hidden" name="id" value={token.id} />
+                  <button type="submit">Revoke token</button>
+                </form>
+              ) : null}
+            </article>
+          ))}
+        </div>
         {tracker.current ? (
           <div className="admin-radar-live">
             <p>
-              Current GCal city: <strong>{tracker.current.city}</strong>,{" "}
+              Current city: <strong>{tracker.current.city}</strong>,{" "}
               {tracker.current.country}
             </p>
             <p>Signal checked {date(tracker.current.updatedAt)} PT.</p>
             <form action={removeRadar}>
               <button type="submit">Take Clemi off radar</button>
             </form>
-            <Link href="/radar">View public radar</Link>
+            <Link href="/secrets/radar">View public radar</Link>
           </div>
         ) : (
           <p className="admin-muted">Clemi is currently off radar.</p>
         )}
+        <form action={emergencyGoDark}>
+          <ConfirmButton
+            className="admin-danger"
+            message="Clear the current city and revoke every active Shortcut token?"
+          >
+            Emergency go dark
+          </ConfirmButton>
+        </form>
       </section>
 
       <section className="admin-section" id="travel-places">
         <h2>Travel places</h2>
         <p className="admin-private">
-          Calendar locations stay private drafts until you approve them. The
-          public map shows city and year only.
+          Inferred and manually added locations stay private drafts until a
+          separate approval. The public map shows city and year only.
         </p>
         <details className="admin-add-place">
           <summary>Add a city yourself</summary>
@@ -159,7 +182,14 @@ export default async function AdminPage({
               Last year
               <input name="lastYear" type="number" min="1900" max="2100" required />
             </label>
-            <input type="hidden" name="status" value="draft" />
+            <label>
+              Confidence
+              <select name="confidence" defaultValue="high">
+                <option value="high">High</option>
+                <option value="ambiguous">Ambiguous</option>
+              </select>
+            </label>
+            <input type="hidden" name="evidenceCategory" value="owner-added" />
             <button type="submit">Add private draft</button>
           </form>
         </details>
@@ -177,6 +207,9 @@ export default async function AdminPage({
                 {place.firstYear === place.lastYear
                   ? place.firstYear
                   : `${place.firstYear}–${place.lastYear}`}
+              </p>
+              <p className="admin-record-status">
+                {place.confidence} confidence · {place.evidenceCategory}
               </p>
               <div className="admin-record-actions">
                 {place.status !== "approved" ? (
@@ -197,7 +230,6 @@ export default async function AdminPage({
                   <summary>Edit</summary>
                   <form className="admin-edit-form" action={savePlace}>
                     <input type="hidden" name="id" value={place.id} />
-                    <input type="hidden" name="status" value={place.status} />
                     <label>
                       City
                       <input name="city" defaultValue={place.city} required />
@@ -228,6 +260,26 @@ export default async function AdminPage({
                         required
                       />
                     </label>
+                    <label>
+                      Confidence
+                      <select name="confidence" defaultValue={place.confidence}>
+                        <option value="high">High</option>
+                        <option value="ambiguous">Ambiguous</option>
+                      </select>
+                    </label>
+                    <label>
+                      Evidence category
+                      <select
+                        name="evidenceCategory"
+                        defaultValue={place.evidenceCategory}
+                      >
+                        <option value="owner-added">Owner-added</option>
+                        <option value="flight">Flight</option>
+                        <option value="flight and reservation">
+                          Flight and reservation
+                        </option>
+                      </select>
+                    </label>
                     <button type="submit">Save</button>
                   </form>
                 </details>
@@ -244,7 +296,7 @@ export default async function AdminPage({
             </article>
           ))}
           {tracker.places.length === 0 ? (
-            <p>Sync GCal to find private travel drafts.</p>
+            <p>No private travel drafts yet.</p>
           ) : null}
         </div>
       </section>

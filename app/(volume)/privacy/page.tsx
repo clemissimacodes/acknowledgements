@@ -37,12 +37,16 @@ export default function PrivacyPage() {
       <section>
         <h2>Clemi Tracker</h2>
         <p>
-          The tracker reads location fields from Clementine’s Google Calendar
-          with read-only permission. An event happening now may publish its city
-          and country. Past locations become private drafts and appear on the
-          password-protected map only after Clementine approves them. Event
-          titles, attendees, descriptions, event IDs, and exact addresses are
-          not stored or published.
+          An authenticated iPhone Shortcut sends a current coordinate for
+          server-side city lookup. The precise point is discarded immediately;
+          only the city, country, city-centroid coordinate, update time, and
+          three-hour expiry are stored. Travel locations remain private drafts
+          and appear on the password-protected map only after Clementine
+          approves them. Exact dates, addresses, booking details, source
+          messages, and companions are not stored or published. OpenStreetMap’s
+          Nominatim service receives the coordinate only to identify its city;
+          OpenFreeMap serves the map tiles and receives ordinary web request
+          data such as an IP address.
         </p>
       </section>
       <section id="secrets-records">
