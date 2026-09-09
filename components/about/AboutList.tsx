@@ -263,11 +263,11 @@ export function AboutList({
           disablePictureInPicture
         >
           <source
-            src="/about/elegant-minimal-circles.webm?v=beige2"
+            src="/about/elegant-minimal-circles.webm?v=beige3"
             type="video/webm"
           />
           <source
-            src="/about/elegant-minimal-circles.m4v?v=beige2"
+            src="/about/elegant-minimal-circles.m4v?v=beige3"
             type="video/mp4"
           />
         </video>
