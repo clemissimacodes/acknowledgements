@@ -23,7 +23,7 @@ const POSES = [
 type PoseId = (typeof POSES)[number]["id"];
 
 const STORAGE_KEY = "clemi-pose";
-const CHANGE_INTERVAL = 8_000;
+const CHANGE_INTERVAL = 3_800;
 
 function isPoseId(value: string | null): value is PoseId {
   return POSES.some((pose) => pose.id === value);
