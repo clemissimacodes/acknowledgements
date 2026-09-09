@@ -92,28 +92,6 @@ tomorrow's as if time were sin.
 Unfinished woman, small.`,
   },
   {
-    slug: "i-know-what-a-peach-tastes-like",
-    title: "I Know What a Peach Tastes Like",
-    dedication: "Jacky",
-    body: `I know what a peach tastes like.
-He calls for another unassuming august
-
-walk around the same block,
-so I bring my peach along.
-
-Two fruit flies got to it before me,
-so I knew to choose this one in particular.
-
-My half with stone sits in blushed flesh.
-His half, flesh.
-
-Yellow taxis run over my shadow,
-the young and beautiful always die transient.
-
-My tongue pauses right below my wrist;
-where's the same sweet thread I’m so familiar with?`,
-  },
-  {
     slug: "a-thousand-blackberries-for-love",
     title: "A Thousand Blackberries for Love",
     body: `We mosey out naked on mother’s milk,
@@ -151,15 +129,6 @@ red hearts around my ankle.
 
 death becomes maternal,
 slippery and eternal.`,
-  },
-  {
-    slug: "like-some-boys",
-    title: "Like Some Boys",
-    body: `She waves red hearts on bicycles tonight
-A pedal step a push a Chloe rides
-A dip a slide a waltz, hello Venus
-Her windy soldiers march across the moon
-Her lips’ first mark of bliss below la lune`,
   },
   {
     slug: "the-runaway-poets",
@@ -258,42 +227,6 @@ the looming peace of death as I balloon.
 
 The grass on the other side browned in war,
 one passed is no more, one’s past is no more.`,
-  },
-  {
-    slug: "lovers-in-the-night",
-    title: "Lovers in the Night",
-    dedication: "Nan",
-    companion: {
-      src: "https://www.moma.org/media/W1siZiIsIjE2OTE5OCJdLFsicCIsImNvbnZlcnQiLCItcXVhbGl0eSA5MCAtcmVzaXplIDIwMDB4MTQ0MFx1MDAzZSJdXQ.jpg?sha=c6263b2c344b7178",
-      alt: "Nan Goldin, Nan One Month After Being Battered, 1984",
-      credit: "Nan Goldin, Nan One Month After Being Battered, 1984. The Museum of Modern Art, New York. © Nan Goldin",
-      href: "https://www.moma.org/collection/works/102197",
-    },
-    body: `back and forth belligerent sex
-like silver vines, they swing left and right
-but right before he left, Brian
-
-marked his love like a knuckle to her left
-eye. together they yield their spartan
-youth to the other side in high languor.
-
-oh how the coiffed ringlets
-gloss over the aged sadism,
-how the luster on her neck
-
-rhymes, like the cinereous green cast
-of murder. she paints her lips for Brian.
-he decorates her eyes in the same shade,
-
-two reds away from brain death.
-protected by the hunger that love fillips,
-a woman is stomped on the undying hill
-
-of romance by a jaundiced man of irascible
-nature—the ballad of sexual dependency.
-a flash bulb burns darkness like candle wax.
-
-one month after being battered, Nan stares back.`,
   },
   {
     slug: "turnip-poem",
