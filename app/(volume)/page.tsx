@@ -83,6 +83,30 @@ export default function HomePage() {
             />
           </svg>
         </a>
+        <a
+          href="https://open.spotify.com/user/au0r1e82mxbofd2on3lvztrkr?si=d00695766b5e4ed1"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Spotify"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle
+              cx="12"
+              cy="12"
+              r="9"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M7.2 9.2c3.7-1 7.4-.6 10.2.9M7.9 12.2c3-.8 6.2-.5 8.7.8M8.5 15.1c2.5-.6 5-.3 7 .6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.45"
+              strokeLinecap="round"
+            />
+          </svg>
+        </a>
         <MailLink aria-label="Email Clementine">
           <svg viewBox="0 0 24 24" width="19" height="18" aria-hidden="true">
             <rect
