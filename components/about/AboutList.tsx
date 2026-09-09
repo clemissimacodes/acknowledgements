@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 export type AboutNote = {
   text: string;
@@ -24,7 +24,13 @@ const INITIAL_CENTERS: Point[] = [
   { x: 0.509, y: 0.456 },
   { x: 0.588, y: 0.643 },
   { x: 0.218, y: 0.721 },
+];
+
+const GENERATED_CENTERS: Point[] = [
   { x: 0.78, y: 0.72 },
+  { x: 0.16, y: 0.5 },
+  { x: 0.72, y: 0.18 },
+  { x: 0.46, y: 0.82 },
 ];
 
 function focusBackgroundPosition(point: Point) {
@@ -143,7 +149,10 @@ export function AboutList({
   const [active, setActive] = useState<number | null>(null);
   const [snapshot, setSnapshot] = useState("");
   const activeNote = active === null ? null : notes[active];
-  const activeCenter = centers[active ?? 0] ?? { x: 0.5, y: 0.5 };
+  const activeCenter =
+    centers[active ?? 0] ??
+    GENERATED_CENTERS[((active ?? INITIAL_CENTERS.length) - INITIAL_CENTERS.length) % GENERATED_CENTERS.length] ??
+    { x: 0.5, y: 0.5 };
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -310,7 +319,7 @@ export function AboutList({
           />
         </video>
         <canvas ref={trackerCanvasRef} hidden />
-        {notes.map((note, index) => {
+        {notes.slice(0, INITIAL_CENTERS.length).map((note, index) => {
           const sourceCenter =
             centers[index] ?? INITIAL_CENTERS[index] ?? { x: 0.5, y: 0.5 };
           const position = containPosition(sourceCenter, stageSize);
@@ -330,6 +339,32 @@ export function AboutList({
               <span>{String(index + 1).padStart(2, "0")}</span>
               <small>{note.label}</small>
             </button>
+          );
+        })}
+        {notes.slice(INITIAL_CENTERS.length).map((note, extraIndex) => {
+          const index = INITIAL_CENTERS.length + extraIndex;
+          const position =
+            GENERATED_CENTERS[extraIndex % GENERATED_CENTERS.length] ??
+            { x: 0.5, y: 0.5 };
+          const style = {
+            left: `${position.x * 100}%`,
+            top: `${position.y * 100}%`,
+            animationDelay: `${extraIndex * -1.7}s`,
+          } satisfies CSSProperties;
+
+          return (
+            <div className="about-generated-thing" key={note.text} style={style}>
+              <span className="about-generated-watercolor" aria-hidden="true" />
+              <button
+                className="about-orbit-target"
+                type="button"
+                onClick={() => openNote(index)}
+                aria-label={`Magnify: ${note.text}`}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <small>{note.label}</small>
+              </button>
+            </div>
           );
         })}
       </div>

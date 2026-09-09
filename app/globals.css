@@ -447,6 +447,67 @@ input {
   line-height: 1.05;
 }
 
+.about-generated-thing {
+  position: absolute;
+  z-index: 1;
+  width: clamp(7.5rem, 15vw, 12rem);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  animation: about-watercolor-drift 8.5s ease-in-out infinite alternate;
+}
+
+.about-generated-thing .about-orbit-target {
+  top: 50%;
+  left: 50%;
+}
+
+.about-generated-watercolor,
+.about-generated-watercolor::before,
+.about-generated-watercolor::after {
+  position: absolute;
+  border-radius: 47% 53% 58% 42% / 54% 44% 56% 46%;
+  content: "";
+  pointer-events: none;
+}
+
+.about-generated-watercolor {
+  inset: 0;
+  opacity: 0.68;
+  background:
+    radial-gradient(circle at 38% 42%, rgba(230, 107, 102, 0.48), transparent 42%),
+    radial-gradient(circle at 62% 55%, rgba(238, 148, 104, 0.38), transparent 50%),
+    radial-gradient(circle at 48% 48%, rgba(213, 88, 119, 0.24), transparent 68%);
+  filter: blur(0.8px);
+  mix-blend-mode: multiply;
+  transform: rotate(-7deg);
+}
+
+.about-generated-watercolor::before {
+  inset: 8% 3% 2% 10%;
+  background: rgba(241, 163, 129, 0.2);
+  filter: blur(4px);
+  transform: rotate(17deg);
+}
+
+.about-generated-watercolor::after {
+  inset: 2% 11% 10% 1%;
+  border: 1px solid rgba(184, 96, 107, 0.16);
+  filter: blur(1.5px);
+  transform: rotate(-13deg);
+}
+
+@keyframes about-watercolor-drift {
+  0% {
+    transform: translate(-50%, -50%) translate3d(-1.1vw, 0.7vh, 0) rotate(-1deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) translate3d(0.8vw, -1.1vh, 0) rotate(1.5deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate3d(1.2vw, 0.6vh, 0) rotate(-0.5deg);
+  }
+}
+
 .about-focus {
   position: fixed;
   z-index: 200;
