@@ -34,13 +34,13 @@ const GENERATED_CENTERS: Point[] = [
 ];
 
 const DECORATIVE_WATERCOLORS = [
-  { x: 0.09, y: 0.25, size: 12, palette: "rose", delay: -1.4 },
-  { x: 0.91, y: 0.2, size: 15, palette: "apricot", delay: -4.8 },
-  { x: 0.08, y: 0.58, size: 10, palette: "blue", delay: -7.2 },
-  { x: 0.91, y: 0.53, size: 11, palette: "violet", delay: -2.9 },
-  { x: 0.13, y: 0.86, size: 14, palette: "apricot", delay: -6.1 },
-  { x: 0.42, y: 0.9, size: 9, palette: "rose", delay: -3.7 },
-  { x: 0.7, y: 0.91, size: 13, palette: "blue", delay: -8.4 },
+  { x: 0.09, y: 0.25, size: 12, source: 1 },
+  { x: 0.91, y: 0.2, size: 15, source: 2 },
+  { x: 0.08, y: 0.58, size: 10, source: 3 },
+  { x: 0.91, y: 0.53, size: 11, source: 4 },
+  { x: 0.13, y: 0.86, size: 14, source: 0 },
+  { x: 0.42, y: 0.9, size: 9, source: 1 },
+  { x: 0.7, y: 0.91, size: 13, source: 5 },
 ] as const;
 
 function focusBackgroundPosition(point: Point) {
@@ -153,6 +153,7 @@ export function AboutList({
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const trackerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const decorativeCanvasRef = useRef<HTMLCanvasElement>(null);
   const [centers, setCenters] = useState<Point[]>(INITIAL_CENTERS);
   const [stageSize, setStageSize] = useState<Size>({ width: 0, height: 0 });
   const centersRef = useRef<Point[]>(INITIAL_CENTERS);
@@ -194,18 +195,106 @@ export function AboutList({
   useEffect(() => {
     const video = videoRef.current;
     const canvas = trackerCanvasRef.current;
-    if (!video || !canvas) return;
+    const decorativeCanvas = decorativeCanvasRef.current;
+    const stage = stageRef.current;
+    if (!video || !canvas || !decorativeCanvas || !stage) return;
     const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) return;
+    const decorativeContext = decorativeCanvas.getContext("2d");
+    if (!context || !decorativeContext) return;
     const videoElement = video;
     const trackerCanvas = canvas;
     const trackerContext = context;
+    const watercolorCanvas = decorativeCanvas;
+    const watercolorContext = decorativeContext;
+    const stageElement = stage;
+    const sampleCanvas = document.createElement("canvas");
+    sampleCanvas.width = 256;
+    sampleCanvas.height = 256;
+    const sampleContext = sampleCanvas.getContext("2d");
 
     let animationFrame = 0;
     let lastTrackedAt = 0;
+    let lastPaintedAt = 0;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+    function paintDecorativeWatercolors(timestamp: number) {
+      if (
+        !sampleContext ||
+        videoElement.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        timestamp - lastPaintedAt < 45
+      ) {
+        return;
+      }
+
+      lastPaintedAt = timestamp;
+      const width = stageElement.clientWidth;
+      const height = stageElement.clientHeight;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      const renderWidth = Math.round(width * pixelRatio);
+      const renderHeight = Math.round(height * pixelRatio);
+      if (
+        watercolorCanvas.width !== renderWidth ||
+        watercolorCanvas.height !== renderHeight
+      ) {
+        watercolorCanvas.width = renderWidth;
+        watercolorCanvas.height = renderHeight;
+      }
+
+      watercolorContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      watercolorContext.clearRect(0, 0, width, height);
+      const sourceCenters = centersRef.current;
+      const sourceWidth = videoElement.videoWidth;
+      const sourceHeight = videoElement.videoHeight;
+      const cropSize = sourceWidth * 0.23;
+
+      DECORATIVE_WATERCOLORS.forEach((watercolor) => {
+        const source =
+          sourceCenters[watercolor.source] ??
+          INITIAL_CENTERS[watercolor.source] ??
+          INITIAL_CENTERS[0];
+        if (!source) return;
+
+        sampleContext.globalCompositeOperation = "source-over";
+        sampleContext.clearRect(0, 0, 256, 256);
+        sampleContext.drawImage(
+          videoElement,
+          source.x * sourceWidth - cropSize / 2,
+          source.y * sourceHeight - cropSize / 2,
+          cropSize,
+          cropSize,
+          0,
+          0,
+          256,
+          256,
+        );
+        sampleContext.globalCompositeOperation = "destination-in";
+        const mask = sampleContext.createRadialGradient(
+          128,
+          128,
+          45,
+          128,
+          128,
+          128,
+        );
+        mask.addColorStop(0, "rgba(0, 0, 0, 0.96)");
+        mask.addColorStop(0.58, "rgba(0, 0, 0, 0.72)");
+        mask.addColorStop(1, "rgba(0, 0, 0, 0)");
+        sampleContext.fillStyle = mask;
+        sampleContext.fillRect(0, 0, 256, 256);
+
+        const size = Math.min(176, Math.max(80, width * watercolor.size / 100));
+        watercolorContext.drawImage(
+          sampleCanvas,
+          watercolor.x * width - size / 2,
+          watercolor.y * height - size / 2,
+          size,
+          size,
+        );
+      });
+    }
+
     function followCircles(timestamp: number) {
+      paintDecorativeWatercolors(timestamp);
       if (
         !reducedMotion.matches &&
         active === null &&
@@ -329,21 +418,11 @@ export function AboutList({
           />
         </video>
         <canvas ref={trackerCanvasRef} hidden />
-        <div className="about-decorative-watercolors" aria-hidden="true">
-          {DECORATIVE_WATERCOLORS.map((watercolor, index) => (
-            <span
-              className={`about-decorative-watercolor about-decorative-watercolor--${watercolor.palette}`}
-              key={`${watercolor.x}-${watercolor.y}`}
-              style={{
-                left: `${watercolor.x * 100}%`,
-                top: `${watercolor.y * 100}%`,
-                width: `clamp(5rem, ${watercolor.size}vw, 11rem)`,
-                animationDelay: `${watercolor.delay}s`,
-                rotate: `${(index % 2 ? 1 : -1) * (4 + index)}deg`,
-              }}
-            />
-          ))}
-        </div>
+        <canvas
+          className="about-decorative-watercolors"
+          ref={decorativeCanvasRef}
+          aria-hidden="true"
+        />
         {notes.slice(0, INITIAL_CENTERS.length).map((note, index) => {
           const sourceCenter =
             centers[index] ?? INITIAL_CENTERS[index] ?? { x: 0.5, y: 0.5 };
