@@ -18,12 +18,8 @@ const notes: AboutNote[] = [
     label: "beautiful people",
   },
   {
-    text: "Costco croissants, toasted eight minutes at 350°, are supreme. I grew up poor, so my palate does not fancy fancier alternatives.",
-    label: "8 min / 350°",
-    image: {
-      src: "/about/costco-croissants.png",
-      alt: "A tray of Costco croissants",
-    },
+    text: "I see every being as a strange gift bestowed by whatever intelligence, accident, or higher order moves beneath the universe, and I wish upon each—mollusk, human, and every form of life between—the maximal capacity their physiology permits for experiencing joy. To exist at all is already an improbable cosmic event; to experience that existence joyfully is its highest expression.",
+    label: "My life philosophy",
   },
   {
     text: "Dekopons are the best citrus variety. God-tier juiciness, I'm telling you.",
