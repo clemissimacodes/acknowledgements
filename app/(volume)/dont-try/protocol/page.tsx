@@ -53,7 +53,7 @@ export default function SweatProtocolPage() {
     <main className="dont-try-page dont-try-protocol-page">
       <header className="dont-try-hero dont-try-protocol-hero">
         <div className="dont-try-rail">
-          <Link href="/dont-try">← Field log</Link>
+          <Link href="/secrets/dont-try">← Field log</Link>
           <span>Version 1.0 · 2026</span>
         </div>
         <p className="dont-try-kicker">The lighter protocol</p>
@@ -171,7 +171,7 @@ export default function SweatProtocolPage() {
           Pick a duration. Write one measurable promise beneath each pillar. Keep a visible,
           honest record. That is the whole protocol.
         </p>
-        <Link href="/dont-try">See the field log →</Link>
+        <Link href="/secrets/dont-try">See the field log →</Link>
       </section>
 
       <footer className="dont-try-footer">

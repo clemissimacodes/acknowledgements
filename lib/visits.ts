@@ -46,6 +46,20 @@ function hashIp(ip: string) {
   return createHmac("sha256", secret).update(ip).digest("hex");
 }
 
+function requestIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return request.headers.get("x-real-ip")?.trim() || forwarded || "";
+}
+
+export async function removeVisitsFromRequest(request: Request) {
+  const url = databaseUrl();
+  const ipHash = hashIp(requestIp(request));
+  if (!url || !ipHash) return;
+
+  const sql = neon(url);
+  await sql`DELETE FROM site_visits WHERE ip_hash = ${ipHash}`;
+}
+
 export async function recordVisit(request: Request, payload: {
   path?: unknown;
   referrer?: unknown;
@@ -62,8 +76,7 @@ export async function recordVisit(request: Request, payload: {
     return false;
   }
 
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = request.headers.get("x-real-ip")?.trim() || forwarded || "";
+  const ip = requestIp(request);
   const city = cleanLine(
     decodedHeader(request.headers.get("x-vercel-ip-city")),
     80,

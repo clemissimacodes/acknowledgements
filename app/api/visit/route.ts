@@ -1,5 +1,7 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { recordVisit } from "@/lib/visits";
+import { isAdminUser } from "@/lib/admin";
+import { recordVisit, removeVisitsFromRequest } from "@/lib/visits";
 
 export const runtime = "nodejs";
 
@@ -14,6 +16,16 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ ok: false }, { status: 403 });
     }
+  }
+
+  const user = await currentUser();
+  if (isAdminUser(user)) {
+    try {
+      await removeVisitsFromRequest(request);
+    } catch {
+      // Analytics cleanup should never interfere with the site.
+    }
+    return NextResponse.json({ ok: true });
   }
 
   let payload: { path?: unknown; referrer?: unknown };

@@ -14,7 +14,7 @@ export function VisitTracker() {
     ) {
       return;
     }
-    const key = `visit:${pathname}`;
+    const key = `visit:v2:${pathname}`;
     try {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, "1");

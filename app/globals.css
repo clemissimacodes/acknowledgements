@@ -39,6 +39,12 @@ html:has(.dont-try-page) .site-anchor {
   background: #f7f7f4;
 }
 
+html:has(.dont-try-page) .site-anchor {
+  left: 50%;
+  padding: 0 0.7rem;
+  transform: translateX(-50%);
+}
+
 .dont-try-page {
   --dont-accent: #111;
   width: calc(100% - 4rem);
@@ -151,30 +157,20 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 .dont-try-premise {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
-  gap: 2rem 9vw;
   padding: clamp(3rem, 8vh, 6rem) 0;
   border-top: 1px solid rgba(22, 20, 18, 0.24);
 }
 
-.dont-try-premise p {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.55;
-}
-
-.dont-try-premise p:last-child {
-  grid-column: 2;
-}
-
-.dont-try-premise .dont-try-pullquote {
-  grid-row: 1 / span 2;
-  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  font-style: italic;
-  line-height: 0.98;
-  text-wrap: balance;
+.dont-try-premise .dont-try-statement {
+  max-width: 68rem;
+  margin: 0 auto;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: clamp(1.55rem, 3.5vw, 3.25rem);
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-wrap: pretty;
 }
 
 .dont-try-protocol,
@@ -240,6 +236,10 @@ html:has(.dont-try-page) .site-anchor {
   font-weight: 700;
   font-size: clamp(2.8rem, 5vw, 4.2rem);
   line-height: 1;
+}
+
+.dont-try-protocol li > div {
+  height: 6.4rem;
 }
 
 .dont-try-protocol h3 {
@@ -576,6 +576,10 @@ html:has(.dont-try-page) .site-anchor {
   min-height: 21rem;
 }
 
+.dont-try-protocol-page .dont-try-protocol li > div {
+  height: 10rem;
+}
+
 .dont-try-protocol-page .dont-try-protocol strong {
   font-weight: 600;
   text-transform: uppercase;
@@ -882,13 +886,8 @@ html:has(.dont-try-page) .site-anchor {
     display: block;
   }
 
-  .dont-try-premise p {
-    margin-top: 1.2rem;
-  }
-
-  .dont-try-premise .dont-try-pullquote {
-    margin: 0 0 3rem;
-    font-size: clamp(2.4rem, 12vw, 3.7rem);
+  .dont-try-premise .dont-try-statement {
+    font-size: clamp(1.5rem, 7.5vw, 2.2rem);
   }
 
   .dont-try-section-heading {
@@ -916,6 +915,11 @@ html:has(.dont-try-page) .site-anchor {
 
   .dont-try-protocol li > span {
     font-size: 2.5rem;
+  }
+
+  .dont-try-protocol li > div,
+  .dont-try-protocol-page .dont-try-protocol li > div {
+    height: auto;
   }
 
   .dont-try-protocol-page .dont-try-protocol li {

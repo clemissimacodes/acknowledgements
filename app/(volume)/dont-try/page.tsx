@@ -83,7 +83,7 @@ export default async function DontTryPage() {
     <main className="dont-try-page">
       <header className="dont-try-hero">
         <div className="dont-try-rail" aria-label="Challenge details">
-          <Link href="/dont-try/protocol">SWEAT protocol</Link>
+          <Link href="/secrets/dont-try/protocol">SWEAT protocol</Link>
           <span>September 10 — December 18, 2026</span>
         </div>
         <p className="dont-try-kicker">A one-hundred-day field log</p>
@@ -108,15 +108,14 @@ export default async function DontTryPage() {
       </header>
 
       <section className="dont-try-premise">
-        <p className="dont-try-pullquote">Someone once told me: don’t try. Do.</p>
-        <p>
-          My weakness is consistency. I can be intensely motivated in spurts,
-          but I want to become someone who does what she said she would do when
-          motivation disappears.
-        </p>
-        <p>
-          This is an experiment in whether discipline can become habitual:
-          one hundred days, five promises, and no hiding the record.
+        <p className="dont-try-statement">
+          I&apos;m a model, which means I&apos;m pretty in shape. It also means
+          I&apos;ve become too comfortable with mediocrity in mindset and
+          training, because I look like I&apos;m in shape. In actuality,
+          I&apos;m abandoning sets at the gym and scrimping on my workouts. I
+          despise this feeling of not doing what I set out to do, so this is my
+          way of proving myself that when I try to do something, I don&apos;t
+          just try, I do.
         </p>
       </section>
 
@@ -136,7 +135,7 @@ export default async function DontTryPage() {
             </li>
           ))}
         </ol>
-        <Link className="dont-try-protocol-link" href="/dont-try/protocol">
+        <Link className="dont-try-protocol-link" href="/secrets/dont-try/protocol">
           Read the full protocol →
         </Link>
       </section>
