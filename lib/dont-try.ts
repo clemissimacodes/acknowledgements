@@ -18,6 +18,7 @@ export type DontTryEntry = {
   steps: number | null;
   eatComplete: boolean | null;
   eatNotes: string;
+  eatPhoto: string;
   act: string;
   actDifficulty: number | null;
   workout: string;
@@ -87,6 +88,18 @@ function cleanText(value: unknown, max: number) {
     .replace(/\r\n?/g, "\n")
     .trim()
     .slice(0, max);
+}
+
+function cleanPhoto(value: unknown) {
+  const photo = String(value ?? "").trim();
+  if (!photo) return "";
+  if (
+    photo.length > 900_000 ||
+    !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(photo)
+  ) {
+    throw new Error("Invalid food photo.");
+  }
+  return photo;
 }
 
 function boundedInteger(
@@ -173,6 +186,7 @@ async function ensureDontTryTable() {
       steps INTEGER CHECK (steps IS NULL OR steps BETWEEN 0 AND 1000000),
       eat_complete BOOLEAN,
       eat_notes TEXT NOT NULL DEFAULT '',
+      eat_photo_data TEXT NOT NULL DEFAULT '',
       act_text TEXT NOT NULL DEFAULT '',
       act_difficulty INTEGER
         CHECK (act_difficulty IS NULL OR act_difficulty BETWEEN 1 AND 10),
@@ -191,6 +205,10 @@ async function ensureDontTryTable() {
       PRIMARY KEY (challenge_id, day_number),
       UNIQUE (challenge_id, entry_date)
     )
+  `;
+  await db()`
+    ALTER TABLE dont_try_daily_entries
+    ADD COLUMN IF NOT EXISTS eat_photo_data TEXT NOT NULL DEFAULT ''
   `;
   await db()`
     INSERT INTO dont_try_daily_entries (challenge_id, day_number, entry_date)
@@ -216,6 +234,7 @@ function mapEntry(row: Record<string, unknown>): DontTryEntry {
     eatComplete:
       row.eat_complete === null ? null : Boolean(row.eat_complete),
     eatNotes: String(row.eat_notes ?? ""),
+    eatPhoto: String(row.eat_photo_data ?? ""),
     act: String(row.act_text ?? ""),
     actDifficulty:
       row.act_difficulty === null ? null : Number(row.act_difficulty),
@@ -307,6 +326,7 @@ export async function saveDontTryEntry(input: {
   steps: unknown;
   eatComplete: unknown;
   eatNotes: unknown;
+  eatPhoto: unknown;
   act: unknown;
   actDifficulty: unknown;
   workout: unknown;
@@ -328,6 +348,7 @@ export async function saveDontTryEntry(input: {
     steps: boundedInteger(input.steps, 0, 1_000_000),
     eatComplete: nullableBoolean(input.eatComplete),
     eatNotes: cleanText(input.eatNotes, 600),
+    eatPhoto: cleanPhoto(input.eatPhoto),
     act: cleanText(input.act, 800),
     actDifficulty: boundedInteger(input.actDifficulty, 1, 10),
     workout: cleanLine(input.workout, 160),
@@ -343,7 +364,7 @@ export async function saveDontTryEntry(input: {
   await db()`
     INSERT INTO dont_try_daily_entries (
       challenge_id, day_number, entry_date, status, study_poem, study_author,
-      study_notes, steps, eat_complete, eat_notes, act_text, act_difficulty,
+      study_notes, steps, eat_complete, eat_notes, eat_photo_data, act_text, act_difficulty,
       workout, duration_minutes, plank_seconds, train_notes, verdict,
       sets_abandoned, abandoned_notes, updated_at
     )
@@ -351,7 +372,7 @@ export async function saveDontTryEntry(input: {
       ${DONT_TRY_CHALLENGE_ID}, ${day}, ${dateForDay(day)}, ${status},
       ${values.studyPoem},
       ${values.studyAuthor}, ${values.studyNotes}, ${values.steps},
-      ${values.eatComplete}, ${values.eatNotes}, ${values.act},
+      ${values.eatComplete}, ${values.eatNotes}, ${values.eatPhoto}, ${values.act},
       ${values.actDifficulty}, ${values.workout}, ${values.durationMinutes},
       ${values.plankSeconds}, ${values.trainNotes}, ${values.verdict},
       ${values.setsAbandoned}, ${values.abandonedNotes}, NOW()
@@ -364,6 +385,7 @@ export async function saveDontTryEntry(input: {
       steps = EXCLUDED.steps,
       eat_complete = EXCLUDED.eat_complete,
       eat_notes = EXCLUDED.eat_notes,
+      eat_photo_data = EXCLUDED.eat_photo_data,
       act_text = EXCLUDED.act_text,
       act_difficulty = EXCLUDED.act_difficulty,
       workout = EXCLUDED.workout,

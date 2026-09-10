@@ -86,11 +86,7 @@ export default async function DontTryPage() {
           <Link href="/secrets/dont-try/protocol">SWEAT protocol</Link>
           <span>September 10 — December 18, 2026</span>
         </div>
-        <p className="dont-try-kicker">A one-hundred-day field log</p>
         <h1>DON’T TRY</h1>
-        <p className="dont-try-subtitle">
-          One hundred days of doing what I said I would do.
-        </p>
         <div className="dont-try-progress-copy">
           <span>Day {String(day).padStart(2, "0")} / 100</span>
           <span>{progress}%</span>
@@ -122,7 +118,6 @@ export default async function DontTryPage() {
       <section className="dont-try-protocol" aria-labelledby="sweat-title">
         <div className="dont-try-section-heading">
           <h2 id="sweat-title">The SWEAT protocol</h2>
-          <span>Five promises, daily</span>
         </div>
         <ol>
           {pillars.map((pillar) => (
@@ -143,7 +138,6 @@ export default async function DontTryPage() {
       <section className="dont-try-ledger" aria-labelledby="ledger-title">
         <div className="dont-try-section-heading">
           <h2 id="ledger-title">Ledger</h2>
-          <span>Published records only</span>
         </div>
         <dl>
           {statItems.map(([label, value]) => (
@@ -153,9 +147,6 @@ export default async function DontTryPage() {
             </div>
           ))}
         </dl>
-        <p className="dont-try-honesty">
-          Success is not a perfect record. Success is an accurate record.
-        </p>
       </section>
 
       <DontTryLog
@@ -165,23 +156,6 @@ export default async function DontTryPage() {
         canEdit={canEdit}
       />
 
-      <section className="dont-try-results" aria-labelledby="results-title">
-        <div className="dont-try-section-heading">
-          <h2 id="results-title">Results</h2>
-          <span>{day < 100 ? "Locked until Day 100" : "Day 100"}</span>
-        </div>
-        <p>
-          {day < 100
-            ? "The final record stays closed until the experiment is complete."
-            : "What changed, what did not, and what I learned will live here."}
-        </p>
-      </section>
-
-      <footer className="dont-try-footer">
-        <p>DON’T TRY.</p>
-        <p>100 DAYS.</p>
-        <p>JUST DO.</p>
-      </footer>
     </main>
   );
 }

@@ -31,6 +31,64 @@ function plankTime(seconds: number | null) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+function compressFoodPhoto(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read photo."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("Could not process photo."));
+      image.onload = () => {
+        const maximum = 900;
+        const scale = Math.min(1, maximum / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.68));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function FoodPhotoInput({ defaultValue }: { defaultValue: string }) {
+  const [photo, setPhoto] = useState(defaultValue);
+  const [processing, setProcessing] = useState(false);
+
+  return (
+    <div className="dont-try-food-photo">
+      <input type="hidden" name="eatPhoto" value={photo} />
+      {photo ? <img src={photo} alt="Food for this day" /> : null}
+      <label>
+        {photo ? "Replace food photo" : "Upload food photo"}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={processing}
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            setProcessing(true);
+            try {
+              setPhoto(await compressFoodPhoto(file));
+            } finally {
+              setProcessing(false);
+            }
+          }}
+        />
+      </label>
+      {photo ? (
+        <button type="button" onClick={() => setPhoto("")}>
+          Remove photo
+        </button>
+      ) : null}
+      {processing ? <span>Processing…</span> : null}
+    </div>
+  );
+}
+
 function DayRecord({
   entry,
   open = false,
@@ -83,6 +141,13 @@ function DayRecord({
                 ? "Kept ✓"
                 : "Not kept ✕"}
           </p>
+          {entry.eatPhoto ? (
+            <img
+              className="dont-try-food-image"
+              src={entry.eatPhoto}
+              alt={`Food from day ${entry.day}`}
+            />
+          ) : null}
           {entry.eatNotes ? <p>{entry.eatNotes}</p> : null}
         </section>
         <section>
@@ -103,14 +168,12 @@ function DayRecord({
           </p>
           {entry.trainNotes ? <p>{entry.trainNotes}</p> : null}
         </section>
-        {entry.setsAbandoned || entry.abandonedNotes ? (
-          <section>
-            <h3>Premature quitting</h3>
-            <p>Sets abandoned: {entry.setsAbandoned}</p>
-            {entry.abandonedNotes ? <p>{entry.abandonedNotes}</p> : null}
-          </section>
-        ) : null}
-        <blockquote>{entry.verdict || "No verdict recorded."}</blockquote>
+        <section>
+          <h3>No room for premature quitting</h3>
+          <p>Sets abandoned: {entry.setsAbandoned}</p>
+          {entry.abandonedNotes ? <p>{entry.abandonedNotes}</p> : null}
+        </section>
+        {entry.verdict ? <blockquote>{entry.verdict}</blockquote> : null}
       </div>
     </details>
   );
@@ -135,6 +198,7 @@ function OwnerEditor({
     steps: null,
     eatComplete: null,
     eatNotes: "",
+    eatPhoto: "",
     act: "",
     actDifficulty: null,
     workout: "",
@@ -199,6 +263,7 @@ function OwnerEditor({
               <option value="no">Not kept</option>
             </select>
             <textarea name="eatNotes" defaultValue={selected.eatNotes} placeholder="Food notes" aria-label="Food notes" />
+            <FoodPhotoInput defaultValue={selected.eatPhoto} />
           </fieldset>
           <fieldset>
             <legend>Act</legend>
@@ -238,7 +303,7 @@ function OwnerEditor({
             <textarea name="trainNotes" defaultValue={selected.trainNotes} placeholder="Training notes" aria-label="Training notes" />
           </fieldset>
           <fieldset>
-            <legend>Premature quitting</legend>
+            <legend>No room for premature quitting</legend>
             <input
               name="setsAbandoned"
               type="number"
@@ -329,9 +394,7 @@ export function DontTryLog({
         {today ? (
           <DayRecord entry={today} open />
         ) : (
-          <p className="dont-try-empty">
-            Today’s record has not been published.
-          </p>
+          <p className="dont-try-empty">—</p>
         )}
       </section>
 
@@ -362,7 +425,7 @@ export function DontTryLog({
               <DayRecord entry={entry} anchor key={entry.day} />
             ))
           ) : (
-            <p className="dont-try-empty">No published records yet.</p>
+            <p className="dont-try-empty">—</p>
           )}
         </div>
       </section>
@@ -370,7 +433,6 @@ export function DontTryLog({
       <section className="dont-try-calendar" aria-labelledby="dont-try-calendar-title">
         <div className="dont-try-section-heading">
           <h2 id="dont-try-calendar-title">One hundred days</h2>
-          <span>Accurate, not perfect</span>
         </div>
         <ol>
           {Array.from({ length: 100 }, (_, index) => index + 1).map((day) => {

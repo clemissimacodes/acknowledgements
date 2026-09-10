@@ -805,6 +805,42 @@ html:has(.dont-try-page) .site-anchor {
   gap: 0.55rem;
 }
 
+.dont-try-food-photo {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dont-try-food-photo img,
+.dont-try-food-image {
+  width: min(100%, 32rem);
+  height: auto;
+  display: block;
+  border: 1px solid rgba(22, 20, 18, 0.18);
+}
+
+.dont-try-food-photo label {
+  color: var(--ink);
+}
+
+.dont-try-food-photo input[type="file"] {
+  padding: 0.55rem;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.7rem;
+}
+
+.dont-try-food-photo > button {
+  width: fit-content;
+  min-height: 2rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--ink);
+  background: transparent;
+}
+
+.dont-try-food-photo > span {
+  color: var(--mute);
+  font-size: 0.65rem;
+}
+
 .dont-try-edit-actions {
   display: flex;
   align-items: stretch;

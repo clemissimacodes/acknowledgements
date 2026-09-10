@@ -27,6 +27,7 @@ function entryFromForm(formData: FormData) {
     steps: formData.get("steps"),
     eatComplete: formData.get("eatComplete"),
     eatNotes: formData.get("eatNotes"),
+    eatPhoto: formData.get("eatPhoto"),
     act: formData.get("act"),
     actDifficulty: formData.get("actDifficulty"),
     workout: formData.get("workout"),
