@@ -44,20 +44,17 @@ export default async function CiaPage() {
     <main className="cia-page cia-hq">
       <header className="cia-hero">
         <p className="cia-classification">Secrets</p>
-        <p className="cia-file-number">Headquarters memorandum · public copy</p>
-        <h1>Small facts, thoroughly peeled.</h1>
+        <p className="cia-file-number">Private workspace</p>
+        <h1>Everything in progress.</h1>
         <p className="cia-deck">
-          In-progress projects and deliberately modest investigations. Every
-          public record has a source, retrieval date, confidence label, and
-          correction path. Robots may notice changes; only Clementine may
-          publish them.
+          Work lives here before it goes live.
         </p>
       </header>
 
       <section className="cia-directorates" aria-labelledby="directorates-title">
         <div className="cia-section-title">
-          <h2 id="directorates-title">Inside Secrets</h2>
-          <span>Protected index</span>
+          <h2 id="directorates-title">In progress</h2>
+          <span>Private hub</span>
         </div>
         <ol>
           {exhibits.map((exhibit) => (
@@ -116,17 +113,19 @@ export default async function CiaPage() {
               <span className="cia-file-count">in progress</span>
             </Link>
           </li>
+          <li>
+            <Link href="/secrets/dont-try">
+              <span className="cia-directorate-number">09</span>
+              <span>
+                <strong>Don’t Try</strong>
+                <small>The private SWEAT challenge and daily field log.</small>
+              </span>
+              <span className="cia-file-count">private</span>
+            </Link>
+          </li>
         </ol>
       </section>
 
-      <aside className="cia-method-note">
-        <p className="cia-stamp">Provenance required</p>
-        <p>
-          Drafts, rejected leads, and withdrawn records are private. Public
-          files expose only the exact revision that passed owner review.
-        </p>
-        <Link href="/privacy#secrets-records">Read the sourcing policy</Link>
-      </aside>
     </main>
   );
 }
