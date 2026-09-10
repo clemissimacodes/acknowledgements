@@ -28,9 +28,9 @@ const pillars = [
   },
   {
     letter: "A",
-    name: "Act courageously",
+    name: "Act ___ly",
     mine: "Act on one uncomfortable, difficult, vulnerable, or scary thing. I expect this usually to be emotional rather than physical.",
-    yours: "Name the action you are avoiding. Courage must leave evidence.",
+    yours: "Choose the way of acting you struggle with. I chose courageously because courage is what I struggle with.",
   },
   {
     letter: "T",
@@ -70,7 +70,7 @@ export default function SweatProtocolPage() {
           promises for one day, then wake up and do it again.
         </p>
         <p>
-          The pillars always stay the same: study, walk, eat, act courageously, and train. The
+          The pillars always stay the same: study, walk, eat, act ___ly, and train. The
           promises underneath them belong to you.
         </p>
         <p>
