@@ -449,6 +449,7 @@ html:has(.dont-try-page) .site-anchor {
 .dont-try-calendar button {
   width: 100%;
   aspect-ratio: 1;
+  position: relative;
   padding: 0;
   color: rgba(22, 20, 18, 0.32);
   background: transparent;
@@ -457,6 +458,64 @@ html:has(.dont-try-page) .site-anchor {
   border-bottom: 1px solid rgba(22, 20, 18, 0.18);
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: 0.62rem;
+  perspective: 50rem;
+}
+
+.dont-try-day-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: block;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dont-try-calendar button.has-entry .dont-try-day-card-inner {
+  transform: rotateY(180deg);
+}
+
+.dont-try-day-card-front,
+.dont-try-day-card-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.65rem;
+  text-align: left;
+  backface-visibility: hidden;
+}
+
+.dont-try-day-card-front {
+  justify-content: space-between;
+}
+
+.dont-try-day-card-front strong {
+  color: #111;
+  font-weight: 500;
+}
+
+.dont-try-day-card-front time {
+  color: var(--mute);
+}
+
+.dont-try-day-card-back {
+  justify-content: center;
+  gap: 0.18rem;
+  transform: rotateY(180deg);
+  font-size: clamp(0.48rem, 0.65vw, 0.6rem);
+}
+
+.dont-try-day-card-back strong {
+  margin-bottom: 0.18rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dont-try-day-card-back > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dont-try-calendar button:not(:disabled) {
@@ -1023,11 +1082,11 @@ html:has(.dont-try-page) .site-anchor {
   }
 
   .dont-try-calendar ol {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .dont-try-calendar button {
-    min-height: 3rem;
+    min-height: 4.5rem;
   }
 
   .dont-try-workouts summary {

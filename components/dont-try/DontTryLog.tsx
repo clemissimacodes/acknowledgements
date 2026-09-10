@@ -26,6 +26,14 @@ function dateForDay(day: number) {
   return date.toISOString().slice(0, 10);
 }
 
+function shortDate(date: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
 function plankTime(seconds: number | null) {
   if (seconds === null) return "—";
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
@@ -441,7 +449,7 @@ export function DontTryLog({
               <li key={day}>
                 <button
                   type="button"
-                  className={entry ? `is-${entry.status}` : ""}
+                  className={entry ? `has-entry is-${entry.status}` : ""}
                   disabled={!entry}
                   title={
                     entry
@@ -454,7 +462,29 @@ export function DontTryLog({
                       ?.scrollIntoView({ behavior: "smooth", block: "center" });
                   }}
                 >
-                  {String(day).padStart(2, "0")}
+                  <span className="dont-try-day-card-inner">
+                    <span className="dont-try-day-card-front">
+                      <strong>Day {String(day).padStart(2, "0")}</strong>
+                      <time dateTime={dateForDay(day)}>
+                        {shortDate(dateForDay(day))}
+                      </time>
+                    </span>
+                    <span className="dont-try-day-card-back">
+                      <strong>{entry?.status}</strong>
+                      <span>S · {entry?.studyPoem || "—"}</span>
+                      <span>W · {entry?.steps?.toLocaleString() || "—"}</span>
+                      <span>
+                        E ·{" "}
+                        {entry?.eatComplete === true
+                          ? "kept"
+                          : entry?.eatComplete === false
+                            ? "missed"
+                            : "—"}
+                      </span>
+                      <span>A · {entry?.act ? "done" : "—"}</span>
+                      <span>T · {entry?.workout || "—"}</span>
+                    </span>
+                  </span>
                 </button>
               </li>
             );
