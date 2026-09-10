@@ -36,22 +36,51 @@ html:has(.dont-try-page),
 html:has(.dont-try-page) body,
 html:has(.dont-try-page) .volume,
 html:has(.dont-try-page) .site-anchor {
-  background: #f3efe6;
+  background: #f7f7f4;
 }
 
 .dont-try-page {
-  --dont-accent: #873a32;
-  width: min(100%, 76rem);
-  margin: 0 auto;
-  padding: calc(var(--site-content-top) + 4vh) 5vw 10vh;
+  --dont-accent: #111;
+  width: calc(100% - 4rem);
+  margin: 2rem;
+  padding: 0 1.15rem 8vh;
+  border: 1px solid #191919;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 .dont-try-hero {
-  min-height: min(44rem, 75vh);
+  min-height: min(50rem, 92vh);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  padding: var(--site-content-top) 0 2rem;
+}
+
+.dont-try-rail {
+  position: absolute;
+  top: 3.25rem;
+  right: 3.15rem;
+  left: 3.15rem;
+  display: flex;
   justify-content: flex-end;
-  padding-bottom: clamp(4rem, 9vh, 7rem);
+  gap: 2rem;
+  padding-left: 14rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.72);
+  font: 0.62rem/1.2 ui-monospace, "SFMono-Regular", Menlo, monospace;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.dont-try-rail a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dont-try-rail a:hover,
+.dont-try-rail a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
 }
 
 .dont-try-kicker,
@@ -67,27 +96,35 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 .dont-try-kicker {
-  margin: 0 0 1.3rem;
-  color: var(--dont-accent);
-  font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  margin: 0 0 2rem;
+  color: #111;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-align: center;
   text-transform: uppercase;
 }
 
 .dont-try-hero h1 {
   margin: 0;
-  font-size: clamp(5rem, 14vw, 11rem);
-  font-weight: 400;
-  letter-spacing: -0.065em;
-  line-height: 0.76;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: clamp(5rem, 15vw, 13rem);
+  font-weight: 700;
+  letter-spacing: -0.075em;
+  line-height: 0.78;
+  text-align: center;
 }
 
 .dont-try-subtitle {
-  width: min(34rem, 72vw);
-  margin: clamp(2rem, 5vh, 3.5rem) 0 4rem auto;
-  font-size: clamp(1.25rem, 2.6vw, 2.15rem);
-  font-style: italic;
-  line-height: 1.08;
+  width: min(38rem, 80vw);
+  margin: clamp(2.8rem, 7vh, 5rem) auto 4rem;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: clamp(0.68rem, 1vw, 0.82rem);
+  font-style: normal;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .dont-try-progress-copy {
@@ -117,14 +154,14 @@ html:has(.dont-try-page) .site-anchor {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
   gap: 2rem 9vw;
-  padding: clamp(4rem, 10vh, 8rem) 0;
+  padding: clamp(3rem, 8vh, 6rem) 0;
   border-top: 1px solid rgba(22, 20, 18, 0.24);
 }
 
 .dont-try-premise p {
   margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.58;
+  font-size: 0.78rem;
+  line-height: 1.55;
 }
 
 .dont-try-premise p:last-child {
@@ -133,7 +170,8 @@ html:has(.dont-try-page) .site-anchor {
 
 .dont-try-premise .dont-try-pullquote {
   grid-row: 1 / span 2;
-  font-size: clamp(2.35rem, 5vw, 4.8rem);
+  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
+  font-size: clamp(2.5rem, 5vw, 4.6rem);
   font-style: italic;
   line-height: 0.98;
   text-wrap: balance;
@@ -197,7 +235,9 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 .dont-try-protocol li > span {
-  color: var(--dont-accent);
+  color: #111;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
   font-size: clamp(2.8rem, 5vw, 4.2rem);
   line-height: 1;
 }
@@ -212,8 +252,25 @@ html:has(.dont-try-page) .site-anchor {
 
 .dont-try-protocol p {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.35;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.dont-try-protocol-link {
+  display: block;
+  width: fit-content;
+  margin: 2rem 0 0 auto;
+  color: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.dont-try-protocol-link:hover,
+.dont-try-protocol-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
 }
 
 .dont-try-ledger dl {
@@ -243,13 +300,14 @@ html:has(.dont-try-page) .site-anchor {
 
 .dont-try-ledger dd {
   margin: 0;
-  font-size: clamp(1.7rem, 3vw, 2.7rem);
+  font-size: clamp(1.4rem, 2.5vw, 2.35rem);
   font-variant-numeric: tabular-nums;
 }
 
 .dont-try-honesty {
   margin: 2rem 0 0 auto;
   max-width: 32rem;
+  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
   font-size: 1.15rem;
   font-style: italic;
   text-align: right;
@@ -310,15 +368,15 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 .dont-try-record.is-complete summary strong {
-  color: #416149;
+  color: #111;
 }
 
 .dont-try-record.is-partial summary strong {
-  color: #896929;
+  color: #555;
 }
 
 .dont-try-record.is-missed summary strong {
-  color: var(--dont-accent);
+  color: #111;
 }
 
 .dont-try-record-body {
@@ -351,6 +409,7 @@ html:has(.dont-try-page) .site-anchor {
   margin: 1rem 0 0;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(22, 20, 18, 0.14);
+  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
   font-size: clamp(1.35rem, 2.5vw, 2.1rem);
   font-style: italic;
 }
@@ -406,16 +465,17 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 .dont-try-calendar button.is-complete {
-  background: rgba(65, 97, 73, 0.18);
+  color: #f7f7f4;
+  background: #191919;
 }
 
 .dont-try-calendar button.is-partial {
-  background: rgba(137, 105, 41, 0.16);
+  background: #d7d7d2;
 }
 
 .dont-try-calendar button.is-missed {
-  color: var(--dont-accent);
-  background: rgba(135, 58, 50, 0.12);
+  color: #111;
+  background: #efefeb;
 }
 
 .dont-try-workouts > details {
@@ -482,6 +542,148 @@ html:has(.dont-try-page) .site-anchor {
   font-style: italic;
 }
 
+.dont-try-protocol-hero {
+  min-height: min(45rem, 86vh);
+}
+
+.dont-try-protocol-letter,
+.dont-try-protocol-rules,
+.dont-try-protocol-day,
+.dont-try-protocol-copy {
+  padding: clamp(3rem, 8vh, 6rem) 0;
+  border-top: 1px solid rgba(22, 20, 18, 0.24);
+}
+
+.dont-try-protocol-letter {
+  max-width: 54rem;
+  margin-left: auto;
+}
+
+.dont-try-protocol-letter p {
+  margin: 0 0 1.25rem;
+  font-size: clamp(0.78rem, 1.25vw, 0.95rem);
+  line-height: 1.65;
+}
+
+.dont-try-protocol-letter .dont-try-protocol-signoff {
+  margin-top: 2.5rem;
+  font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
+  font-size: clamp(1.4rem, 3vw, 2.25rem);
+  font-style: italic;
+}
+
+.dont-try-protocol-page .dont-try-protocol li {
+  min-height: 21rem;
+}
+
+.dont-try-protocol-page .dont-try-protocol strong {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.dont-try-protocol-page .dont-try-protocol .dont-try-protocol-yours {
+  margin-top: 0.75rem;
+  color: var(--mute);
+}
+
+.dont-try-protocol-rules ol {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgba(22, 20, 18, 0.18);
+  list-style: none;
+}
+
+.dont-try-protocol-rules li {
+  display: grid;
+  grid-template-columns: minmax(3rem, 0.25fr) minmax(0, 1.75fr);
+  gap: 1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.18);
+}
+
+.dont-try-protocol-rules li > span {
+  color: var(--mute);
+  font-size: 0.68rem;
+}
+
+.dont-try-protocol-rules h3 {
+  margin: 0 0 0.55rem;
+  font: 500 0.72rem/1.2 ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dont-try-protocol-rules p {
+  max-width: 46rem;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.dont-try-protocol-day > div:last-child {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid rgba(22, 20, 18, 0.18);
+  border-left: 1px solid rgba(22, 20, 18, 0.18);
+}
+
+.dont-try-protocol-day p {
+  min-height: 12rem;
+  margin: 0;
+  padding: 1rem;
+  border-right: 1px solid rgba(22, 20, 18, 0.18);
+  border-bottom: 1px solid rgba(22, 20, 18, 0.18);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.dont-try-protocol-day p span {
+  display: block;
+  margin-bottom: 3rem;
+  font: 500 0.62rem/1.2 ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dont-try-protocol-copy {
+  min-height: 34rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.dont-try-protocol-copy h2 {
+  margin: 0;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: clamp(3rem, 8vw, 7rem);
+  letter-spacing: -0.065em;
+  line-height: 0.88;
+}
+
+.dont-try-protocol-copy > p:not(.dont-try-kicker) {
+  max-width: 36rem;
+  margin: 3rem auto 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.dont-try-protocol-copy a {
+  width: fit-content;
+  margin: 2rem auto 0;
+  color: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.dont-try-protocol-copy a:hover,
+.dont-try-protocol-copy a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+
 .dont-try-results {
   min-height: 18rem;
 }
@@ -501,13 +703,16 @@ html:has(.dont-try-page) .site-anchor {
 
 .dont-try-footer p {
   margin: 0;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: clamp(2.3rem, 7vw, 5.8rem);
+  font-weight: 700;
+  letter-spacing: -0.055em;
   line-height: 0.9;
 }
 
 .dont-try-footer p:nth-child(2) {
-  color: var(--dont-accent);
-  font-style: italic;
+  color: #111;
+  font-style: normal;
 }
 
 .dont-try-owner {
@@ -643,13 +848,24 @@ html:has(.dont-try-page) .site-anchor {
 
 @media (max-width: 767px) {
   .dont-try-page {
-    padding: calc(var(--site-content-top) + 2rem) 1.25rem
-      max(4rem, env(safe-area-inset-bottom));
+    width: calc(100% - 1rem);
+    margin: 0.5rem;
+    padding: 0 0.75rem max(4rem, env(safe-area-inset-bottom));
+  }
+
+  .dont-try-rail {
+    top: 4.8rem;
+    right: 1.25rem;
+    left: 1.25rem;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-left: 0;
+    font-size: 0.52rem;
   }
 
   .dont-try-hero {
-    min-height: 68dvh;
-    padding-bottom: 4rem;
+    min-height: 82dvh;
+    padding: calc(var(--site-content-top) + 4rem) 0 3rem;
   }
 
   .dont-try-hero h1 {
@@ -700,6 +916,30 @@ html:has(.dont-try-page) .site-anchor {
 
   .dont-try-protocol li > span {
     font-size: 2.5rem;
+  }
+
+  .dont-try-protocol-page .dont-try-protocol li {
+    min-height: 0;
+  }
+
+  .dont-try-protocol-letter {
+    margin-left: 0;
+  }
+
+  .dont-try-protocol-day > div:last-child {
+    grid-template-columns: 1fr;
+  }
+
+  .dont-try-protocol-day p {
+    min-height: 0;
+  }
+
+  .dont-try-protocol-day p span {
+    margin-bottom: 1.25rem;
+  }
+
+  .dont-try-protocol-copy {
+    min-height: 28rem;
   }
 
   .dont-try-ledger dl {
