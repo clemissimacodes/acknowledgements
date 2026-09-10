@@ -138,7 +138,7 @@ export default function SweatProtocolPage() {
       <section className="dont-try-workouts" aria-labelledby="workouts-title">
         <div className="dont-try-section-heading">
           <h2 id="workouts-title">My training rotation</h2>
-          <span>Four workouts · John Benton</span>
+          <span>Four workouts</span>
         </div>
         {DONT_TRY_WORKOUTS.map((workout) => (
           <details key={workout.number}>
