@@ -83,8 +83,7 @@ export default function DontTryProtocolPage() {
 
       <section className="dont-try-protocol" aria-labelledby="protocol-pillars">
         <div className="dont-try-section-heading">
-          <h2 id="protocol-pillars">The five pillars</h2>
-          <span>Fixed structure · personal promises</span>
+          <h2 id="protocol-pillars">For 100 days, force yourself to</h2>
         </div>
         <ol>
           {pillars.map((pillar) => (
@@ -143,7 +142,7 @@ export default function DontTryProtocolPage() {
         {DONT_TRY_WORKOUTS.map((workout) => (
           <details key={workout.number}>
             <summary>
-              <span>Workout {workout.number}</span>
+              <span>HAF workout {workout.number}</span>
               <small>{workout.duration} · {workout.equipment}</small>
             </summary>
             <div className="dont-try-workout-body">
