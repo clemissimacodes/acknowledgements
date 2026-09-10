@@ -83,7 +83,7 @@ export default async function DontTryPage() {
     <main className="dont-try-page">
       <header className="dont-try-hero">
         <div className="dont-try-rail" aria-label="Challenge details">
-          <Link href="/secrets/dont-try/protocol">SWEAT protocol</Link>
+          <Link href="/secrets/dont-try/protocol">Don’t Try protocol</Link>
           <span>September 10 — December 18, 2026</span>
         </div>
         <h1>DON’T TRY</h1>
@@ -117,7 +117,7 @@ export default async function DontTryPage() {
 
       <section className="dont-try-protocol" aria-labelledby="sweat-title">
         <div className="dont-try-section-heading">
-          <h2 id="sweat-title">SWEAT daily.</h2>
+          <h2 id="sweat-title">Every day.</h2>
         </div>
         <ol>
           {pillars.map((pillar) => (

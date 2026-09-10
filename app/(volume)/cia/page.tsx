@@ -118,7 +118,7 @@ export default async function CiaPage() {
               <span className="cia-directorate-number">09</span>
               <span>
                 <strong>Don’t Try</strong>
-                <small>The private SWEAT challenge and daily field log.</small>
+                <small>The private Don’t Try challenge and daily field log.</small>
               </span>
               <span className="cia-file-count">private</span>
             </Link>

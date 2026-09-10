@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DONT_TRY_WORKOUTS } from "@/lib/dont-try-workouts";
 
 export const metadata: Metadata = {
-  title: "The SWEAT Protocol",
+  title: "The Don’t Try Protocol",
   description: "Five daily promises for becoming someone who does what they said they would do.",
 };
 
@@ -48,7 +48,7 @@ const rules = [
   ["Review, don’t bargain", "Notice patterns during the challenge. Save major protocol changes for the next cycle."],
 ] as const;
 
-export default function SweatProtocolPage() {
+export default function DontTryProtocolPage() {
   return (
     <main className="dont-try-page dont-try-protocol-page">
       <header className="dont-try-hero dont-try-protocol-hero">
@@ -56,10 +56,10 @@ export default function SweatProtocolPage() {
           <Link href="/secrets/dont-try">← Field log</Link>
           <span>Version 1.0 · 2026</span>
         </div>
-        <p className="dont-try-kicker">The lighter protocol</p>
-        <h1>SWEAT</h1>
+        <p className="dont-try-kicker">The protocol</p>
+        <h1>DON’T TRY</h1>
         <p className="dont-try-subtitle">
-          Five promises for becoming someone who does what they said they would do.
+          Five promises. One hundred days.
         </p>
       </header>
 
@@ -166,7 +166,7 @@ export default function SweatProtocolPage() {
 
       <section className="dont-try-protocol-copy">
         <p className="dont-try-kicker">Make it yours</p>
-        <h2>Keep SWEAT.<br />Rewrite the promises.</h2>
+        <h2>Keep the five.<br />Rewrite the promises.</h2>
         <p>
           Pick a duration. Write one measurable promise beneath each pillar. Keep a visible,
           honest record. That is the whole protocol.
