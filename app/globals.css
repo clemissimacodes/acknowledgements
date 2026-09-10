@@ -40,9 +40,9 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 html:has(.dont-try-page) .site-anchor {
-  left: 50%;
-  padding: 0 0.7rem;
-  transform: translateX(-50%);
+  left: 6vw;
+  padding: 0;
+  transform: none;
 }
 
 .dont-try-page {
@@ -64,7 +64,7 @@ html:has(.dont-try-page) .site-anchor {
 
 .dont-try-rail {
   position: absolute;
-  top: 3.25rem;
+  top: calc(var(--site-anchor-top) + 3rem);
   right: 3.15rem;
   left: 3.15rem;
   display: flex;

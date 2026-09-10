@@ -11,31 +11,31 @@ const pillars = [
   {
     letter: "S",
     name: "Study",
-    mine: "Deeply study one poem.",
+    mine: "Study 1 poem deeply.",
     yours: "Choose something you want to understand, then define one daily unit.",
   },
   {
     letter: "W",
     name: "Walk",
-    mine: "Walk 12,000 steps.",
+    mine: "Walk 12,000 steps at the very least.",
     yours: "Choose a distance, step count, or amount of time that makes you leave the house.",
   },
   {
     letter: "E",
     name: "Eat",
-    mine: "Whole foods. No added sugar, alcohol, or recreational drugs.",
+    mine: "Eat whole foods only. No added sugar, no ultra-processed foods, no alcohol.",
     yours: "Write a food rule simple enough to follow and specific enough to score.",
   },
   {
     letter: "A",
     name: "Act courageously",
-    mine: "Do one uncomfortable, difficult, vulnerable, or scary thing.",
+    mine: "Act on one uncomfortable, difficult, vulnerable, or scary thing. I expect this usually to be emotional rather than physical.",
     yours: "Name the action you are avoiding. Courage must leave evidence.",
   },
   {
     letter: "T",
     name: "Train",
-    mine: "Complete one hard workout. Work toward an eight-minute plank.",
+    mine: "Complete one HAF (hard as f) workout of my choice.",
     yours: "Choose a repeatable training practice and one result you want to move.",
   },
 ] as const;

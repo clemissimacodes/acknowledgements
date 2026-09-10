@@ -163,14 +163,20 @@ async function ensureDontTryTable() {
     VALUES (
       ${DONT_TRY_CHALLENGE_ID}, 'clementine', 'Clementine Kay Shao',
       ${DONT_TRY_START}, ${DONT_TRY_DAYS},
-      'Deeply study one poem every day.',
-      'Walk 12,000 steps every day.',
-      'Whole foods. No added sugar, alcohol, or recreational drugs.',
-      'Do one uncomfortable, difficult, vulnerable, or scary thing.',
-      'Complete one hard workout. Work toward an eight-minute plank.',
+      'Study 1 poem deeply.',
+      'Walk 12,000 steps at the very least.',
+      'Eat whole foods only. No added sugar, no ultra-processed foods, no alcohol.',
+      'Act on one uncomfortable, difficult, vulnerable, or scary thing. I expect this usually to be emotional rather than physical.',
+      'Complete one HAF (hard as f) workout of my choice.',
       TRUE
     )
-    ON CONFLICT (id) DO NOTHING
+    ON CONFLICT (id) DO UPDATE SET
+      study_promise = EXCLUDED.study_promise,
+      walk_promise = EXCLUDED.walk_promise,
+      eat_promise = EXCLUDED.eat_promise,
+      act_promise = EXCLUDED.act_promise,
+      train_promise = EXCLUDED.train_promise,
+      updated_at = NOW()
   `;
   await db()`
     CREATE TABLE IF NOT EXISTS dont_try_daily_entries (

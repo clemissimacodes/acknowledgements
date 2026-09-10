@@ -19,27 +19,27 @@ const pillars = [
   {
     letter: "S",
     name: "Study",
-    promise: "Deeply study one poem every day.",
+    promise: "Study 1 poem deeply.",
   },
   {
     letter: "W",
     name: "Walk",
-    promise: "Walk 12,000 steps every day.",
+    promise: "Walk 12,000 steps at the very least.",
   },
   {
     letter: "E",
     name: "Eat",
-    promise: "Whole foods. No added sugar, alcohol, or recreational drugs.",
+    promise: "Eat whole foods only. No added sugar, no ultra-processed foods, no alcohol.",
   },
   {
     letter: "A",
     name: "Act courageously",
-    promise: "Do one uncomfortable, difficult, vulnerable, or scary thing.",
+    promise: "Act on one uncomfortable, difficult, vulnerable, or scary thing. I expect this usually to be emotional rather than physical.",
   },
   {
     letter: "T",
     name: "Train",
-    promise: "Complete one hard workout. Work toward an eight-minute plank.",
+    promise: "Complete one HAF (hard as f) workout of my choice.",
   },
 ] as const;
 
@@ -117,7 +117,7 @@ export default async function DontTryPage() {
 
       <section className="dont-try-protocol" aria-labelledby="sweat-title">
         <div className="dont-try-section-heading">
-          <h2 id="sweat-title">The SWEAT protocol</h2>
+          <h2 id="sweat-title">SWEAT daily.</h2>
         </div>
         <ol>
           {pillars.map((pillar) => (
