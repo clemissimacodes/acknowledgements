@@ -4,6 +4,7 @@ import { MailLink } from "@/components/MailLink";
 
 const works = [
   { title: "Teeny Tiny Things", href: "/teeny-tiny-things" },
+  { title: "DON’T TRY", href: "/dont-try" },
   {
     title: "Modeling",
     href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
