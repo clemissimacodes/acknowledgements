@@ -531,7 +531,7 @@ html:has(.about-page) .site-anchor,
   place-items: center;
   padding: 4vh 4vw;
   overflow: hidden;
-  background: #f6f1e8;
+  background: #f8f3e9;
   cursor: zoom-out;
   animation: about-focus-wash 280ms ease-out;
 }
@@ -558,11 +558,11 @@ html:has(.about-page) .site-anchor,
   place-items: center;
   width: min(82vw, 82dvh);
   aspect-ratio: 1;
-  padding: clamp(3rem, 8vw, 8rem);
+  padding: clamp(2rem, 5vw, 5rem);
   overflow: hidden;
   text-align: center;
   text-wrap: balance;
-  background-color: #f6f1e8;
+  background-color: #f8f3e9;
   background-repeat: no-repeat;
   background-size: auto 390%;
   border: 1px solid rgba(22, 20, 18, 0.14);
@@ -579,7 +579,7 @@ html:has(.about-page) .site-anchor,
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: rgba(246, 241, 232, 0.66);
+  background: rgba(248, 243, 233, 0.66);
   backdrop-filter: blur(1.5px);
 }
 
@@ -596,9 +596,9 @@ html:has(.about-page) .site-anchor,
 
 .about-focus-circle p {
   margin: 0;
-  max-width: 25ch;
-  font-size: clamp(1.45rem, 4vw, 3.7rem);
-  line-height: 1.04;
+  max-width: 30ch;
+  font-size: clamp(1.25rem, 3vw, 2.8rem);
+  line-height: 1.08;
 }
 
 .about-focus-circle a {
@@ -1561,7 +1561,8 @@ html:has(.about-page) .site-anchor,
   }
 
   .about-focus-circle p {
-    font-size: clamp(1.25rem, 6.3vw, 2.35rem);
+    font-size: clamp(1rem, 4.6vw, 1.8rem);
+    line-height: 1.1;
   }
 
   .poetry-index a {
@@ -1648,7 +1649,7 @@ html:has(.about-page) .site-anchor,
   }
 
   .about-focus-circle p {
-    font-size: clamp(1.2rem, min(3.4vw, 7vh), 2.6rem);
+    font-size: clamp(1rem, min(2.8vw, 5.5vh), 2.1rem);
   }
 }
 

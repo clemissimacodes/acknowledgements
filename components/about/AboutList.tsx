@@ -383,7 +383,7 @@ export function AboutList({
             type="button"
             onClick={closeNote}
           >
-            close
+            Close
           </button>
           <div
             className="about-focus-circle"
