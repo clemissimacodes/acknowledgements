@@ -59,7 +59,7 @@ export default function DontTryProtocolPage() {
         <p className="dont-try-kicker">The protocol</p>
         <h1>DON’T TRY</h1>
         <p className="dont-try-subtitle">
-          Five promises. One hundred days.
+          SWEAT for 100 days.
         </p>
       </header>
 
