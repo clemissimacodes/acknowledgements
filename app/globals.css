@@ -357,7 +357,7 @@ html:has(.about-page) .site-anchor,
 .about-page,
 .about-orbit,
 .about-orbit-stage {
-  background: #f8f3e9;
+  background: #faf5ec;
 }
 
 .about-page {
@@ -531,7 +531,7 @@ html:has(.about-page) .site-anchor,
   place-items: center;
   padding: 4vh 4vw;
   overflow: hidden;
-  background: #f8f3e9;
+  background: #faf5ec;
   cursor: zoom-out;
   animation: about-focus-wash 280ms ease-out;
 }
@@ -562,7 +562,7 @@ html:has(.about-page) .site-anchor,
   overflow: hidden;
   text-align: center;
   text-wrap: balance;
-  background-color: #f8f3e9;
+  background-color: #faf5ec;
   background-repeat: no-repeat;
   background-size: auto 390%;
   border: 1px solid rgba(22, 20, 18, 0.14);
@@ -579,7 +579,7 @@ html:has(.about-page) .site-anchor,
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: rgba(248, 243, 233, 0.66);
+  background: rgba(250, 245, 236, 0.66);
   backdrop-filter: blur(1.5px);
 }
 
