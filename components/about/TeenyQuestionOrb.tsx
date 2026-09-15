@@ -59,7 +59,7 @@ export function TeenyQuestionOrb() {
         aria-haspopup="dialog"
         ref={openerRef}
       >
-        <span>stick ur nose<br />in too</span>
+        <span>ur welcome to<br />stick ur nose in too</span>
       </button>
 
       {open ? (

@@ -409,20 +409,21 @@ export function AboutList({
       </div>
 
       <div className="about-orbit-filter" aria-label="Choose tiny things">
-        <span className="about-orbit-filter-label">filter</span>
+        <span className="about-orbit-filter-label">btw you can filter by</span>
         <button
           type="button"
           className={view === "mine" ? "is-active" : ""}
           onClick={() => setView("mine")}
         >
-          my tiny things
+          my teeny tiny things
         </button>
+        <span className="about-orbit-filter-or">or</span>
         <button
           type="button"
           className={view === "internet" ? "is-active" : ""}
           onClick={() => setView("internet")}
         >
-          tiny things nosy internet humans want to know about me
+          teeny tiny things nosy internet humans want to know about me
         </button>
       </div>
 

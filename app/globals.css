@@ -1613,8 +1613,9 @@ html:has(.about-page) .site-anchor,
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  gap: 0.32rem;
-  max-width: min(25rem, 72vw);
+  gap: 0.24rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
   padding: 0.55rem 0.7rem;
   color: rgba(22, 20, 18, 0.45);
   background: rgba(250, 245, 236, 0.68);
@@ -1626,10 +1627,12 @@ html:has(.about-page) .site-anchor,
 .about-orbit-filter-label {
   margin-bottom: 0.18rem;
   color: rgba(22, 20, 18, 0.38);
-  font-size: 0.52rem;
-  font-style: normal;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.58rem;
+}
+
+.about-orbit-filter-or {
+  color: rgba(22, 20, 18, 0.38);
+  font-size: 0.55rem;
 }
 
 .about-orbit-filter button {
@@ -1640,6 +1643,11 @@ html:has(.about-page) .site-anchor,
   line-height: 1.25;
   text-align: left;
   cursor: pointer;
+}
+
+.about-orbit-filter button:last-child {
+  white-space: nowrap;
+  font-size: clamp(0.46rem, 1vw, 0.64rem);
 }
 
 .about-orbit-filter button.is-active {
