@@ -386,8 +386,8 @@ export function PoetryAnnotations({
                 >
                   {(byLine.get(-2)?.length ?? 0) || "+"}
                 </span>
+                {annotationMargin(-2)}
               </div>
-              {annotationMargin(-2)}
             </div>
             {dedication ? (
               <div className="poem-line-block poem-heading-annotation">
@@ -416,8 +416,8 @@ export function PoetryAnnotations({
                   >
                     {(byLine.get(-1)?.length ?? 0) || "+"}
                   </span>
+                  {annotationMargin(-1)}
                 </div>
-                {annotationMargin(-1)}
               </div>
             ) : null}
           </div>
@@ -465,8 +465,8 @@ export function PoetryAnnotations({
                       +
                     </span>
                   )}
+                  {annotationMargin(index)}
                 </div>
-                {annotationMargin(index)}
               </div>
             );
           })}

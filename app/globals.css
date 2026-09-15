@@ -2514,6 +2514,7 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-line-row {
+  position: relative;
   display: flex;
   width: fit-content;
   max-width: 100%;
@@ -2682,7 +2683,7 @@ html:has(.about-page) .site-anchor,
   position: absolute;
   z-index: 20;
   top: -0.3rem;
-  left: calc(100% + 1.4rem);
+  left: calc(100% + 0.45rem);
   width: 15rem;
   max-height: min(65dvh, 26rem);
   margin: 0;
@@ -2715,7 +2716,7 @@ html:has(.about-page) .site-anchor,
   position: absolute;
   z-index: 10;
   top: -0.35rem;
-  left: calc(100% + 2rem);
+  left: calc(100% + 0.45rem);
   width: 17rem;
   max-height: 16rem;
   padding: 0.8rem 0.9rem;
@@ -2746,8 +2747,8 @@ html:has(.about-page) .site-anchor,
   margin: 0;
 }
 
-.poem-line-block:hover > .poem-hover-notes,
-.poem-line-block:focus-within > .poem-hover-notes {
+.poem-line-block:hover .poem-hover-notes,
+.poem-line-block:focus-within .poem-hover-notes {
   opacity: 1;
   visibility: visible;
   transform: translateX(0);
