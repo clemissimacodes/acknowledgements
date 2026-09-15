@@ -210,11 +210,9 @@ export function PoetryAnnotations({
     }
   }
 
-  function annotationMargin(index: number, text: string) {
+  function annotationMargin(index: number) {
     const targetNotes = byLine.get(index) ?? [];
     const isActive = active === index;
-    const label =
-      index === -2 ? "Title" : index === -1 ? "Dedication" : `Line ${index + 1}`;
 
     return (
       <>
@@ -240,8 +238,6 @@ export function PoetryAnnotations({
             >
               ×
             </button>
-            <p className="margin-line">{label}</p>
-            <p className="margin-quote">{text}</p>
             {targetNotes.length ? (
               <ol className="line-annot-notes">
                 {targetNotes.map((note) =>
@@ -306,19 +302,11 @@ export function PoetryAnnotations({
               </ol>
             ) : null}
             <form className="note-form" onSubmit={submit}>
-              <input
-                value={name}
-                maxLength={60}
-                autoComplete="nickname"
-                placeholder="Your name, if you like"
-                aria-label="Name, optional"
-                onChange={(event) => setName(event.target.value)}
-              />
               <textarea
                 required
                 minLength={2}
                 maxLength={600}
-                rows={3}
+                rows={2}
                 value={body}
                 placeholder="thought or question"
                 aria-label="Thought or question"
@@ -331,28 +319,36 @@ export function PoetryAnnotations({
                 autoComplete="off"
                 aria-hidden="true"
               />
-              <button
-                className="poem-note-send"
-                type="submit"
-                disabled={busy}
-                aria-label="Post thought or question"
-                title="Post"
-              >
-                {busy ? (
-                  "…"
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M4.5 10.5 12 3l7.5 7.5M12 3v18" />
-                  </svg>
-                )}
-              </button>
-              <p className="poem-note-public">
-                This will be public. No name needed.
-              </p>
+              <div className="poem-note-footer">
+                <input
+                  value={name}
+                  maxLength={60}
+                  autoComplete="nickname"
+                  placeholder="name, if you like"
+                  aria-label="Name, optional"
+                  onChange={(event) => setName(event.target.value)}
+                />
+                <p className="poem-note-public">public · name optional</p>
+                <button
+                  className="poem-note-send"
+                  type="submit"
+                  disabled={busy}
+                  aria-label="Post thought or question"
+                  title="Post"
+                >
+                  {busy ? (
+                    "…"
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M4.5 10.5 12 3l7.5 7.5M12 3v18" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         ) : null}
@@ -401,7 +397,7 @@ export function PoetryAnnotations({
                   {(byLine.get(-2)?.length ?? 0) || "+"}
                 </span>
               </div>
-              {annotationMargin(-2, title)}
+              {annotationMargin(-2)}
             </div>
             {dedication ? (
               <div className="poem-line-block poem-heading-annotation">
@@ -431,12 +427,12 @@ export function PoetryAnnotations({
                     {(byLine.get(-1)?.length ?? 0) || "+"}
                   </span>
                 </div>
-                {annotationMargin(-1, `for ${dedication}`)}
+                {annotationMargin(-1)}
               </div>
             ) : null}
           </div>
           <p className="poem-annotation-instruction">
-            A line may have company. Hover to listen; tap to leave a thought.
+            The margins are open. Choose any line.
           </p>
         </div>
         {error ? (
@@ -483,7 +479,7 @@ export function PoetryAnnotations({
                     </span>
                   )}
                 </div>
-                {annotationMargin(index, line)}
+                {annotationMargin(index)}
               </div>
             );
           })}
