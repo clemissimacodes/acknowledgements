@@ -232,8 +232,15 @@ export function PoetryAnnotations({
             <h1>{title}</h1>
             {dedication ? <p className="poem-for">for {dedication}</p> : null}
           </div>
-          <p className="poem-annotation-instruction">Tap a line to write in its margin.</p>
+          <p className="poem-annotation-instruction">
+            Hover to read. Tap a line to write.
+          </p>
         </div>
+        {error ? (
+          <p className="poem-margin-error" role="status">
+            {error}
+          </p>
+        ) : null}
         <div className="poem-lines">
           {lines.map((line, index) => {
             const lineNotes = byLine.get(index) ?? [];
@@ -273,42 +280,125 @@ export function PoetryAnnotations({
                     </span>
                   )}
                 </div>
+                {lineNotes.length && !isActive ? (
+                  <aside className="poem-hover-notes" aria-hidden="true">
+                    {lineNotes.map((note) => (
+                      <div key={note.id}>
+                        <p className="margin-meta">
+                          <span>{note.kind}</span>
+                          <span>{displayName(note)}</span>
+                        </p>
+                        <p>{note.body}</p>
+                      </div>
+                    ))}
+                  </aside>
+                ) : null}
                 {isActive ? (
                   <div className="line-annot" ref={annotationRef}>
+                    <button
+                      className="line-annot-close"
+                      type="button"
+                      aria-label="Close annotation form"
+                      onClick={() => setActive(null)}
+                    >
+                      Close
+                    </button>
                     <p className="margin-line">Line {index + 1}</p>
                     <p className="margin-quote">{line}</p>
                     {activeNotes.length ? (
                       <ol className="line-annot-notes">
-                        {activeNotes.map((note) => (
-                          <li key={note.id}>
-                            <p className="margin-meta">
-                              <span>{note.kind}</span>
-                              <span>{displayName(note)}</span>
-                            </p>
-                            <p>{note.body}</p>
-                          </li>
-                        ))}
+                        {activeNotes.map((note) =>
+                          editingId === note.id ? (
+                            <li key={note.id}>
+                              <form
+                                className="note-form margin-edit-form"
+                                onSubmit={saveEdit}
+                              >
+                                <select
+                                  value={editKind}
+                                  aria-label="Annotation type"
+                                  onChange={(event) =>
+                                    setEditKind(
+                                      event.target.value as PoemNoteKind,
+                                    )
+                                  }
+                                >
+                                  <option value="note">Note</option>
+                                  <option value="question">Question</option>
+                                </select>
+                                <input
+                                  value={editName}
+                                  maxLength={60}
+                                  placeholder="Anonymous"
+                                  aria-label="Author name"
+                                  onChange={(event) =>
+                                    setEditName(event.target.value)
+                                  }
+                                />
+                                <textarea
+                                  required
+                                  minLength={2}
+                                  maxLength={600}
+                                  rows={4}
+                                  value={editBody}
+                                  aria-label="Annotation"
+                                  onChange={(event) =>
+                                    setEditBody(event.target.value)
+                                  }
+                                />
+                                <div className="margin-admin-actions">
+                                  <button type="submit" disabled={busy}>
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingId(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            </li>
+                          ) : (
+                            <li key={note.id}>
+                              <p className="margin-meta">
+                                <span>{note.kind}</span>
+                                <span>{displayName(note)}</span>
+                              </p>
+                              <p>{note.body}</p>
+                              {admin ? (
+                                <div className="margin-admin-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => beginEdit(note)}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => void remove(note)}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              ) : null}
+                            </li>
+                          ),
+                        )}
                       </ol>
                     ) : null}
                     <form className="note-form" onSubmit={submit}>
-                      <div className="kind-row" aria-label="Annotation type">
-                        <button
-                          type="button"
-                          className={kind === "note" ? "is-on" : ""}
-                          aria-pressed={kind === "note"}
-                          onClick={() => setKind("note")}
-                        >
-                          Note
-                        </button>
-                        <button
-                          type="button"
-                          className={kind === "question" ? "is-on" : ""}
-                          aria-pressed={kind === "question"}
-                          onClick={() => setKind("question")}
-                        >
-                          Question
-                        </button>
-                      </div>
+                      <select
+                        value={kind}
+                        aria-label="Annotation type"
+                        onChange={(event) =>
+                          setKind(event.target.value as PoemNoteKind)
+                        }
+                      >
+                        <option value="note">Note</option>
+                        <option value="question">Question</option>
+                      </select>
                       <input
                         value={name}
                         maxLength={60}
@@ -350,100 +440,6 @@ export function PoetryAnnotations({
           })}
         </div>
       </article>
-
-      <aside className="margin" aria-label="Public poetry margin">
-        <p className="poem-hint">
-          Tap any line to leave a note or question. Everything written here is public.
-        </p>
-        <p className="margin-line">Public margin</p>
-        {error ? <p className="margin-error">{error}</p> : null}
-        {notes.length === 0 ? (
-          <p className="margin-empty">No notes yet.</p>
-        ) : (
-          <ol className="margin-notes">
-            {notes.map((note) => (
-              <li
-                key={note.id}
-                className={note.line === active ? "is-on-line" : ""}
-              >
-                {editingId === note.id ? (
-                  <form className="note-form margin-edit-form" onSubmit={saveEdit}>
-                    <div className="kind-row">
-                      <button
-                        type="button"
-                        className={editKind === "note" ? "is-on" : ""}
-                        onClick={() => setEditKind("note")}
-                      >
-                        Note
-                      </button>
-                      <button
-                        type="button"
-                        className={editKind === "question" ? "is-on" : ""}
-                        onClick={() => setEditKind("question")}
-                      >
-                        Question
-                      </button>
-                    </div>
-                    <input
-                      value={editName}
-                      maxLength={60}
-                      placeholder="Anonymous"
-                      aria-label="Author name"
-                      onChange={(event) => setEditName(event.target.value)}
-                    />
-                    <textarea
-                      required
-                      minLength={2}
-                      maxLength={600}
-                      rows={4}
-                      value={editBody}
-                      aria-label="Annotation"
-                      onChange={(event) => setEditBody(event.target.value)}
-                    />
-                    <div className="margin-admin-actions">
-                      <button type="submit" disabled={busy}>
-                        Save
-                      </button>
-                      <button type="button" onClick={() => setEditingId(null)}>
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="margin-jump"
-                      onClick={() => openLine(note.line)}
-                    >
-                      <span className="margin-meta">
-                        <span>{note.kind}</span>
-                        <span>l.{note.line + 1}</span>
-                        <span>{displayName(note)}</span>
-                      </span>
-                      <span className="margin-note-body">{note.body}</span>
-                    </button>
-                    {admin ? (
-                      <div className="margin-admin-actions">
-                        <button type="button" onClick={() => beginEdit(note)}>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void remove(note)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    ) : null}
-                  </>
-                )}
-              </li>
-            ))}
-          </ol>
-        )}
-      </aside>
     </div>
   );
 }
