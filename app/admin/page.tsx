@@ -2,12 +2,19 @@ import { UserButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  removeTeenyQuestion,
+  replyToTeenyQuestion,
+} from "@/app/(volume)/teeny-tiny-things/actions";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
 import { getTrackerAdminData } from "@/lib/tracker";
-import { getPendingTeenyQuestionCount } from "@/lib/teeny-questions";
+import {
+  getAllTeenyQuestions,
+  getPendingTeenyQuestionCount,
+} from "@/lib/teeny-questions";
 import {
   changePlaceStatus,
   emergencyGoDark,
@@ -76,12 +83,14 @@ export default async function AdminPage({
     );
   }
 
-  const [data, tracker, ciaEntries, pendingTeenyQuestions] = await Promise.all([
-    getAdminData(),
-    getTrackerAdminData(),
-    getCiaAdminEntries(),
-    getPendingTeenyQuestionCount(),
-  ]);
+  const [data, tracker, ciaEntries, pendingTeenyQuestions, teenyQuestions] =
+    await Promise.all([
+      getAdminData(),
+      getTrackerAdminData(),
+      getCiaAdminEntries(),
+      getPendingTeenyQuestionCount(),
+      getAllTeenyQuestions(),
+    ]);
   const ciaProject = (await searchParams)?.ciaProject;
   const visibleCiaEntries = CIA_PROJECTS.includes(
     ciaProject as (typeof CIA_PROJECTS)[number],
@@ -101,6 +110,75 @@ export default async function AdminPage({
         </div>
         <UserButton />
       </header>
+
+      <section className="admin-section admin-teeny-inbox" id="teeny-questions">
+        <div className="admin-section-heading">
+          <div>
+            <h2>Teeny tiny question inbox</h2>
+            <p className="admin-private">
+              Nose evidence stays private until you reply + publish.
+            </p>
+          </div>
+          <Link href="/teeny-tiny-things">View the orbit →</Link>
+        </div>
+        <div className="admin-cards">
+          {teenyQuestions.map((item) => (
+            <article className="admin-card" key={item.id}>
+              <div className="admin-card-head">
+                <h3>{item.name || "Anonymous internet human"}</h3>
+                <span
+                  className={`admin-place-status is-${
+                    item.answer ? "published" : "draft"
+                  }`}
+                >
+                  {item.answer ? "published" : "waiting"}
+                </span>
+              </div>
+              <time dateTime={item.createdAt}>{date(item.createdAt)}</time>
+              {item.nosePhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="admin-teeny-nose"
+                  src={item.nosePhoto}
+                  alt={`Nose submitted by ${item.name || "an anonymous human"}`}
+                />
+              ) : item.noseShy ? (
+                <p className="admin-teeny-shy">i am nose shy</p>
+              ) : null}
+              <blockquote className="admin-teeny-question">
+                {item.question}
+              </blockquote>
+              <form className="admin-edit-form" action={replyToTeenyQuestion}>
+                <input type="hidden" name="id" value={item.id} />
+                <label>
+                  Your reply
+                  <textarea
+                    name="answer"
+                    required
+                    maxLength={1000}
+                    defaultValue={item.answer ?? ""}
+                  />
+                </label>
+                <button type="submit">
+                  {item.answer ? "Update approved reply" : "Reply + approve"}
+                </button>
+              </form>
+              <form action={removeTeenyQuestion}>
+                <input type="hidden" name="id" value={item.id} />
+                <ConfirmButton
+                  className="admin-danger"
+                  message="Permanently delete this teeny tiny question?"
+                >
+                  Delete
+                </ConfirmButton>
+              </form>
+            </article>
+          ))}
+          {teenyQuestions.length === 0 ? (
+            <p>No teeny tiny questions yet.</p>
+          ) : null}
+        </div>
+      </section>
 
       <section className="admin-radar" aria-labelledby="radar-control-title">
         <div>
@@ -549,9 +627,9 @@ export default async function AdminPage({
       <nav className="admin-counts" aria-label="Database counts">
         <a href="#posties"><strong>{data.posties.length}</strong> Posties</a>
         <a href="#wishes"><strong>{data.wishes.length}</strong> wishes</a>
-        <Link href="/controlroom/teeny-questions">
+        <a href="#teeny-questions">
           <strong>{pendingTeenyQuestions}</strong> teeny questions
-        </Link>
+        </a>
         <a href="#visits">
           <strong>{data.visits.length}</strong> visits / {uniqueVisitors} visitors
         </a>

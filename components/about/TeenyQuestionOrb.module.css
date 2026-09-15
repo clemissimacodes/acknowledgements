@@ -116,8 +116,8 @@
 
 .close {
   position: absolute;
-  top: 12%;
-  right: 14%;
+  top: 7%;
+  left: 50%;
   width: 2rem;
   height: 2rem;
   padding: 0;
@@ -125,6 +125,7 @@
   background: transparent;
   border: 0;
   font-size: 1.4rem;
+  transform: translateX(-50%);
   cursor: pointer;
 }
 
@@ -291,7 +292,6 @@
   }
 
   .close {
-    top: 8%;
-    right: 14%;
+    top: 5%;
   }
 }

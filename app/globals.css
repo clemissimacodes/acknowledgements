@@ -5075,6 +5075,50 @@ html:has(.admin-page) .site-anchor {
   scroll-margin-top: var(--site-content-top);
 }
 
+.admin-section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.admin-section-heading a {
+  flex: none;
+  font-size: 0.78rem;
+  text-underline-offset: 0.18em;
+}
+
+.admin-teeny-nose {
+  display: block;
+  width: 7rem;
+  aspect-ratio: 1;
+  margin: 1rem 0;
+  object-fit: cover;
+  border: 1px solid rgba(28, 35, 30, 0.18);
+  border-radius: 50%;
+}
+
+.admin-teeny-shy {
+  width: fit-content;
+  margin: 1rem 0 !important;
+  padding: 0.35rem 0.55rem;
+  color: rgba(28, 35, 30, 0.62);
+  border: 1px solid rgba(28, 35, 30, 0.18);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.admin-teeny-question {
+  margin: 1rem 0;
+  font: 1.2rem/1.35 var(--font-book), "Palatino Linotype", serif;
+}
+
+.admin-teeny-inbox .admin-edit-form {
+  margin-top: 1rem;
+}
+
 .admin-section > h2 {
   margin-bottom: 0.25rem;
 }
