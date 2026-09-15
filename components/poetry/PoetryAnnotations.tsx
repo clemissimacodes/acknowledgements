@@ -25,7 +25,11 @@ function ordered(notes: PoemNote[]) {
 }
 
 function displayName(note: PoemNote) {
-  return note.name || "Anonymous";
+  return note.name || "someone passing through";
+}
+
+function displayKind(kind: PoemNoteKind) {
+  return kind === "question" ? "a question" : "a thought";
 }
 
 export function PoetryAnnotations({
@@ -226,7 +230,7 @@ export function PoetryAnnotations({
             {targetNotes.map((note) => (
               <div key={note.id}>
                 <p className="margin-meta">
-                  <span>{note.kind}</span>
+                  <span>{displayKind(note.kind)}</span>
                   <span>{displayName(note)}</span>
                 </p>
                 <p>{note.body}</p>
@@ -242,7 +246,7 @@ export function PoetryAnnotations({
               aria-label="Close annotation form"
               onClick={() => setActive(null)}
             >
-              Close
+              ×
             </button>
             <p className="margin-line">{label}</p>
             <p className="margin-quote">{text}</p>
@@ -262,13 +266,13 @@ export function PoetryAnnotations({
                             setEditKind(event.target.value as PoemNoteKind)
                           }
                         >
-                          <option value="note">Note</option>
-                          <option value="question">Question</option>
+                          <option value="note">A thought</option>
+                          <option value="question">A question</option>
                         </select>
                         <input
                           value={editName}
                           maxLength={60}
-                          placeholder="Anonymous"
+                          placeholder="Your name, if you like"
                           aria-label="Author name"
                           onChange={(event) => setEditName(event.target.value)}
                         />
@@ -297,7 +301,7 @@ export function PoetryAnnotations({
                   ) : (
                     <li key={note.id}>
                       <p className="margin-meta">
-                        <span>{note.kind}</span>
+                        <span>{displayKind(note.kind)}</span>
                         <span>{displayName(note)}</span>
                       </p>
                       <p>{note.body}</p>
@@ -328,14 +332,14 @@ export function PoetryAnnotations({
                   setKind(event.target.value as PoemNoteKind)
                 }
               >
-                <option value="note">Note</option>
-                <option value="question">Question</option>
+                <option value="note">A thought</option>
+                <option value="question">A question</option>
               </select>
               <input
                 value={name}
                 maxLength={60}
                 autoComplete="nickname"
-                placeholder="Name (optional)"
+                placeholder="Your name, if you like"
                 aria-label="Name, optional"
                 onChange={(event) => setName(event.target.value)}
               />
@@ -347,8 +351,8 @@ export function PoetryAnnotations({
                 value={body}
                 placeholder={
                   kind === "question"
-                    ? "Ask about this…"
-                    : "Leave a note here…"
+                    ? "What are you wondering?"
+                    : "What followed you here?"
                 }
                 aria-label={kind === "question" ? "Question" : "Note"}
                 onChange={(event) => setBody(event.target.value)}
@@ -361,10 +365,10 @@ export function PoetryAnnotations({
                 aria-hidden="true"
               />
               <button type="submit" disabled={busy}>
-                {busy ? "Leaving…" : "Leave it"}
+                {busy ? "Leaving it here…" : "Leave it here"}
               </button>
               <p className="poem-note-public">
-                Names and notes are public. Leave the name blank to be anonymous.
+                This will be public. No name needed.
               </p>
             </form>
           </div>
@@ -449,7 +453,7 @@ export function PoetryAnnotations({
             ) : null}
           </div>
           <p className="poem-annotation-instruction">
-            Hover to read. Tap a line to write.
+            A line may have company. Hover to listen; tap to leave a thought.
           </p>
         </div>
         {error ? (

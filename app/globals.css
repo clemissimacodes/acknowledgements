@@ -1616,6 +1616,12 @@ html:has(.about-page) .site-anchor,
   transform: rotate(-13deg);
 }
 
+.about-generated-thing.is-visitor .about-generated-watercolor {
+  box-shadow:
+    0 0 0 0.35rem rgba(250, 245, 236, 0.6),
+    0 0 0 0.42rem rgba(125, 173, 194, 0.2);
+}
+
 @keyframes about-watercolor-drift {
   0% {
     transform: translate(-50%, -50%) translate3d(-1.1vw, 0.7vh, 0) rotate(-1deg);
@@ -1704,6 +1710,29 @@ html:has(.about-page) .site-anchor,
   max-width: 30ch;
   font-size: clamp(1.25rem, 3vw, 2.8rem);
   line-height: 1.08;
+}
+
+.about-focus-circle .about-focus-response {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(22, 20, 18, 0.18);
+  font-size: clamp(1rem, 2.2vw, 1.8rem);
+}
+
+.about-focus-byline {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: 0.62rem;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.about-focus-response span {
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 0.62rem;
+  font-style: italic;
+  letter-spacing: 0.08em;
 }
 
 .about-focus-circle a {
@@ -2531,16 +2560,13 @@ html:has(.about-page) .site-anchor,
   z-index: 20;
   top: -0.55rem;
   left: calc(100% + 2rem);
-  width: 18rem;
+  width: 17rem;
   max-height: min(76dvh, 38rem);
   margin: 0;
-  padding: 1rem;
+  padding: 0.9rem 0 0.9rem 1rem;
   overflow-y: auto;
-  border-left: 2px solid rgba(112, 166, 163, 0.2);
-  background: rgba(232, 248, 246, 0.88);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0.8rem 2rem rgba(60, 42, 30, 0.12);
+  border-left: 1px solid rgba(112, 166, 163, 0.24);
+  background: rgba(250, 253, 250, 0.94);
 }
 
 .line-annot-close {
@@ -2550,9 +2576,9 @@ html:has(.about-page) .site-anchor,
   padding: 0;
   color: var(--mute);
   font: inherit;
-  font-size: 0.72rem;
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
+  font-size: 1rem;
+  line-height: 1;
+  text-decoration: none;
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -2567,18 +2593,16 @@ html:has(.about-page) .site-anchor,
   z-index: 10;
   top: -0.35rem;
   left: calc(100% + 2rem);
-  width: 18rem;
+  width: 17rem;
   max-height: 16rem;
   padding: 0.8rem 0.9rem;
   overflow: hidden;
   color: rgba(22, 20, 18, 0.78);
   font-size: 0.86rem;
   line-height: 1.4;
-  background: rgba(232, 248, 246, 0.84);
-  border-left: 2px solid rgba(112, 166, 163, 0.18);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0.55rem 1.5rem rgba(60, 42, 30, 0.09);
+  background: rgba(250, 253, 250, 0.92);
+  border-left: 1px solid rgba(112, 166, 163, 0.22);
+  box-shadow: none;
   opacity: 0;
   visibility: hidden;
   transform: translateX(-0.35rem);
@@ -2842,8 +2866,8 @@ html:has(.about-page) .site-anchor,
     max-height: min(78dvh, 38rem);
     margin: 0;
     padding: 1rem;
-    border-left-width: 2px;
-    box-shadow: 0 0.5rem 2.5rem rgba(60, 42, 30, 0.2);
+    border: 1px solid rgba(112, 166, 163, 0.2);
+    box-shadow: 0 0.5rem 2rem rgba(60, 42, 30, 0.09);
   }
 
   .poem-hover-notes {
