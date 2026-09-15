@@ -79,6 +79,7 @@ export function PeelCursor() {
       if (element === hovered) return;
       hovered = element;
       cropFrame.classList.toggle("is-visible", Boolean(hovered));
+      cursorElement.classList.toggle("is-framing", Boolean(hovered));
       if (hovered) positionFrame();
     }
 
@@ -306,32 +307,44 @@ export function PeelCursor() {
           </defs>
           <g className={styles.upperWing} filter="url(#wing-sketch)">
             <path
-              d="M50 38C40 22 19 4 7 8c3 14 23 29 43 32Z"
-              fill="url(#wing-blue)"
+              d="M50 38C39 21 18 3 6 8c2 15 23 30 44 32Z"
+              fill="#c5d9e7"
+              fillOpacity=".76"
               stroke="#668ca9"
-              strokeOpacity=".62"
-              strokeWidth="1.25"
+              strokeOpacity=".7"
+              strokeWidth="1.35"
             />
             <path
-              d="M50 38C60 22 81 4 93 8c-3 14-23 29-43 32Z"
-              fill="url(#wing-blue)"
+              d="M50 38C61 23 80 5 94 9c-4 14-24 28-44 31Z"
+              fill="#c9ddeb"
+              fillOpacity=".74"
               stroke="#668ca9"
-              strokeOpacity=".62"
-              strokeWidth="1.25"
+              strokeOpacity=".7"
+              strokeWidth="1.35"
             />
             <path
-              d="M50 39C32 25 10 25 2 33c9 12 31 14 48 8Z"
-              fill="url(#wing-pearl)"
+              d="M50 39C31 24 9 25 2 34c10 11 31 14 48 7Z"
+              fill="#bcd5e4"
+              fillOpacity=".72"
               stroke="#789db4"
-              strokeOpacity=".58"
-              strokeWidth="1.2"
+              strokeOpacity=".66"
+              strokeWidth="1.3"
             />
             <path
-              d="M50 39C68 25 90 25 98 33c-9 12-31 14-48 8Z"
-              fill="url(#wing-pearl)"
+              d="M50 39C69 26 91 24 98 32c-8 13-31 15-48 9Z"
+              fill="#c2d9e6"
+              fillOpacity=".72"
               stroke="#789db4"
-              strokeOpacity=".58"
-              strokeWidth="1.2"
+              strokeOpacity=".66"
+              strokeWidth="1.3"
+            />
+            <path
+              d="M49 38C42 31 34 31 27 37c7 7 15 8 23 3m1-2c7-7 15-7 23-1-7 7-15 8-24 3"
+              fill="#f3e7b7"
+              fillOpacity=".42"
+              stroke="#8ea8b8"
+              strokeOpacity=".42"
+              strokeWidth=".8"
             />
             <path
               d="M49 38C36 24 23 14 10 9m40 30c14-15 27-25 40-30M48 40c-15-7-28-9-42-7m46 7c15-7 28-9 42-7"
@@ -348,15 +361,17 @@ export function PeelCursor() {
           </g>
           <g className={styles.lowerWing} filter="url(#wing-sketch)">
             <path
-              d="M50 40C36 35 20 39 18 49c6 1 4 7 12 5 4 6 14-5 20-12Z"
-              fill="url(#wing-blue)"
+              d="M50 40C35 34 19 39 17 49c6 1 4 7 12 5 5 6 15-5 21-12Z"
+              fill="#c6dbe8"
+              fillOpacity=".7"
               stroke="#7698b3"
               strokeOpacity=".58"
               strokeWidth="1.2"
             />
             <path
-              d="M50 40C64 35 80 39 82 49c-6 1-4 7-12 5-4 6-14-5-20-12Z"
-              fill="url(#wing-blue)"
+              d="M50 40C65 35 81 38 83 48c-6 2-4 7-12 6-5 5-15-5-21-12Z"
+              fill="#c9ddea"
+              fillOpacity=".7"
               stroke="#7698b3"
               strokeOpacity=".58"
               strokeWidth="1.2"
@@ -367,6 +382,13 @@ export function PeelCursor() {
               stroke="#718fa8"
               strokeOpacity=".3"
               strokeWidth=".7"
+            />
+            <path
+              d="M49 42C39 38 29 41 24 48m27-6c10-4 19 0 25 6"
+              fill="none"
+              stroke="#f8edc8"
+              strokeOpacity=".6"
+              strokeWidth="1.5"
             />
           </g>
         </svg>

@@ -1,14 +1,13 @@
 .wings {
   position: absolute;
   z-index: -1;
-  top: -0.05rem;
-  left: -1.02rem;
-  width: 4.15rem;
-  height: 3rem;
+  top: -0.18rem;
+  left: -1.58rem;
+  width: 5.25rem;
+  height: 3.75rem;
   overflow: visible;
-  filter:
-    drop-shadow(0 0 0.18rem rgba(175, 238, 238, 0.54))
-    drop-shadow(0 0 0.3rem rgba(220, 205, 247, 0.28));
+  opacity: 0.88;
+  filter: drop-shadow(0 0 0.12rem rgba(175, 213, 226, 0.34));
 }
 
 .follower {
@@ -20,7 +19,11 @@
 }
 
 .follower:global(.is-visible) {
-  opacity: 0.78;
+  opacity: 0.84;
+}
+
+.follower:global(.is-visible.is-framing) {
+  opacity: 0;
 }
 
 .wandCursor {
@@ -76,11 +79,11 @@
 }
 
 .upperWing {
-  animation: upperWing 260ms cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+  transform: rotate(-1.5deg);
 }
 
 .lowerWing {
-  animation: lowerWing 300ms cubic-bezier(0.4, 0, 0.6, 1) infinite alternate-reverse;
+  transform: rotate(1deg);
 }
 
 .flick {
