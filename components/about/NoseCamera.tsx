@@ -11,6 +11,35 @@ import styles from "./NoseCamera.module.css";
 const SOURCE_SIZE = 640;
 const DEFAULT_ZOOM = 3.4;
 
+function renderCrop(
+  source: HTMLCanvasElement,
+  zoom: number,
+  offset: { x: number; y: number },
+) {
+  const cropSide = SOURCE_SIZE / zoom;
+  const sourceX = Math.max(
+    0,
+    Math.min(
+      SOURCE_SIZE - cropSide,
+      SOURCE_SIZE / 2 - (offset.x * SOURCE_SIZE) / zoom - cropSide / 2,
+    ),
+  );
+  const sourceY = Math.max(
+    0,
+    Math.min(
+      SOURCE_SIZE - cropSide,
+      SOURCE_SIZE / 2 - (offset.y * SOURCE_SIZE) / zoom - cropSide / 2,
+    ),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = 320;
+  canvas.height = 320;
+  canvas
+    .getContext("2d")
+    ?.drawImage(source, sourceX, sourceY, cropSide, cropSide, 0, 0, 320, 320);
+  return canvas.toDataURL("image/jpeg", 0.68);
+}
+
 export function NoseCamera({
   onValidityChange,
 }: {
@@ -24,6 +53,7 @@ export function NoseCamera({
     { x: number; y: number; offsetX: number; offsetY: number } | undefined
   >(undefined);
   const [active, setActive] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [sourcePhoto, setSourcePhoto] = useState("");
   const [photo, setPhoto] = useState("");
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
@@ -41,6 +71,10 @@ export function NoseCamera({
   useEffect(() => {
     onValidityChange(Boolean(photo) || noseShy);
   }, [noseShy, onValidityChange, photo]);
+  useEffect(() => {
+    const source = sourceCanvasRef.current;
+    if (editing && source) setPhoto(renderCrop(source, zoom, offset));
+  }, [editing, offset, zoom]);
   useEffect(
     () => () => {
       onValidityChange(false);
@@ -53,6 +87,7 @@ export function NoseCamera({
     setNoseShy(false);
     setSourcePhoto("");
     setPhoto("");
+    setEditing(false);
     setZoom(DEFAULT_ZOOM);
     setOffset({ x: 0, y: 0 });
     try {
@@ -96,34 +131,13 @@ export function NoseCamera({
     );
     sourceCanvasRef.current = canvas;
     setSourcePhoto(canvas.toDataURL("image/jpeg", 0.72));
+    setPhoto(renderCrop(canvas, DEFAULT_ZOOM, { x: 0, y: 0 }));
+    setEditing(true);
     stopCamera();
   }
 
   function cropPhoto() {
-    const source = sourceCanvasRef.current;
-    if (!source) return;
-    const cropSide = SOURCE_SIZE / zoom;
-    const sourceX = Math.max(
-      0,
-      Math.min(
-        SOURCE_SIZE - cropSide,
-        SOURCE_SIZE / 2 - (offset.x * SOURCE_SIZE) / zoom - cropSide / 2,
-      ),
-    );
-    const sourceY = Math.max(
-      0,
-      Math.min(
-        SOURCE_SIZE - cropSide,
-        SOURCE_SIZE / 2 - (offset.y * SOURCE_SIZE) / zoom - cropSide / 2,
-      ),
-    );
-    const canvas = document.createElement("canvas");
-    canvas.width = 320;
-    canvas.height = 320;
-    canvas
-      .getContext("2d")
-      ?.drawImage(source, sourceX, sourceY, cropSide, cropSide, 0, 0, 320, 320);
-    setPhoto(canvas.toDataURL("image/jpeg", 0.68));
+    setEditing(false);
   }
 
   function moveCrop(event: ReactPointerEvent<HTMLDivElement>) {
@@ -148,13 +162,13 @@ export function NoseCamera({
       <legend>nosiness requires nose evidence</legend>
       <input type="hidden" name="nosePhoto" value={photo} />
       <div
-        className={`${styles.camera}${sourcePhoto && !photo ? ` ${styles.cropper}` : ""}`}
+        className={`${styles.camera}${editing ? ` ${styles.cropper}` : ""}`}
         ref={cropRef}
-        role={sourcePhoto && !photo ? "img" : undefined}
-        aria-label={sourcePhoto && !photo ? "Draggable circular nose crop" : undefined}
-        tabIndex={sourcePhoto && !photo ? 0 : undefined}
+        role={editing ? "img" : undefined}
+        aria-label={editing ? "Draggable circular nose crop" : undefined}
+        tabIndex={editing ? 0 : undefined}
         onPointerDown={(event) => {
-          if (!sourcePhoto || photo) return;
+          if (!editing) return;
           event.currentTarget.setPointerCapture(event.pointerId);
           dragRef.current = {
             x: event.clientX,
@@ -168,7 +182,7 @@ export function NoseCamera({
           dragRef.current = undefined;
         }}
         onKeyDown={(event) => {
-          if (!sourcePhoto || photo) return;
+          if (!editing) return;
           const amount = 0.03;
           const maximum = (zoom - 1) / 2;
           const next = { ...offset };
@@ -184,10 +198,7 @@ export function NoseCamera({
           });
         }}
       >
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo} alt="Your captured nose" />
-        ) : sourcePhoto ? (
+        {editing && sourcePhoto ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={sourcePhoto}
@@ -197,6 +208,9 @@ export function NoseCamera({
               transform: `translate(${offset.x * 100}%, ${offset.y * 100}%) scale(${zoom})`,
             }}
           />
+        ) : photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt="Your captured nose" />
         ) : (
           <video
             ref={videoRef}
@@ -208,7 +222,7 @@ export function NoseCamera({
         )}
       </div>
 
-      {sourcePhoto && !photo ? (
+      {editing ? (
         <div className={styles.cropControls}>
           <span>drag until it is nothing but nose</span>
           <label>
@@ -241,7 +255,7 @@ export function NoseCamera({
           <button type="button" onClick={capture}>
             take nose pic
           </button>
-        ) : !sourcePhoto || photo ? (
+        ) : !sourcePhoto || !editing ? (
           <button type="button" onClick={() => void startCamera()}>
             {photo ? "retake nose" : "open nose cam"}
           </button>
@@ -256,6 +270,7 @@ export function NoseCamera({
               const checked = event.target.checked;
               setNoseShy(checked);
               if (checked) {
+                setEditing(false);
                 setSourcePhoto("");
                 setPhoto("");
                 stopCamera();
