@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { EB_Garamond } from "next/font/google";
+import { PeelCursor } from "@/components/PeelCursor";
 import { SiteAnchor } from "@/components/SiteAnchor";
 import { VisitTracker } from "@/components/VisitTracker";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -47,6 +48,7 @@ export default function RootLayout({
           <header className="site-masthead">
             <SiteAnchor />
           </header>
+          <PeelCursor />
           {children}
           <VisitTracker />
         </ClerkProvider>
