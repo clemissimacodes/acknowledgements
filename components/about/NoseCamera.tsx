@@ -11,7 +11,11 @@ import styles from "./NoseCamera.module.css";
 const SOURCE_SIZE = 640;
 const DEFAULT_ZOOM = 3.4;
 
-export function NoseCamera() {
+export function NoseCamera({
+  onValidityChange,
+}: {
+  onValidityChange: (valid: boolean) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cropRef = useRef<HTMLDivElement>(null);
   const sourceCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -34,6 +38,15 @@ export function NoseCamera() {
   }
 
   useEffect(() => stopCamera, []);
+  useEffect(() => {
+    onValidityChange(Boolean(photo) || noseShy);
+  }, [noseShy, onValidityChange, photo]);
+  useEffect(
+    () => () => {
+      onValidityChange(false);
+    },
+    [onValidityChange],
+  );
 
   async function startCamera() {
     setError("");

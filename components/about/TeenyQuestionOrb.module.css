@@ -205,6 +205,11 @@
   text-underline-offset: 0.18em;
 }
 
+.noseNav button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 .honeypot {
   position: absolute !important;
   width: 1px;

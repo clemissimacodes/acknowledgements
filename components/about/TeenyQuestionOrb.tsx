@@ -16,6 +16,8 @@ const initialState: TeenyQuestionFormState = {
 export function TeenyQuestionOrb() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"words" | "nose">("words");
+  const [hasNoseEvidence, setHasNoseEvidence] = useState(false);
+  const [hideEvidenceError, setHideEvidenceError] = useState(false);
   const [state, action, pending] = useActionState(sendTeenyQuestion, initialState);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
@@ -24,7 +26,13 @@ export function TeenyQuestionOrb() {
   const closeDialog = useCallback(() => {
     setOpen(false);
     setStep("words");
+    setHasNoseEvidence(false);
+    setHideEvidenceError(false);
     window.requestAnimationFrame(() => openerRef.current?.focus());
+  }, []);
+  const handleEvidenceValidity = useCallback((valid: boolean) => {
+    setHasNoseEvidence(valid);
+    if (valid) setHideEvidenceError(true);
   }, []);
 
   useEffect(() => {
@@ -96,7 +104,11 @@ export function TeenyQuestionOrb() {
             {state.status === "sent" ? (
               <p className={styles.sent}>{state.message}</p>
             ) : (
-              <form action={action} ref={formRef}>
+              <form
+                action={action}
+                ref={formRef}
+                onSubmit={() => setHideEvidenceError(false)}
+              >
                 <div className={styles.step} hidden={step !== "words"}>
                   <label>
                     <span>Your thing</span>
@@ -126,15 +138,20 @@ export function TeenyQuestionOrb() {
                 </div>
                 {step === "nose" ? (
                   <div className={styles.step}>
-                    <NoseCamera />
-                    {state.status === "error" ? (
+                    <NoseCamera
+                      onValidityChange={handleEvidenceValidity}
+                    />
+                    {state.status === "error" && !hideEvidenceError ? (
                       <p className={styles.error}>{state.message}</p>
                     ) : null}
                     <div className={styles.noseNav}>
                       <button type="button" onClick={() => setStep("words")}>
                         ← words
                       </button>
-                      <button type="submit" disabled={pending}>
+                      <button
+                        type="submit"
+                        disabled={pending || !hasNoseEvidence}
+                      >
                         {pending
                           ? "sending…"
                           : "send ur teeny tiny thing into orbit"}
