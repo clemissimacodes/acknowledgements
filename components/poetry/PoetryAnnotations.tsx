@@ -318,7 +318,9 @@ export function PoetryAnnotations({
                   aria-label="Name, optional"
                   onChange={(event) => setName(event.target.value)}
                 />
-                <p className="poem-note-public">public · name optional</p>
+                <p className="poem-note-public">
+                  your earthly name or alter ego
+                </p>
                 <button
                   className="poem-note-send"
                   type="submit"
