@@ -67,10 +67,10 @@ export function PeelCursor() {
       if (!hovered) return;
       const rect = hovered.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      cropFrame.style.setProperty("--frame-x", `${rect.left - 7}px`);
-      cropFrame.style.setProperty("--frame-y", `${rect.top - 7}px`);
-      cropFrame.style.setProperty("--frame-width", `${rect.width + 14}px`);
-      cropFrame.style.setProperty("--frame-height", `${rect.height + 14}px`);
+      cropFrame.style.setProperty("--frame-x", `${rect.left - 2}px`);
+      cropFrame.style.setProperty("--frame-y", `${rect.top - 2}px`);
+      cropFrame.style.setProperty("--frame-width", `${rect.width + 4}px`);
+      cropFrame.style.setProperty("--frame-height", `${rect.height + 4}px`);
     }
 
     function setHovered(target: EventTarget | null) {
@@ -141,8 +141,8 @@ export function PeelCursor() {
       }
 
       if (visible) {
-        const desiredX = targetX - (hovered ? 60 : 48);
-        const desiredY = targetY + (hovered ? 18 : 12);
+        const desiredX = targetX + (hovered ? 24 : 16);
+        const desiredY = targetY - (hovered ? 60 : 52);
         fairyX += (desiredX - fairyX) * 0.18;
         fairyY += (desiredY - fairyY) * 0.18;
         const lagX = desiredX - fairyX;
@@ -154,6 +154,16 @@ export function PeelCursor() {
         }
         cursorElement.style.setProperty("--fairy-x", `${fairyX}px`);
         cursorElement.style.setProperty("--fairy-y", `${fairyY}px`);
+        const handX = fairyX + 7;
+        const handY = fairyY + 42;
+        wandElement.style.setProperty(
+          "--wand-angle",
+          `${Math.atan2(handY - targetY, handX - targetX)}rad`,
+        );
+        wandElement.style.setProperty(
+          "--wand-length",
+          `${Math.hypot(handX - targetX, handY - targetY)}px`,
+        );
       }
       animationFrame = window.requestAnimationFrame(draw);
     }
@@ -171,8 +181,8 @@ export function PeelCursor() {
       wandElement.style.left = `${targetX}px`;
       wandElement.style.top = `${targetY}px`;
       if (fairyX < -50) {
-        fairyX = targetX - 48;
-        fairyY = targetY + 12;
+        fairyX = targetX + 16;
+        fairyY = targetY - 52;
       }
 
       const sparkDistance = Math.hypot(
@@ -275,7 +285,7 @@ export function PeelCursor() {
           </defs>
           <path
             className={styles.upperWing}
-            d="M39 35C26 31 7 7 2 13c-5 7 12 27 37 25Z"
+            d="M8 35C22 31 49 7 55 13c5 7-12 27-47 25Z"
             fill="url(#fairy-pearl)"
             stroke="#679d9d"
             strokeOpacity=".55"
@@ -283,7 +293,7 @@ export function PeelCursor() {
           />
           <path
             className={styles.lowerWing}
-            d="M39 37C24 38 5 55 10 60c6 5 23-7 31-21Z"
+            d="M8 37C25 38 52 55 47 60c-6 5-31-7-39-21Z"
             fill="url(#fairy-pearl)"
             stroke="#8a82a3"
             strokeOpacity=".42"

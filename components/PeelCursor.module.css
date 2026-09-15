@@ -1,10 +1,10 @@
 .wings {
   position: absolute;
   z-index: -1;
-  top: -0.1rem;
-  left: -1.05rem;
-  width: 3.1rem;
-  height: 3.45rem;
+  top: -0.08rem;
+  left: 1.2rem;
+  width: 2.7rem;
+  height: 3rem;
   overflow: visible;
   filter:
     drop-shadow(0 0 0.18rem rgba(175, 238, 238, 0.54))
@@ -15,6 +15,8 @@
   isolation: isolate;
   width: 2.15rem;
   height: 2.95rem;
+  transform: translate3d(var(--fairy-x, -100px), var(--fairy-y, -100px), 0)
+    rotate(14deg);
 }
 
 .follower:global(.is-visible) {
@@ -24,21 +26,20 @@
 .wandCursor {
   position: fixed;
   z-index: 10002;
-  width: 1.3rem;
+  width: var(--wand-length, 1.3rem);
   height: 1px;
   margin-top: -1px;
-  margin-left: -1.3rem;
   opacity: 0;
   background: #211e1a;
   box-shadow: 0 0.5px rgba(255, 255, 255, 0.72);
-  transform: rotate(-32deg);
-  transform-origin: 100% 50%;
+  transform: rotate(var(--wand-angle, -32deg));
+  transform-origin: 0 50%;
   transition: opacity 90ms ease;
 }
 
 .wandCursor i {
   position: absolute;
-  left: -0.22rem;
+  right: -0.22rem;
   top: -0.1rem;
   width: 0.32rem;
   height: 0.22rem;
@@ -49,7 +50,7 @@
 .wandCursor b {
   position: absolute;
   top: -0.15rem;
-  right: -0.15rem;
+  left: -0.15rem;
   width: 0.3rem;
   height: 0.3rem;
   background: #faffff;
@@ -71,7 +72,7 @@
 .upperWing,
 .lowerWing {
   transform-box: fill-box;
-  transform-origin: 100% 65%;
+  transform-origin: 0 65%;
 }
 
 .upperWing {
@@ -128,32 +129,32 @@
 
 @keyframes upperWing {
   from {
-    transform: rotate(5deg) scaleX(0.92);
-  }
-  to {
-    transform: rotate(-8deg) scaleX(1);
-  }
-}
-
-@keyframes lowerWing {
-  from {
-    transform: rotate(-3deg) scaleX(0.9);
+    transform: rotate(-5deg) scaleX(0.92);
   }
   to {
     transform: rotate(8deg) scaleX(1);
   }
 }
 
+@keyframes lowerWing {
+  from {
+    transform: rotate(3deg) scaleX(0.9);
+  }
+  to {
+    transform: rotate(-8deg) scaleX(1);
+  }
+}
+
 @keyframes flick {
   45% {
-    transform: translate3d(var(--fairy-x), var(--fairy-y), 0) rotate(5deg)
+    transform: translate3d(var(--fairy-x), var(--fairy-y), 0) rotate(22deg)
       translateY(-0.12rem);
   }
 }
 
 @keyframes wandFlick {
   45% {
-    transform: rotate(-52deg) scaleX(0.9);
+    transform: rotate(calc(var(--wand-angle) - 12deg)) scaleX(0.9);
   }
 }
 
