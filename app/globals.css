@@ -2353,7 +2353,8 @@ html:has(.about-page) .site-anchor,
 
 .poem-heading-button {
   display: block;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   padding: 0;
   color: inherit;
   font: inherit;
@@ -2489,6 +2490,9 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-line-button {
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
   border-radius: 0.18rem;
   cursor: pointer;
   touch-action: manipulation;

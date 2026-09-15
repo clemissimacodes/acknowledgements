@@ -250,7 +250,7 @@ export function PoetryAnnotations({
                         <input
                           value={editName}
                           maxLength={60}
-                          placeholder="Your name, if you like"
+                          placeholder="your earthly name or alter ego"
                           aria-label="Author name"
                           onChange={(event) => setEditName(event.target.value)}
                         />
@@ -324,7 +324,7 @@ export function PoetryAnnotations({
                   value={name}
                   maxLength={60}
                   autoComplete="nickname"
-                  placeholder="name, if you like"
+                  placeholder="your earthly name or alter ego"
                   aria-label="Name, optional"
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -432,7 +432,7 @@ export function PoetryAnnotations({
             ) : null}
           </div>
           <p className="poem-annotation-instruction">
-            The margins are open. Choose any line.
+            leave a thought or question ᵕ̈
           </p>
         </div>
         {error ? (
