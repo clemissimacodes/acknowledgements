@@ -20,6 +20,7 @@ const INTERACTIVE_SELECTOR =
 export function PeelCursor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerRef = useRef<HTMLSpanElement>(null);
+  const wandRef = useRef<HTMLSpanElement>(null);
   const frameRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -29,11 +30,13 @@ export function PeelCursor() {
 
     const canvas = canvasRef.current;
     const pointer = pointerRef.current;
+    const wand = wandRef.current;
     const frame = frameRef.current;
     const context = canvas?.getContext("2d");
-    if (!canvas || !pointer || !frame || !context) return;
+    if (!canvas || !pointer || !wand || !frame || !context) return;
     const surface = canvas;
     const cursorElement = pointer;
+    const wandElement = wand;
     const cropFrame = frame;
     const drawing = context;
 
@@ -76,7 +79,6 @@ export function PeelCursor() {
       if (element === hovered) return;
       hovered = element;
       cropFrame.classList.toggle("is-visible", Boolean(hovered));
-      cursorElement.classList.toggle("is-framing", Boolean(hovered));
       if (hovered) positionFrame();
     }
 
@@ -139,10 +141,10 @@ export function PeelCursor() {
       }
 
       if (visible) {
-        const desiredX = targetX - 52;
-        const desiredY = targetY - 30;
-        fairyX += (desiredX - fairyX) * 0.24;
-        fairyY += (desiredY - fairyY) * 0.24;
+        const desiredX = targetX - (hovered ? 60 : 48);
+        const desiredY = targetY + (hovered ? 18 : 12);
+        fairyX += (desiredX - fairyX) * 0.18;
+        fairyY += (desiredY - fairyY) * 0.18;
         const lagX = desiredX - fairyX;
         const lagY = desiredY - fairyY;
         const lag = Math.hypot(lagX, lagY);
@@ -150,14 +152,8 @@ export function PeelCursor() {
           fairyX = desiredX - (lagX / lag) * 24;
           fairyY = desiredY - (lagY / lag) * 24;
         }
-        const wandX = fairyX + 34;
-        const wandY = fairyY + 32;
-        const dx = targetX - wandX;
-        const dy = targetY - wandY;
         cursorElement.style.setProperty("--fairy-x", `${fairyX}px`);
         cursorElement.style.setProperty("--fairy-y", `${fairyY}px`);
-        cursorElement.style.setProperty("--wand-angle", `${Math.atan2(dy, dx)}rad`);
-        cursorElement.style.setProperty("--wand-length", `${Math.hypot(dx, dy)}px`);
       }
       animationFrame = window.requestAnimationFrame(draw);
     }
@@ -166,14 +162,17 @@ export function PeelCursor() {
       if (event.pointerType === "touch") return;
       visible = true;
       cursorElement.classList.add("is-visible");
+      wandElement.classList.add(styles.wandVisible);
       surface.classList.add("is-visible");
       setHovered(event.target);
 
       targetX = event.clientX;
       targetY = event.clientY;
+      wandElement.style.left = `${targetX}px`;
+      wandElement.style.top = `${targetY}px`;
       if (fairyX < -50) {
-        fairyX = targetX - 52;
-        fairyY = targetY - 30;
+        fairyX = targetX - 48;
+        fairyY = targetY + 12;
       }
 
       const sparkDistance = Math.hypot(
@@ -191,9 +190,12 @@ export function PeelCursor() {
       if (!visible || event.pointerType === "touch") return;
       cursorElement.classList.remove("is-pressed");
       cursorElement.classList.remove(styles.flick);
+      wandElement.classList.remove(styles.wandFlick);
       void cursorElement.offsetWidth;
       cursorElement.classList.add("is-pressed", styles.flick);
+      wandElement.classList.add(styles.wandFlick);
       window.setTimeout(() => cursorElement.classList.remove(styles.flick), 360);
+      window.setTimeout(() => wandElement.classList.remove(styles.wandFlick), 360);
       for (let index = 0; index < 7; index += 1) {
         addSpark(
           event.clientX,
@@ -219,7 +221,8 @@ export function PeelCursor() {
       fairyY = -100;
       lastSparkX = -100;
       lastSparkY = -100;
-      cursorElement.classList.remove("is-visible", "is-framing");
+      cursorElement.classList.remove("is-visible");
+      wandElement.classList.remove(styles.wandVisible);
       cropFrame.classList.remove("is-visible");
       surface.classList.remove("is-visible");
     }
@@ -252,7 +255,10 @@ export function PeelCursor() {
         <i />
         <i />
       </span>
-      <span ref={pointerRef} className="peel-cursor-pointer">
+      <span
+        ref={pointerRef}
+        className={`peel-cursor-pointer ${styles.follower}`}
+      >
         <svg
           className={styles.wings}
           viewBox="0 0 58 64"
@@ -285,9 +291,10 @@ export function PeelCursor() {
           />
         </svg>
         <Image src="/clemi/still.png" alt="" width={43} height={59} />
-        <i className="fairy-cursor-wand">
-          <b />
-        </i>
+      </span>
+      <span ref={wandRef} className={styles.wandCursor}>
+        <i />
+        <b />
       </span>
     </div>
   );

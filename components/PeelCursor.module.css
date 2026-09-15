@@ -1,14 +1,71 @@
 .wings {
   position: absolute;
-  z-index: 1;
+  z-index: -1;
   top: -0.1rem;
-  left: -1.25rem;
-  width: 3.8rem;
-  height: 4rem;
+  left: -1.05rem;
+  width: 3.1rem;
+  height: 3.45rem;
   overflow: visible;
   filter:
     drop-shadow(0 0 0.18rem rgba(175, 238, 238, 0.54))
     drop-shadow(0 0 0.3rem rgba(220, 205, 247, 0.28));
+}
+
+.follower {
+  isolation: isolate;
+  width: 2.15rem;
+  height: 2.95rem;
+}
+
+.follower:global(.is-visible) {
+  opacity: 0.78;
+}
+
+.wandCursor {
+  position: fixed;
+  z-index: 10002;
+  width: 1.3rem;
+  height: 1px;
+  margin-top: -1px;
+  margin-left: -1.3rem;
+  opacity: 0;
+  background: #211e1a;
+  box-shadow: 0 0.5px rgba(255, 255, 255, 0.72);
+  transform: rotate(-32deg);
+  transform-origin: 100% 50%;
+  transition: opacity 90ms ease;
+}
+
+.wandCursor i {
+  position: absolute;
+  left: -0.22rem;
+  top: -0.1rem;
+  width: 0.32rem;
+  height: 0.22rem;
+  border: 1px solid rgba(104, 158, 158, 0.72);
+  border-radius: 50%;
+}
+
+.wandCursor b {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  background: #faffff;
+  border: 1px solid #416f6f;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(175, 238, 238, 0.34),
+    0 0 0.55rem rgba(175, 238, 238, 0.86);
+}
+
+.wandVisible {
+  opacity: 1;
+}
+
+.wandFlick {
+  animation: wandFlick 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .upperWing,
@@ -91,6 +148,12 @@
   45% {
     transform: translate3d(var(--fairy-x), var(--fairy-y), 0) rotate(5deg)
       translateY(-0.12rem);
+  }
+}
+
+@keyframes wandFlick {
+  45% {
+    transform: rotate(-52deg) scaleX(0.9);
   }
 }
 
