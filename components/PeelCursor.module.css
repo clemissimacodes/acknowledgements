@@ -16,7 +16,7 @@
   width: 2.15rem;
   height: 2.95rem;
   transform: translate3d(var(--fairy-x, -100px), var(--fairy-y, -100px), 0)
-    rotate(14deg);
+    rotate(-18deg);
 }
 
 .follower:global(.is-visible) {
@@ -147,7 +147,7 @@
 
 @keyframes flick {
   45% {
-    transform: translate3d(var(--fairy-x), var(--fairy-y), 0) rotate(22deg)
+    transform: translate3d(var(--fairy-x), var(--fairy-y), 0) rotate(-28deg)
       translateY(-0.12rem);
   }
 }
