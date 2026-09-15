@@ -276,29 +276,85 @@ export function PeelCursor() {
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="fairy-pearl" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#f9ffff" stopOpacity=".82" />
-              <stop offset=".44" stopColor="#afeeee" stopOpacity=".46" />
-              <stop offset=".72" stopColor="#ddd0f1" stopOpacity=".38" />
-              <stop offset="1" stopColor="#78bcbc" stopOpacity=".2" />
+            <linearGradient id="wing-blue" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0" stopColor="#fff1b9" stopOpacity=".52" />
+              <stop offset=".32" stopColor="#d5e7ee" stopOpacity=".72" />
+              <stop offset=".72" stopColor="#9ebdd7" stopOpacity=".68" />
+              <stop offset="1" stopColor="#789dbd" stopOpacity=".52" />
             </linearGradient>
+            <linearGradient id="wing-pearl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#fff8cf" stopOpacity=".66" />
+              <stop offset=".45" stopColor="#dce9ee" stopOpacity=".72" />
+              <stop offset="1" stopColor="#a9c8dd" stopOpacity=".58" />
+            </linearGradient>
+            <filter id="wing-sketch" x="-15%" y="-15%" width="130%" height="130%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency=".045"
+                numOctaves="2"
+                seed="8"
+                result="paper"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="paper"
+                scale=".7"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
           </defs>
-          <path
-            className={styles.upperWing}
-            d="M8 35C22 31 49 7 55 13c5 7-12 27-47 25Z"
-            fill="url(#fairy-pearl)"
-            stroke="#679d9d"
-            strokeOpacity=".55"
-            strokeWidth=".75"
-          />
-          <path
-            className={styles.lowerWing}
-            d="M8 37C25 38 52 55 47 60c-6 5-31-7-39-21Z"
-            fill="url(#fairy-pearl)"
-            stroke="#8a82a3"
-            strokeOpacity=".42"
-            strokeWidth=".75"
-          />
+          <g className={styles.upperWing} filter="url(#wing-sketch)">
+            <path
+              d="M7 35C13 20 36 1 51 6c2 12-17 28-43 32Z"
+              fill="url(#wing-blue)"
+              stroke="#668ca9"
+              strokeOpacity=".72"
+              strokeWidth="1"
+            />
+            <path
+              d="M8 36C23 24 46 18 56 25c-4 11-25 17-48 13Z"
+              fill="url(#wing-pearl)"
+              stroke="#789db4"
+              strokeOpacity=".66"
+              strokeWidth="1"
+            />
+            <path
+              d="M9 35C21 25 33 15 47 8M10 36c14-5 27-8 42-9"
+              fill="none"
+              stroke="#6f91aa"
+              strokeOpacity=".36"
+              strokeWidth=".62"
+            />
+            <path
+              d="m43 9 1 3 3 1-3 1-1 3-1-3-3-1 3-1Zm5 5 .6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6Z"
+              fill="#fbffff"
+              fillOpacity=".88"
+            />
+          </g>
+          <g className={styles.lowerWing} filter="url(#wing-sketch)">
+            <path
+              d="M8 37c16 0 39 6 46 15-9 9-32 1-47-13Z"
+              fill="url(#wing-blue)"
+              stroke="#7698b3"
+              strokeOpacity=".68"
+              strokeWidth="1"
+            />
+            <path
+              d="M8 38c11 9 24 20 22 25-12 2-22-10-24-24Z"
+              fill="url(#wing-pearl)"
+              stroke="#698eac"
+              strokeOpacity=".65"
+              strokeWidth="1"
+            />
+            <path
+              d="M9 38c14 4 27 9 40 14M8 39c8 7 14 14 20 21"
+              fill="none"
+              stroke="#718fa8"
+              strokeOpacity=".34"
+              strokeWidth=".62"
+            />
+          </g>
         </svg>
         <Image src="/clemi/still.png" alt="" width={43} height={59} />
       </span>
