@@ -338,7 +338,17 @@ export function PoetryAnnotations({
                 aria-label="Post thought or question"
                 title="Post"
               >
-                {busy ? "…" : "↑"}
+                {busy ? (
+                  "…"
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M4.5 10.5 12 3l7.5 7.5M12 3v18" />
+                  </svg>
+                )}
               </button>
               <p className="poem-note-public">
                 This will be public. No name needed.

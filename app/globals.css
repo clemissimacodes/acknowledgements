@@ -1576,9 +1576,59 @@ html:has(.about-page) .site-anchor,
   animation: about-watercolor-drift 8.5s ease-in-out infinite alternate;
 }
 
+.about-generated-thing,
+.about-orbit-target {
+  transition: opacity 420ms ease, filter 420ms ease;
+}
+
+.about-generated-thing.is-visitor {
+  z-index: 0;
+  width: clamp(5rem, 10vw, 8rem);
+  opacity: 0.28;
+  filter: saturate(0.72);
+}
+
+.about-orbit.is-viewing-internet .about-generated-thing.is-visitor {
+  z-index: 3;
+  opacity: 1;
+  filter: saturate(1);
+}
+
+.about-orbit.is-viewing-internet .about-orbit-target.is-personal,
+.about-orbit.is-viewing-internet .about-generated-thing.is-personal {
+  opacity: 0.16;
+}
+
 .about-generated-thing .about-orbit-target {
   top: 50%;
   left: 50%;
+}
+
+.about-orbit-filter {
+  position: fixed;
+  z-index: 12;
+  right: clamp(1rem, 5vw, 4rem);
+  bottom: calc(clamp(1rem, 5vw, 4rem) + clamp(6.5rem, 11vw, 9rem));
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(22, 20, 18, 0.45);
+  font-size: 0.64rem;
+  font-style: italic;
+}
+
+.about-orbit-filter button {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.about-orbit-filter button.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
 }
 
 .about-generated-watercolor,
@@ -1733,6 +1783,27 @@ html:has(.about-page) .site-anchor,
   font-size: 0.62rem;
   font-style: italic;
   letter-spacing: 0.08em;
+}
+
+.about-focus-nav {
+  position: absolute;
+  right: 17%;
+  bottom: 13%;
+  left: 17%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.about-focus-nav button {
+  padding: 0.3rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font-size: 0.62rem;
+  font-style: italic;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
 }
 
 .about-focus-circle a {
@@ -2800,6 +2871,16 @@ html:has(.about-page) .site-anchor,
 .note-form .poem-note-send:focus-visible {
   background: rgba(205, 239, 237, 0.16);
   outline: none;
+}
+
+.note-form .poem-note-send svg {
+  width: 0.82rem;
+  height: 0.82rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .margin-notes {
