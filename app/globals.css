@@ -2498,8 +2498,9 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-line-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 1.4rem;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
   gap: 0.3rem;
   align-items: baseline;
 }
@@ -2519,9 +2520,9 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-line-button {
+  flex: 0 1 auto;
   width: fit-content;
   max-width: 100%;
-  justify-self: start;
   border-radius: 0.18rem;
   cursor: pointer;
   touch-action: manipulation;
@@ -2537,6 +2538,7 @@ html:has(.about-page) .site-anchor,
 
 .poem-note-count,
 .poem-note-plus {
+  flex: 0 0 1.4rem;
   color: #789e9c;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 0.66rem;
@@ -2846,7 +2848,7 @@ html:has(.about-page) .site-anchor,
 
 .note-form textarea {
   line-height: 1.4;
-  min-height: 3.4rem;
+  min-height: 2.4rem;
   max-height: 7rem;
 }
 
@@ -2927,6 +2929,11 @@ html:has(.about-page) .site-anchor,
 .note-form .poem-note-send:focus-visible {
   background: rgba(205, 239, 237, 0.16);
   outline: none;
+}
+
+.note-form .poem-note-send:disabled {
+  opacity: 0.28;
+  cursor: default;
 }
 
 .note-form .poem-note-send svg {

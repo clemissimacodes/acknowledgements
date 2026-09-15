@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PoemNote } from "@/lib/poem-comments";
 
 const NAME_KEY = "clemissima-poetry-name";
@@ -45,7 +45,6 @@ export function PoetryAnnotations({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editBody, setEditBody] = useState("");
-  const annotationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setName(window.localStorage.getItem(NAME_KEY)?.trim() ?? "");
@@ -90,19 +89,11 @@ export function PoetryAnnotations({
   function openLine(index: number) {
     setActive(index);
     setError("");
-    window.requestAnimationFrame(() => {
-      annotationRef.current?.scrollIntoView({
-        block: "nearest",
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
-          : "smooth",
-      });
-    });
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (active === null || busy) return;
+    if (active === null || busy || body.trim().length < 2) return;
     setBusy(true);
     setError("");
 
@@ -229,7 +220,7 @@ export function PoetryAnnotations({
           </aside>
         ) : null}
         {isActive ? (
-          <div className="line-annot" ref={annotationRef}>
+          <div className="line-annot">
             <button
               className="line-annot-close"
               type="button"
@@ -303,10 +294,9 @@ export function PoetryAnnotations({
             ) : null}
             <form className="note-form" onSubmit={submit}>
               <textarea
-                required
                 minLength={2}
                 maxLength={600}
-                rows={2}
+                rows={1}
                 value={body}
                 placeholder="thought or question"
                 aria-label="Thought or question"
@@ -332,7 +322,7 @@ export function PoetryAnnotations({
                 <button
                   className="poem-note-send"
                   type="submit"
-                  disabled={busy}
+                  disabled={busy || body.trim().length < 2}
                   aria-label="Post thought or question"
                   title="Post"
                 >
@@ -431,9 +421,6 @@ export function PoetryAnnotations({
               </div>
             ) : null}
           </div>
-          <p className="poem-annotation-instruction">
-            leave a thought or question ᵕ̈
-          </p>
         </div>
         {error ? (
           <p className="poem-margin-error" role="status">
