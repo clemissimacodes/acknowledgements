@@ -2781,6 +2781,27 @@ html:has(.about-page) .site-anchor,
   color: #8a3b2e;
 }
 
+.note-form .poem-note-send {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-self: flex-end;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(22, 20, 18, 0.34);
+  border-radius: 50%;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.note-form .poem-note-send:hover,
+.note-form .poem-note-send:focus-visible {
+  background: rgba(205, 239, 237, 0.16);
+  outline: none;
+}
+
 .margin-notes {
   list-style: none;
   margin: 0;
@@ -6263,7 +6284,7 @@ html:has(.store-page) .site-anchor {
   }
 }
 
-/* A page-thin clementine peel: movement curls; intent becomes crop marks. */
+/* Flying Clemi follows the wand point; intent still becomes crop marks. */
 @media (hover: hover) and (pointer: fine) {
   html.peel-cursor-enabled,
   html.peel-cursor-enabled * {
@@ -6274,8 +6295,7 @@ html:has(.store-page) .site-anchor {
 .peel-cursor,
 .peel-cursor-trail,
 .peel-cursor-frame,
-.peel-cursor-pointer,
-.peel-cursor-tear {
+.peel-cursor-pointer {
   pointer-events: none;
 }
 
@@ -6300,10 +6320,11 @@ html:has(.store-page) .site-anchor {
   position: fixed;
   top: 0;
   left: 0;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 2.7rem;
+  height: 3.7rem;
   opacity: 0;
-  transform: translate3d(var(--cursor-x, -100px), var(--cursor-y, -100px), 0);
+  transform: translate3d(var(--fairy-x, -100px), var(--fairy-y, -100px), 0)
+    rotate(-7deg);
   transition: opacity 100ms ease;
   will-change: transform;
 }
@@ -6312,45 +6333,79 @@ html:has(.store-page) .site-anchor {
   opacity: 1;
 }
 
-.peel-cursor-pointer::before {
+.peel-cursor-pointer > img {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    saturate(0.82)
+    contrast(1.08)
+    drop-shadow(0 1px 1px rgba(24, 19, 14, 0.2));
+}
+
+.fairy-cursor-wings {
+  position: absolute;
+  z-index: 1;
+  top: 1.75rem;
+  left: 0.35rem;
+  width: 1.8rem;
+  height: 1rem;
+  transform: rotate(-14deg);
+}
+
+.fairy-cursor-wings i {
+  position: absolute;
+  left: -0.65rem;
+  width: 1.25rem;
+  height: 0.52rem;
+  background: rgba(175, 238, 238, 0.2);
+  border: 1px solid rgba(62, 112, 112, 0.42);
+  border-radius: 100% 8% 100% 8%;
+  transform-origin: 100% 50%;
+  animation: fairy-wing 180ms ease-in-out infinite alternate;
+}
+
+.fairy-cursor-wings i:last-child {
+  top: 0.38rem;
+  animation-name: fairy-wing-lower;
+  animation-direction: alternate-reverse;
+}
+
+.fairy-cursor-wand {
+  position: absolute;
+  z-index: 3;
+  top: 2rem;
+  left: 2.15rem;
+  display: block;
+  width: var(--wand-length, 1.2rem);
+  height: 1px;
+  background: #24201c;
+  box-shadow: 0 0.5px rgba(250, 245, 236, 0.7);
+  transform: rotate(var(--wand-angle, 0rad));
+  transform-origin: 0 50%;
+}
+
+.fairy-cursor-wand b {
   position: absolute;
   top: -0.16rem;
-  left: -0.16rem;
+  right: -0.16rem;
+  display: block;
   width: 0.32rem;
   height: 0.32rem;
-  content: "";
   background: #17130f;
-  border: 1px solid rgba(255, 245, 226, 0.88);
+  border: 1px solid rgba(255, 245, 226, 0.9);
   border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(210, 91, 28, 0.42);
-}
-
-.peel-cursor-pointer > i {
-  position: absolute;
-  top: 0.08rem;
-  left: 0.02rem;
-  width: 1rem;
-  height: 0.48rem;
-  border: 0.2rem solid #d25b1c;
-  border-left-color: transparent;
-  border-radius: 10% 100% 90% 15%;
   box-shadow:
-    inset 0 1px rgba(255, 205, 128, 0.92),
-    0 1px 1px rgba(83, 37, 12, 0.24);
-  transform: rotate(var(--cursor-angle, 0rad)) translateX(-0.1rem);
-  transform-origin: 0 50%;
-  transition:
-    width 180ms ease,
-    opacity 120ms ease;
-}
-
-.peel-cursor-pointer.is-framing > i {
-  width: 0;
-  opacity: 0;
+    0 0 0 1px rgba(79, 136, 136, 0.52),
+    0 0 0.55rem rgba(175, 238, 238, 0.8);
 }
 
 .peel-cursor-pointer.is-pressed {
-  animation: peel-cursor-press 240ms ease-out;
+  animation: fairy-cursor-press 240ms ease-out;
 }
 
 .peel-cursor-frame {
@@ -6378,7 +6433,7 @@ html:has(.store-page) .site-anchor {
   position: absolute;
   width: 0.65rem;
   height: 0.65rem;
-  border-color: #d25b1c;
+  border-color: #4f7777;
   border-style: solid;
   filter: drop-shadow(0 0.5px rgba(255, 244, 224, 0.85));
 }
@@ -6407,36 +6462,27 @@ html:has(.store-page) .site-anchor {
   border-width: 0 0 1px 1px;
 }
 
-.peel-cursor-tear {
-  position: fixed;
-  z-index: 9999;
-  width: 1.35rem;
-  height: 1.1rem;
-  background:
-    repeating-linear-gradient(
-      104deg,
-      rgba(255, 205, 130, 0.9) 0 1px,
-      rgba(203, 78, 20, 0.92) 1px 4px
-    );
-  clip-path: polygon(8% 23%, 39% 4%, 85% 14%, 100% 48%, 79% 91%, 34% 100%, 0 72%);
-  transform: translate(-50%, -50%) scale(0.25) rotate(-12deg);
-  animation: peel-cursor-tear 640ms cubic-bezier(0.18, 0.78, 0.22, 1) forwards;
-}
-
-@keyframes peel-cursor-press {
+@keyframes fairy-cursor-press {
   50% {
-    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(0.72);
+    filter: brightness(1.1);
   }
 }
 
-@keyframes peel-cursor-tear {
-  45% {
-    opacity: 0.82;
-    transform: translate(-50%, -50%) scale(1) rotate(8deg);
+@keyframes fairy-wing {
+  from {
+    transform: rotate(9deg) scaleX(0.82);
   }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -72%) scale(0.7) rotate(22deg);
+  to {
+    transform: rotate(-17deg) scaleX(1);
+  }
+}
+
+@keyframes fairy-wing-lower {
+  from {
+    transform: rotate(-18deg) scaleX(0.84);
+  }
+  to {
+    transform: rotate(-37deg) scaleX(1);
   }
 }
 

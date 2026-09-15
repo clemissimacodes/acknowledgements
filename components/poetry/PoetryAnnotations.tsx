@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { PoemNote, PoemNoteKind } from "@/lib/poem-comments";
+import type { PoemNote } from "@/lib/poem-comments";
 
 const NAME_KEY = "clemissima-poetry-name";
 
@@ -25,11 +25,7 @@ function ordered(notes: PoemNote[]) {
 }
 
 function displayName(note: PoemNote) {
-  return note.name || "someone passing through";
-}
-
-function displayKind(kind: PoemNoteKind) {
-  return kind === "question" ? "a question" : "a thought";
+  return note.name || "internet human";
 }
 
 export function PoetryAnnotations({
@@ -42,13 +38,11 @@ export function PoetryAnnotations({
   const [notes, setNotes] = useState<PoemNote[]>([]);
   const [admin, setAdmin] = useState(false);
   const [active, setActive] = useState<number | null>(null);
-  const [kind, setKind] = useState<PoemNoteKind>("note");
   const [name, setName] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editKind, setEditKind] = useState<PoemNoteKind>("note");
   const [editName, setEditName] = useState("");
   const [editBody, setEditBody] = useState("");
   const annotationRef = useRef<HTMLDivElement>(null);
@@ -119,7 +113,7 @@ export function PoetryAnnotations({
         body: JSON.stringify({
           poem: slug,
           line: active,
-          kind,
+          kind: body.trim().endsWith("?") ? "question" : "note",
           name,
           body,
           website: new FormData(event.currentTarget).get("website"),
@@ -150,7 +144,6 @@ export function PoetryAnnotations({
 
   function beginEdit(note: PoemNote) {
     setEditingId(note.id);
-    setEditKind(note.kind);
     setEditName(note.name ?? "");
     setEditBody(note.body);
     setError("");
@@ -166,7 +159,7 @@ export function PoetryAnnotations({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind: editKind,
+          kind: editBody.trim().endsWith("?") ? "question" : "note",
           name: editName,
           body: editBody,
         }),
@@ -230,7 +223,6 @@ export function PoetryAnnotations({
             {targetNotes.map((note) => (
               <div key={note.id}>
                 <p className="margin-meta">
-                  <span>{displayKind(note.kind)}</span>
                   <span>{displayName(note)}</span>
                 </p>
                 <p>{note.body}</p>
@@ -259,16 +251,6 @@ export function PoetryAnnotations({
                         className="note-form margin-edit-form"
                         onSubmit={saveEdit}
                       >
-                        <select
-                          value={editKind}
-                          aria-label="Annotation type"
-                          onChange={(event) =>
-                            setEditKind(event.target.value as PoemNoteKind)
-                          }
-                        >
-                          <option value="note">A thought</option>
-                          <option value="question">A question</option>
-                        </select>
                         <input
                           value={editName}
                           maxLength={60}
@@ -301,7 +283,6 @@ export function PoetryAnnotations({
                   ) : (
                     <li key={note.id}>
                       <p className="margin-meta">
-                        <span>{displayKind(note.kind)}</span>
                         <span>{displayName(note)}</span>
                       </p>
                       <p>{note.body}</p>
@@ -325,16 +306,6 @@ export function PoetryAnnotations({
               </ol>
             ) : null}
             <form className="note-form" onSubmit={submit}>
-              <select
-                value={kind}
-                aria-label="Annotation type"
-                onChange={(event) =>
-                  setKind(event.target.value as PoemNoteKind)
-                }
-              >
-                <option value="note">A thought</option>
-                <option value="question">A question</option>
-              </select>
               <input
                 value={name}
                 maxLength={60}
@@ -349,12 +320,8 @@ export function PoetryAnnotations({
                 maxLength={600}
                 rows={3}
                 value={body}
-                placeholder={
-                  kind === "question"
-                    ? "What are you wondering?"
-                    : "What followed you here?"
-                }
-                aria-label={kind === "question" ? "Question" : "Note"}
+                placeholder="thought or question"
+                aria-label="Thought or question"
                 onChange={(event) => setBody(event.target.value)}
               />
               <input
@@ -364,8 +331,14 @@ export function PoetryAnnotations({
                 autoComplete="off"
                 aria-hidden="true"
               />
-              <button type="submit" disabled={busy}>
-                {busy ? "Leaving it here…" : "Leave it here"}
+              <button
+                className="poem-note-send"
+                type="submit"
+                disabled={busy}
+                aria-label="Post thought or question"
+                title="Post"
+              >
+                {busy ? "…" : "↑"}
               </button>
               <p className="poem-note-public">
                 This will be public. No name needed.
