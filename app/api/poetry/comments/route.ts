@@ -97,13 +97,22 @@ export async function POST(request: Request) {
   }
   const lines = poemLines(poem);
   const line = Number(payload.line);
+  const targetText =
+    line === -2
+      ? poem.title
+      : line === -1
+        ? poem.dedication ?? ""
+        : lines[line] ?? "";
   if (
     !Number.isInteger(line) ||
-    line < 0 ||
+    line < -2 ||
     line >= lines.length ||
-    !lines[line]?.trim()
+    !targetText.trim()
   ) {
-    return NextResponse.json({ error: "Choose a line with words." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Choose a title, dedication, or line with words." },
+      { status: 400 },
+    );
   }
   const name = cleanName(payload.name);
   const body = cleanBody(payload.body);

@@ -30,13 +30,32 @@ async function ensureTable() {
     CREATE TABLE IF NOT EXISTS poem_notes (
       id TEXT PRIMARY KEY,
       poem_slug TEXT NOT NULL,
-      line_index INTEGER NOT NULL CHECK (line_index >= 0),
+      line_index INTEGER NOT NULL
+        CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -2),
       kind TEXT NOT NULL CHECK (kind IN ('note', 'question')),
       author_name TEXT,
       body TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `;
+  await sql`
+    ALTER TABLE poem_notes
+    DROP CONSTRAINT IF EXISTS poem_notes_line_index_check
+  `;
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'poem_notes_anchor_check'
+      ) THEN
+        ALTER TABLE poem_notes
+        ADD CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -2);
+      END IF;
+    END
+    $$
   `;
   await sql`
     CREATE INDEX IF NOT EXISTS poem_notes_poem_line_idx

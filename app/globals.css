@@ -2246,6 +2246,37 @@ html:has(.about-page) .site-anchor,
   margin-bottom: 0.75rem;
 }
 
+.poem-heading-targets {
+  min-width: 0;
+}
+
+.poem-heading-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 0.18rem;
+  cursor: pointer;
+}
+
+.poem-heading-button:hover,
+.poem-heading-button:focus-visible,
+.poem-line-row.is-active .poem-heading-button {
+  background: rgba(175, 238, 238, 0.22);
+  outline: none;
+}
+
+.poem-line-row.is-active .poem-note-count,
+.poem-line-row.is-active .poem-note-plus {
+  opacity: 0.48;
+}
+
 .poem-sheet h1 {
   margin: 0;
 }
