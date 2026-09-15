@@ -23,7 +23,7 @@
 }
 
 .follower:global(.is-visible.is-framing) {
-  opacity: 0;
+  opacity: 0.84;
 }
 
 .wandCursor {
@@ -79,11 +79,11 @@
 }
 
 .upperWing {
-  transform: rotate(-1.5deg);
+  animation: upperWing 420ms ease-in-out infinite alternate;
 }
 
 .lowerWing {
-  transform: rotate(1deg);
+  animation: lowerWing 480ms ease-in-out infinite alternate-reverse;
 }
 
 .flick {
