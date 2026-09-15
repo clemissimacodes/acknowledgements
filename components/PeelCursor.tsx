@@ -271,7 +271,7 @@ export function PeelCursor() {
       >
         <svg
           className={styles.wings}
-          viewBox="0 0 58 64"
+          viewBox="0 0 100 64"
           focusable="false"
           aria-hidden="true"
         >
@@ -306,53 +306,67 @@ export function PeelCursor() {
           </defs>
           <g className={styles.upperWing} filter="url(#wing-sketch)">
             <path
-              d="M7 35C13 20 36 1 51 6c2 12-17 28-43 32Z"
+              d="M50 38C40 22 19 4 7 8c3 14 23 29 43 32Z"
               fill="url(#wing-blue)"
               stroke="#668ca9"
-              strokeOpacity=".72"
-              strokeWidth="1"
+              strokeOpacity=".62"
+              strokeWidth="1.25"
             />
             <path
-              d="M8 36C23 24 46 18 56 25c-4 11-25 17-48 13Z"
+              d="M50 38C60 22 81 4 93 8c-3 14-23 29-43 32Z"
+              fill="url(#wing-blue)"
+              stroke="#668ca9"
+              strokeOpacity=".62"
+              strokeWidth="1.25"
+            />
+            <path
+              d="M50 39C32 25 10 25 2 33c9 12 31 14 48 8Z"
               fill="url(#wing-pearl)"
               stroke="#789db4"
-              strokeOpacity=".66"
-              strokeWidth="1"
+              strokeOpacity=".58"
+              strokeWidth="1.2"
             />
             <path
-              d="M9 35C21 25 33 15 47 8M10 36c14-5 27-8 42-9"
+              d="M50 39C68 25 90 25 98 33c-9 12-31 14-48 8Z"
+              fill="url(#wing-pearl)"
+              stroke="#789db4"
+              strokeOpacity=".58"
+              strokeWidth="1.2"
+            />
+            <path
+              d="M49 38C36 24 23 14 10 9m40 30c14-15 27-25 40-30M48 40c-15-7-28-9-42-7m46 7c15-7 28-9 42-7"
               fill="none"
               stroke="#6f91aa"
-              strokeOpacity=".36"
-              strokeWidth=".62"
+              strokeOpacity=".32"
+              strokeWidth=".72"
             />
             <path
-              d="m43 9 1 3 3 1-3 1-1 3-1-3-3-1 3-1Zm5 5 .6 1.7 1.7.6-1.7.6-.6 1.7-.6-1.7-1.7-.6 1.7-.6Z"
+              d="m84 10 1.2 3.3 3.3 1.2-3.3 1.2-1.2 3.3-1.2-3.3-3.3-1.2 3.3-1.2Zm6 7 .7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7Z"
               fill="#fbffff"
-              fillOpacity=".88"
+              fillOpacity=".78"
             />
           </g>
           <g className={styles.lowerWing} filter="url(#wing-sketch)">
             <path
-              d="M8 37c16 0 39 6 46 15-9 9-32 1-47-13Z"
+              d="M50 40C36 35 20 39 18 49c6 1 4 7 12 5 4 6 14-5 20-12Z"
               fill="url(#wing-blue)"
               stroke="#7698b3"
-              strokeOpacity=".68"
-              strokeWidth="1"
+              strokeOpacity=".58"
+              strokeWidth="1.2"
             />
             <path
-              d="M8 38c11 9 24 20 22 25-12 2-22-10-24-24Z"
-              fill="url(#wing-pearl)"
-              stroke="#698eac"
-              strokeOpacity=".65"
-              strokeWidth="1"
+              d="M50 40C64 35 80 39 82 49c-6 1-4 7-12 5-4 6-14-5-20-12Z"
+              fill="url(#wing-blue)"
+              stroke="#7698b3"
+              strokeOpacity=".58"
+              strokeWidth="1.2"
             />
             <path
-              d="M9 38c14 4 27 9 40 14M8 39c8 7 14 14 20 21"
+              d="M50 41C40 40 30 43 22 49m28-8c10-1 20 2 28 8"
               fill="none"
               stroke="#718fa8"
-              strokeOpacity=".34"
-              strokeWidth=".62"
+              strokeOpacity=".3"
+              strokeWidth=".7"
             />
           </g>
         </svg>
