@@ -132,8 +132,7 @@ export function NoseCamera() {
 
   return (
     <fieldset className={styles.fieldset}>
-      <legend>nose evidence</legend>
-      <p className={styles.instruction}>nose only. no eyes. no alibis.</p>
+      <legend>nosiness requires nose evidence</legend>
       <input type="hidden" name="nosePhoto" value={photo} />
       <div
         className={`${styles.camera}${sourcePhoto && !photo ? ` ${styles.cropper}` : ""}`}
