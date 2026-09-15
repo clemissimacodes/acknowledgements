@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PoemSheet } from "@/components/poetry/PoemSheet";
+import { PoetryAnnotations } from "@/components/poetry/PoetryAnnotations";
 import { TurnipChase } from "@/components/poetry/TurnipChase";
 import { getPoem, poemLines, poems } from "@/lib/poems";
 
@@ -29,7 +29,8 @@ export default async function PoemPage({
     <main className="poetry-page poetry-read">
       {poem.swarm ? <TurnipChase /> : null}
       <div className="poetry-inner">
-        <PoemSheet
+        <PoetryAnnotations
+          slug={poem.slug}
           title={poem.title}
           dedication={poem.dedication}
           lines={poemLines(poem)}

@@ -26,6 +26,15 @@ export default function PrivacyPage() {
         </p>
       </section>
       <section>
+        <h2>Poetry margins</h2>
+        <p>
+          Notes and questions left on poems are public. A name is optional and
+          appears publicly when supplied. The site keeps a short-lived cookie
+          only to limit repeated submissions; it does not attach an IP address
+          to an annotation.
+        </p>
+      </section>
+      <section>
         <h2>Visits</h2>
         <p>
           The site keeps the page visited, time, referring website, device
