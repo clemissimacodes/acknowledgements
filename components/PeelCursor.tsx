@@ -1,11 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 type Point = {
   x: number;
   y: number;
   time: number;
+  size: number;
+  rotation: number;
+  vx: number;
+  vy: number;
 };
 
 const INTERACTIVE_SELECTOR =
@@ -36,9 +41,13 @@ export function PeelCursor() {
     let points: Point[] = [];
     let animationFrame = 0;
     let hovered: Element | null = null;
-    let lastX = -100;
-    let lastY = -100;
-    let lastAngle = 0;
+    let targetX = -100;
+    let targetY = -100;
+    let fairyX = -100;
+    let fairyY = -100;
+    let lastSparkX = -100;
+    let lastSparkY = -100;
+    let sparkleIndex = 0;
     let visible = false;
 
     function resizeCanvas() {
@@ -67,43 +76,80 @@ export function PeelCursor() {
       hovered = element;
       cropFrame.classList.toggle("is-visible", Boolean(hovered));
       cursorElement.classList.toggle("is-framing", Boolean(hovered));
-      if (hovered) {
-        points = [];
-        positionFrame();
-      }
+      if (hovered) positionFrame();
+    }
+
+    function addSpark(
+      x: number,
+      y: number,
+      burst = false,
+      angle = Math.random() * Math.PI * 2,
+    ) {
+      const speed = burst ? 0.45 + Math.random() * 0.5 : 0;
+      points.push({
+        x,
+        y,
+        time: performance.now(),
+        size: burst ? 2.4 + Math.random() * 2.4 : 1.5 + (sparkleIndex % 3) * 0.65,
+        rotation: angle + Math.PI / 4,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+      });
+      sparkleIndex += 1;
+      if (points.length > 28) points.shift();
     }
 
     function draw(now: number) {
       drawing.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      points = points.filter((point) => now - point.time < 720);
+      points = points.filter((point) => now - point.time < 760);
 
-      if (points.length > 1) {
-        for (let index = 1; index < points.length; index += 1) {
-          const previous = points[index - 1];
-          const current = points[index];
-          const age = now - current.time;
-          const life = Math.max(0, 1 - age / 720);
-          const progress = index / points.length;
-          const width = 1.2 + progress * 5.8;
+      for (const [pointIndex, point] of points.entries()) {
+        const age = now - point.time;
+        const life = Math.max(0, 1 - age / 760);
+        const x = point.x + point.vx * age;
+        const y = point.y + point.vy * age + point.vy * age * age * 0.00045;
+        const radius = point.size * (0.7 + life * 0.3);
+        const horizontal = radius * 0.38;
 
-          drawing.beginPath();
-          drawing.moveTo(previous.x, previous.y);
-          drawing.lineTo(current.x, current.y);
-          drawing.lineCap = "round";
-          drawing.lineJoin = "round";
-          drawing.lineWidth = width;
-          drawing.strokeStyle = `rgba(210, 91, 28, ${life * 0.78})`;
-          drawing.stroke();
-
-          drawing.beginPath();
-          drawing.moveTo(previous.x - 0.8, previous.y - 0.8);
-          drawing.lineTo(current.x - 0.8, current.y - 0.8);
-          drawing.lineWidth = Math.max(0.6, width * 0.24);
-          drawing.strokeStyle = `rgba(255, 201, 123, ${life * 0.72})`;
-          drawing.stroke();
-        }
+        drawing.save();
+        drawing.translate(x, y);
+        drawing.rotate(point.rotation);
+        drawing.strokeStyle =
+          pointIndex % 2
+            ? `rgba(77, 142, 142, ${life * 0.82})`
+            : `rgba(26, 23, 20, ${life * 0.68})`;
+        drawing.lineWidth = 0.7;
+        drawing.beginPath();
+        drawing.moveTo(-radius, 0);
+        drawing.quadraticCurveTo(-horizontal, 0, 0, -radius * 2.2);
+        drawing.quadraticCurveTo(horizontal, 0, radius, 0);
+        drawing.quadraticCurveTo(horizontal, 0, 0, radius * 2.2);
+        drawing.quadraticCurveTo(-horizontal, 0, -radius, 0);
+        drawing.stroke();
+        drawing.restore();
       }
 
+      if (visible) {
+        const desiredX = targetX - 52;
+        const desiredY = targetY - 30;
+        fairyX += (desiredX - fairyX) * 0.24;
+        fairyY += (desiredY - fairyY) * 0.24;
+        const lagX = desiredX - fairyX;
+        const lagY = desiredY - fairyY;
+        const lag = Math.hypot(lagX, lagY);
+        if (lag > 24) {
+          fairyX = desiredX - (lagX / lag) * 24;
+          fairyY = desiredY - (lagY / lag) * 24;
+        }
+        const wandX = fairyX + 34;
+        const wandY = fairyY + 32;
+        const dx = targetX - wandX;
+        const dy = targetY - wandY;
+        cursorElement.style.setProperty("--fairy-x", `${fairyX}px`);
+        cursorElement.style.setProperty("--fairy-y", `${fairyY}px`);
+        cursorElement.style.setProperty("--wand-angle", `${Math.atan2(dy, dx)}rad`);
+        cursorElement.style.setProperty("--wand-length", `${Math.hypot(dx, dy)}px`);
+      }
       animationFrame = window.requestAnimationFrame(draw);
     }
 
@@ -114,25 +160,21 @@ export function PeelCursor() {
       surface.classList.add("is-visible");
       setHovered(event.target);
 
-      const dx = event.clientX - lastX;
-      const dy = event.clientY - lastY;
-      const distance = Math.hypot(dx, dy);
-      if (distance > 0.5) lastAngle = Math.atan2(dy, dx);
+      targetX = event.clientX;
+      targetY = event.clientY;
+      if (fairyX < -50) {
+        fairyX = targetX - 52;
+        fairyY = targetY - 30;
+      }
 
-      lastX = event.clientX;
-      lastY = event.clientY;
-      cursorElement.style.setProperty("--cursor-x", `${lastX}px`);
-      cursorElement.style.setProperty("--cursor-y", `${lastY}px`);
-      cursorElement.style.setProperty("--cursor-angle", `${lastAngle}rad`);
-
-      if (!hovered && distance > 1) {
-        const curl = Math.sin(performance.now() / 95) * Math.min(distance, 9) * 0.2;
-        points.push({
-          x: lastX - Math.sin(lastAngle) * curl,
-          y: lastY + Math.cos(lastAngle) * curl,
-          time: performance.now(),
-        });
-        if (points.length > 42) points.shift();
+      const sparkDistance = Math.hypot(
+        targetX - lastSparkX,
+        targetY - lastSparkY,
+      );
+      if (!hovered && sparkDistance > 17) {
+        addSpark(targetX, targetY);
+        lastSparkX = targetX;
+        lastSparkY = targetY;
       }
     }
 
@@ -141,20 +183,24 @@ export function PeelCursor() {
       cursorElement.classList.remove("is-pressed");
       void cursorElement.offsetWidth;
       cursorElement.classList.add("is-pressed");
-
-      const tear = document.createElement("span");
-      tear.className = "peel-cursor-tear";
-      tear.style.left = `${event.clientX}px`;
-      tear.style.top = `${event.clientY}px`;
-      tear.setAttribute("aria-hidden", "true");
-      document.body.appendChild(tear);
-      window.setTimeout(() => tear.remove(), 650);
+      for (let index = 0; index < 7; index += 1) {
+        addSpark(
+          event.clientX,
+          event.clientY,
+          true,
+          (index / 7) * Math.PI * 2,
+        );
+      }
     }
 
     function hide() {
       visible = false;
       hovered = null;
       points = [];
+      fairyX = -100;
+      fairyY = -100;
+      lastSparkX = -100;
+      lastSparkY = -100;
       cursorElement.classList.remove("is-visible", "is-framing");
       cropFrame.classList.remove("is-visible");
       surface.classList.remove("is-visible");
@@ -189,7 +235,14 @@ export function PeelCursor() {
         <i />
       </span>
       <span ref={pointerRef} className="peel-cursor-pointer">
-        <i />
+        <span className="fairy-cursor-wings">
+          <i />
+          <i />
+        </span>
+        <Image src="/clemi/still.png" alt="" width={43} height={59} />
+        <i className="fairy-cursor-wand">
+          <b />
+        </i>
       </span>
     </div>
   );
