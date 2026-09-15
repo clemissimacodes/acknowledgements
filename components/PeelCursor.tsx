@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import styles from "./PeelCursor.module.css";
 
 type Point = {
   x: number;
@@ -96,7 +97,7 @@ export function PeelCursor() {
         vy: Math.sin(angle) * speed,
       });
       sparkleIndex += 1;
-      if (points.length > 28) points.shift();
+      if (points.length > 36) points.shift();
     }
 
     function draw(now: number) {
@@ -114,11 +115,17 @@ export function PeelCursor() {
         drawing.save();
         drawing.translate(x, y);
         drawing.rotate(point.rotation);
+        const pearl = pointIndex % 3;
         drawing.strokeStyle =
-          pointIndex % 2
-            ? `rgba(77, 142, 142, ${life * 0.82})`
-            : `rgba(26, 23, 20, ${life * 0.68})`;
-        drawing.lineWidth = 0.7;
+          pearl === 0
+            ? `rgba(126, 211, 211, ${life * 0.9})`
+            : pearl === 1
+              ? `rgba(226, 215, 247, ${life * 0.86})`
+              : `rgba(247, 255, 253, ${life * 0.94})`;
+        drawing.shadowColor =
+          pearl === 1 ? "rgba(210, 190, 240, 0.72)" : "rgba(175, 238, 238, 0.82)";
+        drawing.shadowBlur = 4;
+        drawing.lineWidth = 0.78;
         drawing.beginPath();
         drawing.moveTo(-radius, 0);
         drawing.quadraticCurveTo(-horizontal, 0, 0, -radius * 2.2);
@@ -126,6 +133,8 @@ export function PeelCursor() {
         drawing.quadraticCurveTo(horizontal, 0, 0, radius * 2.2);
         drawing.quadraticCurveTo(-horizontal, 0, -radius, 0);
         drawing.stroke();
+        drawing.fillStyle = `rgba(255, 255, 255, ${life * 0.82})`;
+        drawing.fillRect(-0.55, -0.55, 1.1, 1.1);
         drawing.restore();
       }
 
@@ -171,7 +180,7 @@ export function PeelCursor() {
         targetX - lastSparkX,
         targetY - lastSparkY,
       );
-      if (!hovered && sparkDistance > 17) {
+      if (!hovered && sparkDistance > 13) {
         addSpark(targetX, targetY);
         lastSparkX = targetX;
         lastSparkY = targetY;
@@ -181,8 +190,10 @@ export function PeelCursor() {
     function onPointerDown(event: PointerEvent) {
       if (!visible || event.pointerType === "touch") return;
       cursorElement.classList.remove("is-pressed");
+      cursorElement.classList.remove(styles.flick);
       void cursorElement.offsetWidth;
-      cursorElement.classList.add("is-pressed");
+      cursorElement.classList.add("is-pressed", styles.flick);
+      window.setTimeout(() => cursorElement.classList.remove(styles.flick), 360);
       for (let index = 0; index < 7; index += 1) {
         addSpark(
           event.clientX,
@@ -191,6 +202,13 @@ export function PeelCursor() {
           (index / 7) * Math.PI * 2,
         );
       }
+      const sigil = document.createElement("span");
+      sigil.className = styles.sigil;
+      sigil.style.left = `${event.clientX}px`;
+      sigil.style.top = `${event.clientY}px`;
+      sigil.setAttribute("aria-hidden", "true");
+      document.body.appendChild(sigil);
+      window.setTimeout(() => sigil.remove(), 720);
     }
 
     function hide() {
@@ -235,10 +253,37 @@ export function PeelCursor() {
         <i />
       </span>
       <span ref={pointerRef} className="peel-cursor-pointer">
-        <span className="fairy-cursor-wings">
-          <i />
-          <i />
-        </span>
+        <svg
+          className={styles.wings}
+          viewBox="0 0 58 64"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="fairy-pearl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#f9ffff" stopOpacity=".82" />
+              <stop offset=".44" stopColor="#afeeee" stopOpacity=".46" />
+              <stop offset=".72" stopColor="#ddd0f1" stopOpacity=".38" />
+              <stop offset="1" stopColor="#78bcbc" stopOpacity=".2" />
+            </linearGradient>
+          </defs>
+          <path
+            className={styles.upperWing}
+            d="M39 35C26 31 7 7 2 13c-5 7 12 27 37 25Z"
+            fill="url(#fairy-pearl)"
+            stroke="#679d9d"
+            strokeOpacity=".55"
+            strokeWidth=".75"
+          />
+          <path
+            className={styles.lowerWing}
+            d="M39 37C24 38 5 55 10 60c6 5 23-7 31-21Z"
+            fill="url(#fairy-pearl)"
+            stroke="#8a82a3"
+            strokeOpacity=".42"
+            strokeWidth=".75"
+          />
+        </svg>
         <Image src="/clemi/still.png" alt="" width={43} height={59} />
         <i className="fairy-cursor-wand">
           <b />
