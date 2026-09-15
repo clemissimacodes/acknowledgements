@@ -5077,7 +5077,7 @@ html:has(.admin-page) .site-anchor {
 
 .admin-section-heading {
   display: flex;
-  align-items: start;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.2rem;
