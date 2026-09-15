@@ -140,6 +140,15 @@
   gap: 0.75rem;
 }
 
+.step {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.step[hidden] {
+  display: none;
+}
+
 .dialog label span {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
@@ -167,7 +176,8 @@
   border-bottom-color: #302d29;
 }
 
-.dialog form > button {
+.step > button,
+.noseNav button {
   width: 100%;
   margin-top: 0.35rem;
   min-height: 2.5rem;
@@ -179,6 +189,20 @@
   font: 0.74rem/1.15 var(--font-book), "Palatino Linotype", serif;
   text-align: center;
   cursor: pointer;
+}
+
+.noseNav {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.noseNav button:first-child {
+  width: auto;
+  background: transparent;
+  border-color: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .honeypot {
@@ -225,6 +249,10 @@
     gap: 0.4rem;
   }
 
+  .step {
+    gap: 0.4rem;
+  }
+
   .dialog label {
     gap: 0.2rem;
   }
@@ -243,7 +271,8 @@
     height: 2.8rem;
   }
 
-  .dialog form > button {
+  .step > button,
+  .noseNav button {
     min-height: 2rem;
     margin-top: 0.2rem;
     padding: 0.45rem 0.6rem;

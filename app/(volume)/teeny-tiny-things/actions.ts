@@ -26,6 +26,8 @@ export async function sendTeenyQuestion(
       question: formData.get("question"),
       name: formData.get("name"),
       website: formData.get("website"),
+      nosePhoto: formData.get("nosePhoto"),
+      noseShy: formData.get("noseShy"),
       ip: requestHeaders.get("x-real-ip")?.trim() || forwarded || "",
     });
     return {

@@ -38,6 +38,16 @@ export default async function TeenyQuestionsPage() {
                   timeStyle: "short",
                 }).format(new Date(item.createdAt))}
               </p>
+              {item.nosePhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className={styles.nose}
+                  src={item.nosePhoto}
+                  alt={`Nose submitted by ${item.name || "an anonymous human"}`}
+                />
+              ) : item.noseShy ? (
+                <p className={styles.noseShy}>i am nose shy</p>
+              ) : null}
               <blockquote>{item.question}</blockquote>
               <form action={replyToTeenyQuestion}>
                 <input type="hidden" name="id" value={item.id} />

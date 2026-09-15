@@ -1861,6 +1861,14 @@ html:has(.about-page) .site-anchor,
   transform: rotate(4deg);
 }
 
+.about-focus-circle img.about-focus-nose {
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid rgba(22, 20, 18, 0.18);
+  border-radius: 50%;
+  mix-blend-mode: normal;
+}
+
 @keyframes about-circle-zoom {
   from {
     opacity: 0.2;

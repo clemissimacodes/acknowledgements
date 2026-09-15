@@ -8,6 +8,8 @@ export type TeenyQuestion = {
   question: string;
   name: string | null;
   answer: string | null;
+  nosePhoto: string;
+  noseShy: boolean;
   createdAt: string;
   answeredAt: string | null;
 };
@@ -46,10 +48,20 @@ async function ensureTable() {
       question TEXT NOT NULL,
       name TEXT,
       answer TEXT,
+      nose_photo_data TEXT NOT NULL DEFAULT '',
+      nose_shy BOOLEAN NOT NULL DEFAULT FALSE,
       ip_hash TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       answered_at TIMESTAMPTZ
     )
+  `;
+  await db()`
+    ALTER TABLE teeny_tiny_questions
+    ADD COLUMN IF NOT EXISTS nose_photo_data TEXT NOT NULL DEFAULT ''
+  `;
+  await db()`
+    ALTER TABLE teeny_tiny_questions
+    ADD COLUMN IF NOT EXISTS nose_shy BOOLEAN NOT NULL DEFAULT FALSE
   `;
 }
 
@@ -59,6 +71,8 @@ function mapQuestion(row: Record<string, unknown>): TeenyQuestion {
     question: String(row.question),
     name: row.name ? String(row.name) : null,
     answer: row.answer ? String(row.answer) : null,
+    nosePhoto: String(row.nose_photo_data ?? ""),
+    noseShy: Boolean(row.nose_shy),
     createdAt: new Date(row.created_at as string | Date).toISOString(),
     answeredAt: row.answered_at
       ? new Date(row.answered_at as string | Date).toISOString()
@@ -70,12 +84,26 @@ export async function submitTeenyQuestion(input: {
   question: unknown;
   name: unknown;
   website: unknown;
+  nosePhoto: unknown;
+  noseShy: unknown;
   ip: string;
 }) {
   if (cleanLine(input.website, 100)) return;
   const question = cleanLine(input.question, 500);
   const name = cleanLine(input.name, 80);
+  const nosePhoto = String(input.nosePhoto ?? "").trim();
+  const noseShy = input.noseShy === "yes" || input.noseShy === true;
   if (question.length < 3) throw new Error("Ask a little more.");
+  if (
+    nosePhoto &&
+    (nosePhoto.length > 180_000 ||
+      !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(nosePhoto))
+  ) {
+    throw new Error("That nose photo could not be read.");
+  }
+  if (!nosePhoto && !noseShy) {
+    throw new Error("Show nose or declare nose shyness.");
+  }
 
   await ensureTable();
   const ipHash = hashIp(input.ip);
@@ -92,15 +120,21 @@ export async function submitTeenyQuestion(input: {
   }
 
   await db()`
-    INSERT INTO teeny_tiny_questions (id, question, name, ip_hash)
-    VALUES (${randomUUID()}, ${question}, ${name || null}, ${ipHash})
+    INSERT INTO teeny_tiny_questions (
+      id, question, name, nose_photo_data, nose_shy, ip_hash
+    )
+    VALUES (
+      ${randomUUID()}, ${question}, ${name || null}, ${nosePhoto}, ${noseShy},
+      ${ipHash}
+    )
   `;
 }
 
 export async function getAnsweredTeenyQuestions() {
   await ensureTable();
   const rows = (await db()`
-    SELECT id, question, name, answer, created_at, answered_at
+    SELECT id, question, name, answer, nose_photo_data, nose_shy,
+           created_at, answered_at
     FROM teeny_tiny_questions
     WHERE answer IS NOT NULL AND answer <> ''
     ORDER BY answered_at ASC
@@ -111,7 +145,8 @@ export async function getAnsweredTeenyQuestions() {
 export async function getAllTeenyQuestions() {
   await ensureTable();
   const rows = (await db()`
-    SELECT id, question, name, answer, created_at, answered_at
+    SELECT id, question, name, answer, nose_photo_data, nose_shy,
+           created_at, answered_at
     FROM teeny_tiny_questions
     ORDER BY created_at DESC
     LIMIT 250

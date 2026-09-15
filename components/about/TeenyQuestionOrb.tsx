@@ -5,6 +5,7 @@ import {
   sendTeenyQuestion,
   type TeenyQuestionFormState,
 } from "@/app/(volume)/teeny-tiny-things/actions";
+import { NoseCamera } from "./NoseCamera";
 import styles from "./TeenyQuestionOrb.module.css";
 
 const initialState: TeenyQuestionFormState = {
@@ -14,12 +15,15 @@ const initialState: TeenyQuestionFormState = {
 
 export function TeenyQuestionOrb() {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"words" | "nose">("words");
   const [state, action, pending] = useActionState(sendTeenyQuestion, initialState);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const closeDialog = useCallback(() => {
     setOpen(false);
+    setStep("words");
     window.requestAnimationFrame(() => openerRef.current?.focus());
   }, []);
 
@@ -92,21 +96,52 @@ export function TeenyQuestionOrb() {
             {state.status === "sent" ? (
               <p className={styles.sent}>{state.message}</p>
             ) : (
-              <form action={action}>
-                <label>
-                  <span>Your thing</span>
-                  <textarea
-                    name="question"
-                    required
-                    minLength={3}
-                    maxLength={500}
-                    rows={3}
-                  />
-                </label>
-                <label>
-                  <span>earthly name or alter ego idc</span>
-                  <input name="name" maxLength={80} autoComplete="name" />
-                </label>
+              <form action={action} ref={formRef}>
+                <div className={styles.step} hidden={step !== "words"}>
+                  <label>
+                    <span>Your thing</span>
+                    <textarea
+                      name="question"
+                      required
+                      minLength={3}
+                      maxLength={500}
+                      rows={3}
+                    />
+                  </label>
+                  <label>
+                    <span>earthly name or alter ego idc</span>
+                    <input name="name" maxLength={80} autoComplete="name" />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const question = formRef.current?.elements.namedItem(
+                        "question",
+                      ) as HTMLTextAreaElement | null;
+                      if (question?.reportValidity()) setStep("nose");
+                    }}
+                  >
+                    next: nose
+                  </button>
+                </div>
+                {step === "nose" ? (
+                  <div className={styles.step}>
+                    <NoseCamera />
+                    {state.status === "error" ? (
+                      <p className={styles.error}>{state.message}</p>
+                    ) : null}
+                    <div className={styles.noseNav}>
+                      <button type="button" onClick={() => setStep("words")}>
+                        ← words
+                      </button>
+                      <button type="submit" disabled={pending}>
+                        {pending
+                          ? "sending…"
+                          : "send ur teeny tiny thing into orbit"}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
                 <label className={styles.honeypot} aria-hidden="true">
                   Website
                   <input
@@ -116,12 +151,6 @@ export function TeenyQuestionOrb() {
                     aria-hidden="true"
                   />
                 </label>
-                {state.status === "error" ? (
-                  <p className={styles.error}>{state.message}</p>
-                ) : null}
-                <button type="submit" disabled={pending}>
-                  {pending ? "sending…" : "send ur teeny tiny thing into orbit"}
-                </button>
               </form>
             )}
             <p className={styles.promise}>

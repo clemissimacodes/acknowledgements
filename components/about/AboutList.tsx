@@ -512,7 +512,13 @@ export function AboutList({
             ) : null}
             {activeNote.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={activeNote.image.src} alt={activeNote.image.alt} />
+              <img
+                className={
+                  activeNote.kind === "visitor" ? "about-focus-nose" : undefined
+                }
+                src={activeNote.image.src}
+                alt={activeNote.image.alt}
+              />
             ) : null}
           </div>
         </div>

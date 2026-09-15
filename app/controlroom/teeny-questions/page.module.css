@@ -33,6 +33,26 @@
     "Palatino Linotype", serif;
 }
 
+.nose {
+  width: 6rem;
+  aspect-ratio: 1;
+  margin: 0.5rem 0 1rem;
+  object-fit: cover;
+  border: 1px solid rgba(60, 60, 67, 0.29);
+  border-radius: 50%;
+}
+
+.noseShy {
+  width: fit-content;
+  margin: 0.5rem 0 1rem;
+  padding: 0.35rem 0.55rem;
+  color: #777;
+  border: 1px solid rgba(60, 60, 67, 0.29);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
 .list form {
   margin-top: 0.7rem;
 }
