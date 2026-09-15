@@ -452,7 +452,15 @@ export function AboutList({
             <span className="about-focus-number">
               {String((active ?? 0) + 1).padStart(2, "0")}
             </span>
-            <p>
+            <p
+              className={
+                activeNote.text.length > 220
+                  ? "is-long"
+                  : activeNote.text.length > 120
+                    ? "is-medium"
+                    : undefined
+              }
+            >
               {activeNote.href ? (
                 <a href={activeNote.href} target="_blank" rel="noreferrer">
                   {activeNote.text}

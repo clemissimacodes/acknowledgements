@@ -1774,9 +1774,22 @@ html:has(.about-page) .site-anchor,
 
 .about-focus-circle p {
   margin: 0;
-  max-width: 30ch;
-  font-size: clamp(1.25rem, 3vw, 2.8rem);
-  line-height: 1.08;
+  max-width: 34ch;
+  font-size: clamp(1.15rem, 2.5vw, 2.25rem);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.about-focus-circle p.is-medium {
+  max-width: 38ch;
+  font-size: clamp(1rem, 2vw, 1.65rem);
+  line-height: 1.16;
+}
+
+.about-focus-circle p.is-long {
+  max-width: 44ch;
+  font-size: clamp(0.88rem, 1.55vw, 1.3rem);
+  line-height: 1.2;
 }
 
 .about-focus-circle .about-focus-response {
