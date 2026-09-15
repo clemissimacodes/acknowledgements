@@ -303,7 +303,7 @@ export default async function AdminPage({
         </div>
       </section>
 
-      <section className="admin-section" id="cia">
+      <section className="admin-section" id="cia" hidden>
         <h2>CIA publication desk</h2>
         <p className="admin-private">
           Private drafts and discovery candidates stay here. Editing creates a
@@ -547,12 +547,8 @@ export default async function AdminPage({
       </section>
 
       <nav className="admin-counts" aria-label="Database counts">
-        <a href="#cia"><strong>{ciaEntries.length}</strong> CIA files</a>
         <a href="#posties"><strong>{data.posties.length}</strong> Posties</a>
         <a href="#wishes"><strong>{data.wishes.length}</strong> wishes</a>
-        <a href="#introductions">
-          <strong>{data.introductions.length}</strong> introductions
-        </a>
         <Link href="/controlroom/teeny-questions">
           <strong>{pendingTeenyQuestions}</strong> teeny questions
         </Link>
@@ -720,7 +716,7 @@ export default async function AdminPage({
         </div>
       </section>
 
-      <section className="admin-section" id="introductions">
+      <section className="admin-section" id="introductions" hidden>
         <h2>Tiny introductions</h2>
         <div className="admin-cards admin-cards-small">
           {data.introductions.map((introduction) => (
