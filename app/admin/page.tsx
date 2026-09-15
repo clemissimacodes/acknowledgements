@@ -7,6 +7,7 @@ import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
 import { getTrackerAdminData } from "@/lib/tracker";
+import { getPendingTeenyQuestionCount } from "@/lib/teeny-questions";
 import {
   changePlaceStatus,
   emergencyGoDark,
@@ -75,10 +76,11 @@ export default async function AdminPage({
     );
   }
 
-  const [data, tracker, ciaEntries] = await Promise.all([
+  const [data, tracker, ciaEntries, pendingTeenyQuestions] = await Promise.all([
     getAdminData(),
     getTrackerAdminData(),
     getCiaAdminEntries(),
+    getPendingTeenyQuestionCount(),
   ]);
   const ciaProject = (await searchParams)?.ciaProject;
   const visibleCiaEntries = CIA_PROJECTS.includes(
@@ -551,6 +553,9 @@ export default async function AdminPage({
         <a href="#introductions">
           <strong>{data.introductions.length}</strong> introductions
         </a>
+        <Link href="/controlroom/teeny-questions">
+          <strong>{pendingTeenyQuestions}</strong> teeny questions
+        </Link>
         <a href="#visits">
           <strong>{data.visits.length}</strong> visits / {uniqueVisitors} visitors
         </a>

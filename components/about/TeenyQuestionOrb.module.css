@@ -1,0 +1,263 @@
+.orb {
+  position: fixed;
+  z-index: 20;
+  left: clamp(1rem, 5vw, 4rem);
+  bottom: clamp(1rem, 5vw, 4rem);
+  width: clamp(5.8rem, 10vw, 8rem);
+  aspect-ratio: 1;
+  padding: 1rem;
+  color: #302d29;
+  background:
+    radial-gradient(circle at 34% 31%, rgba(255, 255, 255, 0.92), transparent 25%),
+    radial-gradient(circle at 63% 68%, rgba(244, 185, 140, 0.14), transparent 54%),
+    radial-gradient(circle at 34% 58%, rgba(137, 190, 216, 0.58), transparent 64%),
+    rgba(210, 226, 235, 0.48);
+  border: 1px solid rgba(76, 70, 63, 0.28);
+  border-radius: 52% 48% 57% 43% / 46% 57% 43% 54%;
+  box-shadow:
+    inset 0 0 2rem rgba(255, 255, 255, 0.65),
+    0 0.8rem 2.5rem rgba(75, 64, 50, 0.08);
+  font: 0.62rem/1.1 var(--font-book), "Palatino Linotype", serif;
+  letter-spacing: 0.04em;
+  text-align: center;
+  cursor: pointer;
+  animation: drift 8s ease-in-out infinite alternate;
+}
+
+.orb:hover,
+.orb:focus-visible {
+  border-color: rgba(48, 45, 41, 0.62);
+  transform: scale(1.04);
+}
+
+@keyframes drift {
+  0% {
+    border-radius: 52% 48% 57% 43% / 46% 57% 43% 54%;
+    translate: 0 0;
+  }
+  100% {
+    border-radius: 45% 55% 47% 53% / 55% 44% 56% 45%;
+    translate: 0 -0.55rem;
+  }
+}
+
+.backdrop {
+  position: fixed;
+  z-index: 250;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(250, 245, 236, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.dialog {
+  position: relative;
+  width: min(92vw, 38rem, 92dvh);
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(3.4rem, 7vw, 5.25rem);
+  overflow: hidden;
+  color: #302d29;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.86), transparent 28%),
+    radial-gradient(circle at 67% 70%, rgba(244, 180, 126, 0.1), transparent 55%),
+    radial-gradient(circle at 30% 65%, rgba(137, 188, 211, 0.38), transparent 58%),
+    #faf5ec;
+  border: 1px solid rgba(61, 57, 52, 0.32);
+  border-radius: 50%;
+  box-shadow: 0 1.5rem 5rem rgba(47, 42, 36, 0.12);
+}
+
+.dialogSent::before,
+.dialogSent::after {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border: 1px solid rgba(125, 173, 194, 0.35);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: ripple 2.4s ease-out infinite;
+}
+
+.dialogSent::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes ripple {
+  from {
+    opacity: 0.65;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+.dialog h2 {
+  max-width: 15ch;
+  margin: 0 auto 1.35rem;
+  font: 400 clamp(1.35rem, 3vw, 2.15rem)/1.02 var(--font-book),
+    "Palatino Linotype", serif;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.promise {
+  max-width: 45ch;
+  margin: 1rem auto 0;
+  font: italic 0.7rem/1.35 var(--font-book), "Palatino Linotype", serif;
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  top: 12%;
+  right: 14%;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.dialog form,
+.dialog label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.dialog form {
+  width: min(100%, 25rem);
+  margin: 0 auto;
+  gap: 0.75rem;
+}
+
+.dialog label span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.dialog textarea,
+.dialog input {
+  width: 100%;
+  padding: 0.5rem 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(61, 57, 52, 0.34);
+  border-radius: 0;
+  outline: none;
+  font: 1.05rem/1.35 var(--font-book), "Palatino Linotype", serif;
+}
+
+.dialog textarea {
+  resize: none;
+}
+
+.dialog textarea:focus,
+.dialog input:focus {
+  border-bottom-color: #302d29;
+}
+
+.dialog form > button {
+  width: 100%;
+  margin-top: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.7rem 1rem;
+  color: #302d29;
+  background: rgba(250, 245, 236, 0.58);
+  border: 1px solid rgba(61, 57, 52, 0.42);
+  border-radius: 999px;
+  font: 0.74rem/1.15 var(--font-book), "Palatino Linotype", serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+.honeypot {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.error,
+.sent {
+  margin: 0;
+  font: 1rem/1.4 var(--font-book), "Palatino Linotype", serif;
+  text-align: center;
+}
+
+.error {
+  color: #8b3f32;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    animation: none;
+  }
+
+  .dialogSent::before,
+  .dialogSent::after {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .dialog {
+    padding: 2.1rem 2.35rem;
+  }
+
+  .dialog h2 {
+    margin-bottom: 0.65rem;
+    font-size: 1.08rem;
+  }
+
+  .dialog form {
+    gap: 0.4rem;
+  }
+
+  .dialog label {
+    gap: 0.2rem;
+  }
+
+  .dialog label span {
+    font-size: 0.56rem;
+  }
+
+  .dialog textarea,
+  .dialog input {
+    padding: 0.28rem 0;
+    font-size: 0.9rem;
+  }
+
+  .dialog textarea {
+    height: 2.8rem;
+  }
+
+  .dialog form > button {
+    min-height: 2rem;
+    margin-top: 0.2rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.62rem;
+  }
+
+  .promise {
+    margin-top: 0.55rem;
+    font-size: 0.5rem;
+    line-height: 1.2;
+  }
+
+  .close {
+    top: 8%;
+    right: 14%;
+  }
+}

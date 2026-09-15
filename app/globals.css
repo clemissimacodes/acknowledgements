@@ -1608,14 +1608,28 @@ html:has(.about-page) .site-anchor,
 .about-orbit-filter {
   position: fixed;
   z-index: 12;
-  right: clamp(1rem, 5vw, 4rem);
-  bottom: calc(clamp(1rem, 5vw, 4rem) + clamp(6.5rem, 11vw, 9rem));
+  bottom: calc(clamp(1rem, 5vw, 4rem) + clamp(6.6rem, 11vw, 9rem));
+  left: clamp(1rem, 5vw, 4rem);
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.32rem;
+  max-width: min(25rem, 72vw);
+  padding: 0.55rem 0.7rem;
   color: rgba(22, 20, 18, 0.45);
+  background: rgba(250, 245, 236, 0.68);
+  border-left: 1px solid rgba(22, 20, 18, 0.2);
   font-size: 0.64rem;
   font-style: italic;
+}
+
+.about-orbit-filter-label {
+  margin-bottom: 0.18rem;
+  color: rgba(22, 20, 18, 0.38);
+  font-size: 0.52rem;
+  font-style: normal;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .about-orbit-filter button {
@@ -1623,6 +1637,8 @@ html:has(.about-page) .site-anchor,
   color: inherit;
   background: transparent;
   border: 0;
+  line-height: 1.25;
+  text-align: left;
   cursor: pointer;
 }
 

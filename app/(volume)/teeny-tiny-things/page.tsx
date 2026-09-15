@@ -1,4 +1,6 @@
 import { AboutList, type AboutNote } from "@/components/about/AboutList";
+import { TeenyQuestionOrb } from "@/components/about/TeenyQuestionOrb";
+import { getAnsweredTeenyQuestions } from "@/lib/teeny-questions";
 
 export const metadata = {
   title: "Teeny Tiny Things",
@@ -36,10 +38,24 @@ const notes: AboutNote[] = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const answered = await getAnsweredTeenyQuestions().catch(() => []);
+  const visitorNotes: AboutNote[] = answered.map((item) => ({
+    id: item.id,
+    kind: "visitor",
+    text: item.question,
+    response: item.answer ?? "",
+    byline: item.name || "someone",
+    label:
+      item.question.length > 34
+        ? `${item.question.slice(0, 34).trimEnd()}…`
+        : item.question,
+  }));
+
   return (
     <main className="about-page">
-      <AboutList title="Teeny Tiny Things" notes={notes} />
+      <AboutList title="Teeny Tiny Things" notes={[...notes, ...visitorNotes]} />
+      <TeenyQuestionOrb />
     </main>
   );
 }
