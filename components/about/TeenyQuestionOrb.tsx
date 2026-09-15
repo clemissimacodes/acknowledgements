@@ -85,7 +85,9 @@ export function TeenyQuestionOrb() {
               ×
             </button>
             <h2 id="teeny-question-title">
-              Ask me any teeny tiny (or elephantine) thing ◡̈
+              ask me any teeny tiny
+              <br />
+              (or elephantine) thing
             </h2>
             {state.status === "sent" ? (
               <p className={styles.sent}>{state.message}</p>

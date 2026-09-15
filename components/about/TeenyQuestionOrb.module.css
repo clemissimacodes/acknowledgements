@@ -99,7 +99,7 @@
 }
 
 .dialog h2 {
-  max-width: 15ch;
+  max-width: none;
   margin: 0 auto 1.35rem;
   font: 400 clamp(1.35rem, 3vw, 2.15rem)/1.02 var(--font-book),
     "Palatino Linotype", serif;
