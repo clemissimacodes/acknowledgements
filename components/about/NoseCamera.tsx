@@ -42,7 +42,7 @@ export function NoseCamera() {
   function capture() {
     const video = videoRef.current;
     if (!video?.videoWidth || !video.videoHeight) return;
-    const side = Math.min(video.videoWidth, video.videoHeight);
+    const side = Math.min(video.videoWidth, video.videoHeight) * 0.38;
     const sourceX = (video.videoWidth - side) / 2;
     const sourceY = (video.videoHeight - side) / 2;
     const canvas = document.createElement("canvas");
@@ -59,6 +59,7 @@ export function NoseCamera() {
   return (
     <fieldset className={styles.fieldset}>
       <legend>nose evidence</legend>
+      <p className={styles.instruction}>nose only. no eyes. no alibis.</p>
       <input type="hidden" name="nosePhoto" value={photo} />
       <div className={styles.camera}>
         {photo ? (

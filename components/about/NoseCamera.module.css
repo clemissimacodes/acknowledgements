@@ -15,6 +15,12 @@
   text-align: center;
 }
 
+.instruction {
+  margin: -0.2rem 0 0;
+  color: rgba(48, 45, 41, 0.66);
+  font: italic 0.58rem/1.2 var(--font-book), "Palatino Linotype", serif;
+}
+
 .camera {
   width: clamp(6.5rem, 22vw, 8rem);
   aspect-ratio: 1;
@@ -36,7 +42,7 @@
 
 .camera video {
   opacity: 0;
-  transform: scaleX(-1);
+  transform: scaleX(-1) scale(2.63);
 }
 
 .camera video.active {
