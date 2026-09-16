@@ -15,7 +15,7 @@ function MemoRow({ memo }: { memo: VoiceMemo }) {
       : memo.title || formatVoiceDate(memo.recordedAt);
   return (
     <li>
-      <Link href={`/out-loud/${memo.slug}`}>
+      <Link href={`/secrets/out-loud/${memo.slug}`}>
         {memo.kind === "person" ? `for ${name}` : name}
       </Link>
       <span className="out-loud-index-meta">
@@ -36,6 +36,9 @@ export default async function OutLoudIndexPage() {
   return (
     <main className="out-loud-page">
       <div className="out-loud-inner">
+        <p className="out-loud-kicker">
+          <Link href="/secrets">Secrets</Link>
+        </p>
         <h1>Out Loud</h1>
         <p className="out-loud-lede">
           Live, raw voice memos about people and thoughts. Speak back if you

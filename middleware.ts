@@ -15,6 +15,8 @@ export default clerkMiddleware(async (auth, request) => {
     pathname === "/secrets" || pathname.startsWith("/secrets/");
   const isDontTry =
     pathname === "/dont-try" || pathname.startsWith("/dont-try/");
+  const isOutLoud =
+    pathname === "/out-loud" || pathname.startsWith("/out-loud/");
   const isCia = pathname === "/cia" || pathname.startsWith("/cia/");
   const isSecretsUnlock =
     pathname === "/secrets/unlock" || pathname === "/cia/unlock";
@@ -27,7 +29,7 @@ export default clerkMiddleware(async (auth, request) => {
     isStoreCheckout ||
     isPostiesSubmission;
 
-  if (isDontTry) {
+  if (isDontTry || isOutLoud) {
     const destination = new URL(`/secrets${pathname}`, request.url);
     destination.search = request.nextUrl.search;
     return NextResponse.redirect(destination);

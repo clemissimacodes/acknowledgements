@@ -43,7 +43,9 @@ export default async function OutLoudMemoPage({
     <main className="out-loud-page out-loud-listen">
       <div className="out-loud-inner">
         <p className="out-loud-kicker">
-          <Link href="/out-loud">Out Loud</Link>
+          <Link href="/secrets">Secrets</Link>
+          {" / "}
+          <Link href="/secrets/out-loud">Out Loud</Link>
         </p>
         <h1>{heading}</h1>
         <p className="out-loud-when">

@@ -81,6 +81,16 @@ const nextConfig: NextConfig = {
         destination: "/secrets/sunday-posties",
         permanent: true,
       },
+      {
+        source: "/out-loud",
+        destination: "/secrets/out-loud",
+        permanent: false,
+      },
+      {
+        source: "/out-loud/:path*",
+        destination: "/secrets/out-loud/:path*",
+        permanent: false,
+      },
       { source: "/cia", destination: "/secrets", permanent: true },
       {
         source: "/shop/:path*",

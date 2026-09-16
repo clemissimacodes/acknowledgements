@@ -222,12 +222,12 @@ export async function removeVoiceMemo(formData: FormData) {
   await requireOwner();
   await deleteMemo(cleanVoiceId(formData.get("id")));
   refreshControlRoom();
-  revalidatePath("/out-loud");
+  revalidatePath("/secrets/out-loud");
 }
 
 export async function removeVoiceReply(formData: FormData) {
   await requireOwner();
   await deleteReply(cleanVoiceId(formData.get("id")));
   refreshControlRoom();
-  revalidatePath("/out-loud");
+  revalidatePath("/secrets/out-loud");
 }

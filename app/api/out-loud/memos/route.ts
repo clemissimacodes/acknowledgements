@@ -99,8 +99,8 @@ export async function POST(request: Request) {
       recordedAt,
       published: payload.published !== false,
     });
-    revalidatePath("/out-loud");
-    revalidatePath(`/out-loud/${memo.slug}`);
+    revalidatePath("/secrets/out-loud");
+    revalidatePath(`/secrets/out-loud/${memo.slug}`);
     revalidatePath("/controlroom");
     return NextResponse.json({ memo });
   } catch (error) {

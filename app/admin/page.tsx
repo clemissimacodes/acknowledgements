@@ -660,7 +660,7 @@ export default async function AdminPage({
               Record or upload a memo. Visitor voice replies go live immediately.
             </p>
           </div>
-          <Link href="/out-loud">View the archive →</Link>
+          <Link href="/secrets/out-loud">View the archive →</Link>
         </div>
         <OutLoudPublisher />
         <div className="admin-cards">
@@ -686,7 +686,7 @@ export default async function AdminPage({
                 {memo.replyCount === 1 ? "reply" : "replies"}
               </p>
               <p>
-                <Link href={`/out-loud/${memo.slug}`}>{memo.slug}</Link>
+                <Link href={`/secrets/out-loud/${memo.slug}`}>{memo.slug}</Link>
               </p>
               {memo.replies.length ? (
                 <ol className="admin-out-loud-replies">
