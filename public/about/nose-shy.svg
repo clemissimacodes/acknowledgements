@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">A shy cartoon nose hiding behind a handkerchief</title>
+  <defs>
+    <filter id="wobble" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence baseFrequency=".018" numOctaves="2" seed="8" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.8"/>
+    </filter>
+    <radialGradient id="wash" cx="38%" cy="32%" r="70%">
+      <stop offset="0" stop-color="#fff" stop-opacity=".92"/>
+      <stop offset=".58" stop-color="#c9dde6" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#e9c6aa" stop-opacity=".34"/>
+    </radialGradient>
+  </defs>
+  <circle cx="120" cy="120" r="106" fill="url(#wash)"/>
+  <g filter="url(#wobble)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M86 114c9-7 14-20 18-39 3-17 12-28 20-28 9 0 12 14 13 33 2 23 12 31 20 38-4 15-18 23-36 23-17 0-30-9-35-27Z" fill="#e5aa8f" fill-opacity=".72" stroke="#72564d" stroke-width="3"/>
+    <path d="M103 121c5 5 12 7 18 7 8 0 15-3 20-8" fill="none" stroke="#72564d" stroke-width="2.5"/>
+    <ellipse cx="105" cy="116" rx="6" ry="4" fill="#72564d" fill-opacity=".74"/>
+    <ellipse cx="139" cy="116" rx="6" ry="4" fill="#72564d" fill-opacity=".74"/>
+    <path d="M44 121c24 7 47 22 77 51 28-29 51-44 76-51l-10 77H54Z" fill="#faf5ec" fill-opacity=".93" stroke="#7d9dab" stroke-width="3"/>
+    <path d="M56 139c19 7 39 21 65 46 24-24 45-39 64-46" fill="none" stroke="#b7cfd9" stroke-width="2"/>
+    <path d="M95 158c7 5 16 8 26 8 11 0 20-3 27-8" fill="none" stroke="#e3a982" stroke-width="2" stroke-dasharray="2 6"/>
+  </g>
+</svg>

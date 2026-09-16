@@ -6,6 +6,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { NoseDoodle } from "./NoseDoodle";
 import styles from "./NoseCamera.module.css";
 
 const SOURCE_SIZE = 640;
@@ -42,8 +43,10 @@ function renderCrop(
 
 export function NoseCamera({
   onValidityChange,
+  onDrawingModeChange,
 }: {
   onValidityChange: (valid: boolean) => void;
+  onDrawingModeChange: (drawing: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cropRef = useRef<HTMLDivElement>(null);
@@ -69,8 +72,12 @@ export function NoseCamera({
 
   useEffect(() => stopCamera, []);
   useEffect(() => {
-    onValidityChange(Boolean(photo) || noseShy);
-  }, [noseShy, onValidityChange, photo]);
+    onValidityChange(Boolean(photo));
+  }, [onValidityChange, photo]);
+  useEffect(() => {
+    onDrawingModeChange(noseShy);
+    return () => onDrawingModeChange(false);
+  }, [noseShy, onDrawingModeChange]);
   useEffect(() => {
     const source = sourceCanvasRef.current;
     if (editing && source) setPhoto(renderCrop(source, zoom, offset));
@@ -158,10 +165,20 @@ export function NoseCamera({
   }
 
   return (
-    <fieldset className={styles.fieldset}>
-      <legend>nosiness requires nose evidence</legend>
+    <div
+      className={styles.fieldset}
+      role="group"
+      aria-labelledby="nose-evidence-title"
+    >
+      <p className={styles.evidenceHeading} id="nose-evidence-title">
+        nosiness requires nose evidence
+      </p>
       <input type="hidden" name="nosePhoto" value={photo} />
-      <div
+      {noseShy ? (
+        <NoseDoodle onChange={setPhoto} />
+      ) : (
+        <>
+          <div
         className={`${styles.camera}${editing ? ` ${styles.cropper}` : ""}`}
         ref={cropRef}
         role={editing ? "img" : undefined}
@@ -220,42 +237,44 @@ export function NoseCamera({
             aria-label="Live nose camera"
           />
         )}
-      </div>
+          </div>
 
-      {editing ? (
-        <div className={styles.cropControls}>
-          <span>drag until it is nothing but nose</span>
-          <label>
-            zoom
-            <input
-              type="range"
-              min="2.8"
-              max="5"
-              step="0.1"
-              value={zoom}
-              onChange={(event) => {
-                const nextZoom = Number(event.target.value);
-                const maximum = (nextZoom - 1) / 2;
-                setZoom(nextZoom);
-                setOffset((current) => ({
-                  x: Math.max(-maximum, Math.min(maximum, current.x)),
-                  y: Math.max(-maximum, Math.min(maximum, current.y)),
-                }));
-              }}
-            />
-          </label>
-          <button type="button" onClick={cropPhoto}>
-            crop my nose
-          </button>
-        </div>
-      ) : null}
+          {editing ? (
+            <div className={styles.cropControls}>
+              <span>drag until it is nothing but nose</span>
+              <label>
+                zoom
+                <input
+                  type="range"
+                  min="2.8"
+                  max="5"
+                  step="0.1"
+                  value={zoom}
+                  onChange={(event) => {
+                    const nextZoom = Number(event.target.value);
+                    const maximum = (nextZoom - 1) / 2;
+                    setZoom(nextZoom);
+                    setOffset((current) => ({
+                      x: Math.max(-maximum, Math.min(maximum, current.x)),
+                      y: Math.max(-maximum, Math.min(maximum, current.y)),
+                    }));
+                  }}
+                />
+              </label>
+              <button type="button" onClick={cropPhoto}>
+                crop my nose
+              </button>
+            </div>
+          ) : null}
+        </>
+      )}
 
       <div className={styles.actions}>
-        {active ? (
+        {!noseShy && active ? (
           <button type="button" onClick={capture}>
             take nose pic
           </button>
-        ) : !sourcePhoto || !editing ? (
+        ) : !noseShy && (!sourcePhoto || !editing) ? (
           <button type="button" onClick={() => void startCamera()}>
             {photo ? "retake nose" : "open nose cam"}
           </button>
@@ -269,18 +288,16 @@ export function NoseCamera({
             onChange={(event) => {
               const checked = event.target.checked;
               setNoseShy(checked);
-              if (checked) {
-                setEditing(false);
-                setSourcePhoto("");
-                setPhoto("");
-                stopCamera();
-              }
+              setEditing(false);
+              setSourcePhoto("");
+              setPhoto("");
+              stopCamera();
             }}
           />
-          <span>i am nose shy</span>
+          <span>i am nose shy (i’ll draw it)</span>
         </label>
       </div>
       {error ? <p className={styles.error}>{error}</p> : null}
-    </fieldset>
+    </div>
   );
 }

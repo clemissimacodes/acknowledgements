@@ -171,6 +171,13 @@ export function PeelCursor() {
 
     function onPointerMove(event: PointerEvent) {
       if (event.pointerType === "touch") return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest("[data-native-drawing]")
+      ) {
+        hide();
+        return;
+      }
       visible = true;
       cursorElement.classList.add("is-visible");
       wandElement.classList.add(styles.wandVisible);
@@ -199,6 +206,12 @@ export function PeelCursor() {
 
     function onPointerDown(event: PointerEvent) {
       if (!visible || event.pointerType === "touch") return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest("[data-native-drawing]")
+      ) {
+        return;
+      }
       cursorElement.classList.remove("is-pressed");
       cursorElement.classList.remove(styles.flick);
       wandElement.classList.remove(styles.wandFlick);

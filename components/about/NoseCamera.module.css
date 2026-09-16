@@ -2,14 +2,16 @@
   display: grid;
   place-items: center;
   gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.fieldset legend {
-  width: 100%;
-  margin-bottom: 0.25rem;
+.evidenceHeading {
+  margin: 0;
+  color: rgba(48, 45, 41, 0.68);
   font-size: 0.68rem;
   font-style: italic;
   text-align: center;

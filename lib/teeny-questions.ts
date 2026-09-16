@@ -96,10 +96,10 @@ export async function submitTeenyQuestion(input: {
   if (question.length < 3) throw new Error("Ask a little more.");
   if (
     nosePhoto &&
-    (nosePhoto.length > 180_000 ||
-      !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(nosePhoto))
+    (nosePhoto.length > 500_000 ||
+      !/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(nosePhoto))
   ) {
-    throw new Error("That nose photo could not be read.");
+    throw new Error("That nose evidence could not be read.");
   }
   if (!nosePhoto && !noseShy) {
     throw new Error("Show nose or declare nose shyness.");

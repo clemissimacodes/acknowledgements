@@ -9,6 +9,7 @@ export type AboutNote = {
   byline?: string;
   response?: string;
   kind?: "visitor";
+  noseShy?: boolean;
   href?: string;
   image?: {
     src: string;
@@ -516,14 +517,22 @@ export function AboutList({
               </nav>
             ) : null}
             {activeNote.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className={
-                  activeNote.kind === "visitor" ? "about-focus-nose" : undefined
-                }
-                src={activeNote.image.src}
-                alt={activeNote.image.alt}
-              />
+              activeNote.noseShy ? (
+                <figure className="about-focus-nose-shy">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={activeNote.image.src} alt={activeNote.image.alt} />
+                  <figcaption>this internet human was nose shy</figcaption>
+                </figure>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className={
+                    activeNote.kind === "visitor" ? "about-focus-nose" : undefined
+                  }
+                  src={activeNote.image.src}
+                  alt={activeNote.image.alt}
+                />
+              )
             ) : null}
           </div>
         </div>

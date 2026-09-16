@@ -18,6 +18,7 @@ export function TeenyQuestionOrb() {
   const [step, setStep] = useState<"words" | "nose">("words");
   const [hasNoseEvidence, setHasNoseEvidence] = useState(false);
   const [hideEvidenceError, setHideEvidenceError] = useState(false);
+  const [drawingNose, setDrawingNose] = useState(false);
   const [state, action, pending] = useActionState(sendTeenyQuestion, initialState);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
@@ -28,11 +29,15 @@ export function TeenyQuestionOrb() {
     setStep("words");
     setHasNoseEvidence(false);
     setHideEvidenceError(false);
+    setDrawingNose(false);
     window.requestAnimationFrame(() => openerRef.current?.focus());
   }, []);
   const handleEvidenceValidity = useCallback((valid: boolean) => {
     setHasNoseEvidence(valid);
     if (valid) setHideEvidenceError(true);
+  }, []);
+  const handleDrawingMode = useCallback((drawing: boolean) => {
+    setDrawingNose(drawing);
   }, []);
 
   useEffect(() => {
@@ -81,7 +86,11 @@ export function TeenyQuestionOrb() {
           onClick={closeDialog}
         >
           <div
-            className={`${styles.dialog}${state.status === "sent" ? ` ${styles.dialogSent}` : ""}`}
+            className={`${styles.dialog}${
+              state.status === "sent" ? ` ${styles.dialogSent}` : ""
+            }${step === "nose" ? ` ${styles.dialogNose}` : ""}${
+              drawingNose ? ` ${styles.dialogDrawing}` : ""
+            }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="teeny-question-title"
@@ -140,6 +149,7 @@ export function TeenyQuestionOrb() {
                   <div className={styles.step}>
                     <NoseCamera
                       onValidityChange={handleEvidenceValidity}
+                      onDrawingModeChange={handleDrawingMode}
                     />
                     {state.status === "error" && !hideEvidenceError ? (
                       <p className={styles.error}>{state.message}</p>

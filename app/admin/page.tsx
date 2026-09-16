@@ -155,7 +155,8 @@ export default async function AdminPage({
                   src={item.nosePhoto}
                   alt={`Nose submitted by ${item.name || "an anonymous human"}`}
                 />
-              ) : item.noseShy ? (
+              ) : null}
+              {item.noseShy ? (
                 <p className="admin-teeny-shy">i am nose shy</p>
               ) : null}
               <blockquote className="admin-teeny-question">

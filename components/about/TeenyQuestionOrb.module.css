@@ -107,6 +107,49 @@
   text-wrap: balance;
 }
 
+.dialogNose h2 {
+  margin-bottom: 0.55rem;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+}
+
+.dialogNose form,
+.dialogNose .step {
+  gap: 0.4rem;
+}
+
+.dialogNose .promise {
+  margin-top: 0.45rem;
+  font-size: 0.52rem;
+  line-height: 1.2;
+}
+
+.dialogDrawing {
+  width: min(96vw, 56rem, 96dvh);
+  padding: clamp(2rem, 4vmin, 3rem);
+}
+
+.dialogDrawing h2 {
+  margin-bottom: 0.25rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+}
+
+.dialogDrawing .close {
+  top: 3%;
+}
+
+.dialog.dialogDrawing form {
+  width: min(100%, 52rem);
+}
+
+.dialogDrawing .step {
+  gap: 0.55rem;
+}
+
+.dialogDrawing .noseNav {
+  width: min(100%, 32rem);
+  margin-inline: auto;
+}
+
 .promise {
   max-width: 45ch;
   margin: 1rem auto 0;
@@ -244,6 +287,11 @@
 @media (max-width: 520px) {
   .dialog {
     padding: 2.1rem 2.35rem;
+  }
+
+  .dialogDrawing {
+    width: min(96vw, 96dvh);
+    padding: 1.25rem;
   }
 
   .dialog h2 {
