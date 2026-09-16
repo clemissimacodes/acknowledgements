@@ -45,7 +45,8 @@ export default async function TeenyQuestionsPage() {
                   src={item.nosePhoto}
                   alt={`Nose submitted by ${item.name || "an anonymous human"}`}
                 />
-              ) : item.noseShy ? (
+              ) : null}
+              {item.noseShy ? (
                 <p className={styles.noseShy}>i am nose shy</p>
               ) : null}
               <blockquote>{item.question}</blockquote>
