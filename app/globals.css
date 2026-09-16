@@ -1247,7 +1247,8 @@ body {
   text-underline-offset: 0.16em;
 }
 
-html:has(.poetry-page) .site-anchor {
+html:has(.poetry-page) .site-anchor,
+html:has(.out-loud-page) .site-anchor {
   background: #f4efe4;
 }
 
@@ -3226,6 +3227,358 @@ html:has(.about-page) .site-anchor,
   }
 }
 
+/* —— Out Loud —— */
+
+html:has(.out-loud-page),
+html:has(.out-loud-page) body,
+html:has(.out-loud-page) .volume {
+  background: #f4efe4;
+}
+
+.out-loud-page {
+  position: relative;
+  min-height: 100dvh;
+  padding: var(--site-content-top) 6vw 16vh;
+  background: #f4efe4;
+}
+
+.out-loud-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 34rem;
+}
+
+.out-loud-page:not(.out-loud-listen) .out-loud-inner {
+  max-width: 72rem;
+}
+
+.out-loud-page h1 {
+  margin: 0 0 1.2rem;
+  font-size: 1.85rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.out-loud-lede,
+.out-loud-when,
+.out-loud-thread-copy,
+.out-loud-empty,
+.out-loud-empty-replies,
+.out-loud-recorder-copy,
+.out-loud-reply-date,
+.out-loud-index-meta {
+  color: var(--mute);
+}
+
+.out-loud-lede {
+  margin: 0 0 2.4rem;
+  max-width: 32em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.out-loud-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: start;
+}
+
+.out-loud-columns h2 {
+  margin: 0 0 1.5rem;
+  color: var(--mute);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.out-loud-thoughts {
+  margin: 0;
+  padding-left: clamp(2rem, 4vw, 4rem);
+  border-left: 1px solid rgba(22, 20, 18, 0.16);
+}
+
+.out-loud-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.out-loud-index li + li {
+  margin-top: 1.1rem;
+}
+
+.out-loud-index a {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  text-decoration: none;
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.out-loud-index a:hover,
+.out-loud-index a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.out-loud-index-meta,
+.out-loud-when {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.out-loud-kicker {
+  margin: 0 0 2.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.out-loud-kicker a {
+  text-decoration: none;
+}
+
+.out-loud-kicker a:hover,
+.out-loud-kicker a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.out-loud-when {
+  margin: -0.6rem 0 2rem;
+}
+
+.out-loud-player {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem 1rem;
+  align-items: center;
+  margin: 0 0 1.4rem;
+}
+
+.out-loud-play {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid rgba(22, 20, 18, 0.28);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.out-loud-play svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: currentColor;
+}
+
+.out-loud-player.is-playing .out-loud-play {
+  border-color: var(--ink);
+}
+
+.out-loud-player-body {
+  min-width: 0;
+}
+
+.out-loud-player-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.out-loud-player-meta span:last-child {
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.out-loud-progress {
+  height: 2px;
+  background: rgba(22, 20, 18, 0.14);
+  cursor: pointer;
+}
+
+.out-loud-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+}
+
+.out-loud-through {
+  margin-top: 0.7rem;
+}
+
+.out-loud-through button,
+.out-loud-delete {
+  padding: 0;
+  color: var(--mute);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.out-loud-through button.is-on {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
+.out-loud-thread {
+  margin-top: 3.2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(22, 20, 18, 0.16);
+}
+
+.out-loud-thread h2 {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.out-loud-thread-copy {
+  margin: 0 0 1.5rem;
+  max-width: 28em;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.out-loud-replies {
+  list-style: none;
+  margin: 0 0 1.8rem;
+  padding: 0;
+}
+
+.out-loud-replies li {
+  margin: 0 0 1.4rem;
+}
+
+.out-loud-reply-date {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+}
+
+.out-loud-delete {
+  margin-top: 0.35rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.out-loud-recorder {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 22rem;
+}
+
+.out-loud-recorder-copy {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.out-loud-recorder input {
+  width: 100%;
+  padding: 0.35rem 0;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.28);
+}
+
+.out-loud-honeypot {
+  position: absolute;
+  left: -10000px;
+}
+
+.out-loud-hold {
+  width: fit-content;
+  padding: 0.7rem 1.1rem;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 1px solid rgba(22, 20, 18, 0.32);
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.out-loud-hold.is-holding {
+  border-color: var(--ink);
+}
+
+.out-loud-error {
+  margin: 0;
+  color: #8b241d;
+  font-size: 0.88rem;
+}
+
+.admin-out-loud-replies {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.8rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-out-loud-replies li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.8rem;
+}
+
+.admin-out-loud-record {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  align-items: center;
+}
+
+.admin-out-loud-file {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 860px) {
+  .out-loud-columns {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .out-loud-thoughts {
+    padding: 2rem 0 0;
+    border-top: 1px solid rgba(22, 20, 18, 0.16);
+    border-left: 0;
+  }
+
+  .out-loud-index a {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.2rem 0;
+  }
+}
+
 /* —— Dandelion —— */
 
 .dandelion-page {
@@ -5050,7 +5403,7 @@ html:has(.admin-page) .site-anchor {
 
 .admin-counts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
   gap: 0.8rem;
   margin: 0 0 4rem;
 }

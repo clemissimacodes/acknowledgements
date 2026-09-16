@@ -35,6 +35,16 @@ export default function PrivacyPage() {
         </p>
       </section>
       <section>
+        <h2>Out Loud</h2>
+        <p>
+          Voice replies left on Out Loud memos are public, including the audio
+          itself. A name is optional and appears publicly when supplied. Audio
+          is stored with the site’s file host so it can be played back. The
+          site keeps a short-lived cookie only to limit repeated submissions; it
+          does not attach an IP address to a reply.
+        </p>
+      </section>
+      <section>
         <h2>Visits</h2>
         <p>
           The site keeps the page visited, time, referring website, device

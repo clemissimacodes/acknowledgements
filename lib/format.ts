@@ -50,6 +50,20 @@ export function threadStamp(dateValue?: string, place?: string): string {
   return [place, datePart].filter(Boolean).join(" · ");
 }
 
+export function formatVoiceDuration(ms: number) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+export function formatVoiceDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: "America/Los_Angeles",
+  }).format(new Date(value));
+}
+
 export function initialsFor(name: string): string {
   const scene = /^the\s+/i.test(name);
   const cleaned = name.replace(/^the\s+/i, "").trim();
