@@ -52,6 +52,8 @@ export async function replyToTeenyQuestion(formData: FormData) {
   await answerTeenyQuestion(formData.get("id"), formData.get("answer"));
   revalidatePath("/teeny-tiny-things");
   revalidatePath("/controlroom/teeny-questions");
+  revalidatePath("/controlroom");
+  revalidatePath("/admin");
 }
 
 export async function removeTeenyQuestion(formData: FormData) {
@@ -59,4 +61,6 @@ export async function removeTeenyQuestion(formData: FormData) {
   await deleteTeenyQuestion(formData.get("id"));
   revalidatePath("/teeny-tiny-things");
   revalidatePath("/controlroom/teeny-questions");
+  revalidatePath("/controlroom");
+  revalidatePath("/admin");
 }

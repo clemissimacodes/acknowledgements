@@ -1,6 +1,9 @@
 import { AboutList, type AboutNote } from "@/components/about/AboutList";
 import { TeenyQuestionOrb } from "@/components/about/TeenyQuestionOrb";
+import { TeenyQuestionSync } from "@/components/about/TeenyQuestionSync";
 import { getAnsweredTeenyQuestions } from "@/lib/teeny-questions";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Teeny Tiny Things",
@@ -60,6 +63,7 @@ export default async function AboutPage() {
 
   return (
     <main className="about-page">
+      <TeenyQuestionSync />
       <AboutList title="Teeny Tiny Things" notes={[...notes, ...visitorNotes]} />
       <TeenyQuestionOrb />
     </main>
