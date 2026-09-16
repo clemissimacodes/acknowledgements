@@ -6,8 +6,8 @@
 }
 
 .paper {
-  width: min(100%, 15rem);
-  height: 10.5rem;
+  width: min(52vw, 220px);
+  height: min(24vh, 150px);
   overflow: hidden;
   border: 1px solid rgba(61, 57, 52, 0.28);
   border-radius: 46% 54% 48% 52% / 52% 45% 55% 48%;
@@ -16,6 +16,7 @@
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 0.7rem;
@@ -47,7 +48,11 @@
 
 @media (max-width: 520px) {
   .paper {
-    width: min(100%, 12.5rem);
-    height: 8.5rem;
+    width: min(58vw, 190px);
+    height: min(22vh, 125px);
+  }
+
+  .footer {
+    gap: 0.3rem 0.55rem;
   }
 }

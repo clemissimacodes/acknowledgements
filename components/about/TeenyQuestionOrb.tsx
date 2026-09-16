@@ -81,7 +81,9 @@ export function TeenyQuestionOrb() {
           onClick={closeDialog}
         >
           <div
-            className={`${styles.dialog}${state.status === "sent" ? ` ${styles.dialogSent}` : ""}`}
+            className={`${styles.dialog}${
+              state.status === "sent" ? ` ${styles.dialogSent}` : ""
+            }${step === "nose" ? ` ${styles.dialogNose}` : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="teeny-question-title"

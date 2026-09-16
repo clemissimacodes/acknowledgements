@@ -107,6 +107,22 @@
   text-wrap: balance;
 }
 
+.dialogNose h2 {
+  margin-bottom: 0.55rem;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+}
+
+.dialogNose form,
+.dialogNose .step {
+  gap: 0.4rem;
+}
+
+.dialogNose .promise {
+  margin-top: 0.45rem;
+  font-size: 0.52rem;
+  line-height: 1.2;
+}
+
 .promise {
   max-width: 45ch;
   margin: 1rem auto 0;
