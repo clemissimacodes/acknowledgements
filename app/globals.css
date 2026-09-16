@@ -1669,17 +1669,6 @@ html:has(.about-page) .site-anchor,
   text-underline-offset: 0.22em;
 }
 
-@media (max-width: 859px) {
-  .about-orbit-rail {
-    gap: 1.5rem;
-  }
-
-  .about-orbit-filter button:last-child {
-    white-space: normal;
-    max-width: min(18rem, calc(100vw - (2 * var(--site-gutter)) - 0.7rem));
-  }
-}
-
 .about-generated-watercolor,
 .about-generated-watercolor::before,
 .about-generated-watercolor::after {
