@@ -1869,6 +1869,35 @@ html:has(.about-page) .site-anchor,
   mix-blend-mode: normal;
 }
 
+.about-focus-nose-shy {
+  position: absolute;
+  right: 9%;
+  bottom: 8%;
+  width: min(23%, 10rem);
+  margin: 0;
+  text-align: center;
+  transform: rotate(3deg);
+}
+
+.about-focus-nose-shy img {
+  position: static;
+  width: 100%;
+  max-height: none;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 0;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+  transform: none;
+}
+
+.about-focus-nose-shy figcaption {
+  margin-top: 0.25rem;
+  font-size: clamp(0.42rem, 0.8vw, 0.62rem);
+  font-style: italic;
+  line-height: 1.15;
+}
+
 @keyframes about-circle-zoom {
   from {
     opacity: 0.2;

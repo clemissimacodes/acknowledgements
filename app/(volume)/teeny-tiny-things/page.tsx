@@ -49,12 +49,18 @@ export default async function AboutPage() {
     text: item.question,
     response: item.answer ?? "",
     byline: item.name || "someone",
+    noseShy: item.noseShy,
     image: item.nosePhoto
       ? {
           src: item.nosePhoto,
           alt: `The nose accompanying ${item.name || "someone"}'s question`,
         }
-      : undefined,
+      : item.noseShy
+        ? {
+            src: "/about/nose-shy.svg",
+            alt: "A shy cartoon nose hiding behind a handkerchief",
+          }
+        : undefined,
     label:
       item.question.length > 34
         ? `${item.question.slice(0, 34).trimEnd()}…`
