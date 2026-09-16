@@ -165,8 +165,14 @@ export function NoseCamera({
   }
 
   return (
-    <fieldset className={styles.fieldset}>
-      <legend>nosiness requires nose evidence</legend>
+    <div
+      className={styles.fieldset}
+      role="group"
+      aria-labelledby="nose-evidence-title"
+    >
+      <p className={styles.evidenceHeading} id="nose-evidence-title">
+        nosiness requires nose evidence
+      </p>
       <input type="hidden" name="nosePhoto" value={photo} />
       {noseShy ? (
         <NoseDoodle onChange={setPhoto} />
@@ -292,6 +298,6 @@ export function NoseCamera({
         </label>
       </div>
       {error ? <p className={styles.error}>{error}</p> : null}
-    </fieldset>
+    </div>
   );
 }

@@ -124,8 +124,8 @@
 }
 
 .dialogDrawing {
-  width: min(98vw, 58rem, 98dvh);
-  padding: clamp(1.5rem, 3vmin, 2.5rem);
+  width: min(96vw, 56rem, 96dvh);
+  padding: clamp(2rem, 4vmin, 3rem);
 }
 
 .dialogDrawing h2 {
@@ -135,6 +135,19 @@
 
 .dialogDrawing .close {
   top: 3%;
+}
+
+.dialog.dialogDrawing form {
+  width: min(100%, 52rem);
+}
+
+.dialogDrawing .step {
+  gap: 0.55rem;
+}
+
+.dialogDrawing .noseNav {
+  width: min(100%, 32rem);
+  margin-inline: auto;
 }
 
 .promise {
@@ -277,7 +290,7 @@
   }
 
   .dialogDrawing {
-    width: min(99vw, 99dvh);
+    width: min(96vw, 96dvh);
     padding: 1.25rem;
   }
 

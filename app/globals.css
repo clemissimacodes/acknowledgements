@@ -6524,6 +6524,24 @@ html:has(.store-page) .site-anchor {
   html.peel-cursor-enabled * {
     cursor: none !important;
   }
+
+  html.peel-cursor-enabled.nose-drawing-active,
+  html.peel-cursor-enabled.nose-drawing-active * {
+    cursor: auto !important;
+  }
+
+  html.peel-cursor-enabled.nose-drawing-active button,
+  html.peel-cursor-enabled.nose-drawing-active a {
+    cursor: pointer !important;
+  }
+
+  html.peel-cursor-enabled.nose-drawing-active [data-native-drawing] svg {
+    cursor: crosshair !important;
+  }
+}
+
+.nose-drawing-active .peel-cursor {
+  display: none;
 }
 
 .peel-cursor,

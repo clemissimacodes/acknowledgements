@@ -2,7 +2,7 @@
 
 import { Draw, type DrawHandle, type Stroke } from "drawesome";
 import "drawesome/styles.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./NoseDoodle.module.css";
 
 export function NoseDoodle({
@@ -13,6 +13,13 @@ export function NoseDoodle({
   const drawingRef = useRef<DrawHandle>(null);
   const [hasInk, setHasInk] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.add("nose-drawing-active");
+    return () => {
+      document.documentElement.classList.remove("nose-drawing-active");
+    };
+  }, []);
 
   function handleStrokes(strokes: Stroke[]) {
     setHasInk(strokes.some((stroke) => !stroke.erase));
@@ -34,7 +41,7 @@ export function NoseDoodle({
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.paper}>
+      <div className={styles.paper} data-native-drawing>
         <Draw
           ref={drawingRef}
           background="#faf5ec"
