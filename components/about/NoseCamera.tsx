@@ -43,8 +43,10 @@ function renderCrop(
 
 export function NoseCamera({
   onValidityChange,
+  onDrawingModeChange,
 }: {
   onValidityChange: (valid: boolean) => void;
+  onDrawingModeChange: (drawing: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cropRef = useRef<HTMLDivElement>(null);
@@ -72,6 +74,10 @@ export function NoseCamera({
   useEffect(() => {
     onValidityChange(Boolean(photo));
   }, [onValidityChange, photo]);
+  useEffect(() => {
+    onDrawingModeChange(noseShy);
+    return () => onDrawingModeChange(false);
+  }, [noseShy, onDrawingModeChange]);
   useEffect(() => {
     const source = sourceCanvasRef.current;
     if (editing && source) setPhoto(renderCrop(source, zoom, offset));

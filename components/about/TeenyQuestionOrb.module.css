@@ -123,6 +123,20 @@
   line-height: 1.2;
 }
 
+.dialogDrawing {
+  width: min(98vw, 58rem, 98dvh);
+  padding: clamp(1.5rem, 3vmin, 2.5rem);
+}
+
+.dialogDrawing h2 {
+  margin-bottom: 0.25rem;
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+}
+
+.dialogDrawing .close {
+  top: 3%;
+}
+
 .promise {
   max-width: 45ch;
   margin: 1rem auto 0;
@@ -260,6 +274,11 @@
 @media (max-width: 520px) {
   .dialog {
     padding: 2.1rem 2.35rem;
+  }
+
+  .dialogDrawing {
+    width: min(99vw, 99dvh);
+    padding: 1.25rem;
   }
 
   .dialog h2 {

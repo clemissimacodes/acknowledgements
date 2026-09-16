@@ -38,20 +38,10 @@ export function NoseDoodle({
         <Draw
           ref={drawingRef}
           background="#faf5ec"
-          tools={["pencil"]}
-          eraser={false}
-          controls={{
-            color: false,
-            size: false,
-            opacity: false,
-            custom: false,
-            minimize: false,
-          }}
-          placement="left"
           look="studio"
           depth="soft"
           motion="none"
-          inset={4}
+          inset={12}
           onChange={handleStrokes}
         />
       </div>
