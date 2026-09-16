@@ -2,6 +2,7 @@
   --site-anchor-top: clamp(2.25rem, 8vh, 4rem);
   --site-content-top: calc(var(--site-anchor-top) + 3rem);
   --site-masthead-height: var(--site-content-top);
+  --site-gutter: 6vw;
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -40,7 +41,7 @@ html:has(.dont-try-page) .site-anchor {
 }
 
 html:has(.dont-try-page) .site-anchor {
-  left: 6vw;
+  left: var(--site-gutter);
   padding: 0;
   transform: none;
 }
@@ -1226,7 +1227,7 @@ body {
 .site-anchor {
   position: absolute;
   top: var(--site-anchor-top);
-  left: 6vw;
+  left: var(--site-gutter);
   width: fit-content;
   padding-right: 0.25rem;
   color: inherit;
@@ -1300,7 +1301,7 @@ input {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw max(0.55rem, env(safe-area-inset-bottom));
+  padding: var(--site-content-top) var(--site-gutter) max(0.55rem, env(safe-area-inset-bottom));
   overflow: hidden;
 }
 
@@ -1407,18 +1408,19 @@ input {
 @media (max-width: 767px) {
   :root {
     --site-anchor-top: max(2.25rem, env(safe-area-inset-top));
+    --site-gutter: 1.25rem;
   }
 
   .site-anchor {
-    left: 1.25rem;
-    max-width: calc(100vw - 2.5rem);
+    left: var(--site-gutter);
+    max-width: calc(100vw - (2 * var(--site-gutter)));
     font-size: 1.45rem;
   }
 
   .index {
     display: flex;
     flex-direction: column;
-    padding: var(--site-content-top) 1.25rem
+    padding: var(--site-content-top) var(--site-gutter)
       max(0.55rem, env(safe-area-inset-bottom));
     overflow-x: hidden;
     overflow-y: visible;
@@ -1481,8 +1483,8 @@ html:has(.about-page) .site-anchor,
 .about-orbit-heading {
   position: absolute;
   z-index: 3;
-  top: calc(var(--site-content-top) + clamp(2rem, 9vh, 6rem));
-  left: 6vw;
+  top: var(--site-content-top);
+  left: var(--site-gutter);
   width: min(24rem, 38vw);
   pointer-events: none;
 }
@@ -1606,27 +1608,36 @@ html:has(.about-page) .site-anchor,
   left: 50%;
 }
 
-.about-orbit-filter {
-  position: fixed;
+.about-orbit-rail {
+  position: absolute;
   z-index: 12;
-  bottom: calc(clamp(1rem, 5vw, 4rem) + clamp(6.6rem, 11vw, 9rem));
-  left: clamp(1rem, 5vw, 4rem);
+  top: var(--site-content-top);
+  left: var(--site-gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.4rem;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - (2 * var(--site-gutter))));
+}
+
+.about-orbit-filter {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  gap: 0.24rem;
+  gap: 0.28rem;
   width: max-content;
-  max-width: calc(100vw - 2rem);
-  padding: 0.55rem 0.7rem;
+  max-width: 100%;
+  margin: 0 0 0 -0.7rem;
+  padding: 0 0 0 0.7rem;
   color: rgba(22, 20, 18, 0.45);
-  background: rgba(250, 245, 236, 0.68);
+  background: none;
   border-left: 1px solid rgba(22, 20, 18, 0.2);
   font-size: 0.64rem;
   font-style: italic;
 }
 
 .about-orbit-filter-label {
-  margin-bottom: 0.18rem;
   color: rgba(22, 20, 18, 0.38);
   font-size: 0.58rem;
 }
@@ -1647,14 +1658,20 @@ html:has(.about-page) .site-anchor,
 }
 
 .about-orbit-filter button:last-child {
-  white-space: nowrap;
-  font-size: clamp(0.46rem, 1vw, 0.64rem);
+  max-width: 22rem;
 }
 
 .about-orbit-filter button.is-active {
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 0.22em;
+}
+
+@media (min-width: 860px) {
+  .about-orbit-filter button:last-child {
+    white-space: nowrap;
+    max-width: none;
+  }
 }
 
 .about-generated-watercolor,
@@ -1889,7 +1906,7 @@ html:has(.about-page) .site-anchor,
 
 .unlock-page {
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 16vh;
+  padding: var(--site-content-top) var(--site-gutter) 16vh;
   max-width: 36rem;
 }
 
@@ -2211,7 +2228,7 @@ html:has(.about-page) .site-anchor,
 .poetry-page {
   position: relative;
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 16vh;
+  padding: var(--site-content-top) var(--site-gutter) 16vh;
   background: #f4efe4;
   overflow-x: hidden;
 }
@@ -3069,8 +3086,9 @@ html:has(.about-page) .site-anchor,
 @media (max-width: 767px) {
   .about-page,
   .unlock-page,
-  .poetry-page {
-    padding: var(--site-content-top) 1.25rem
+  .poetry-page,
+  .out-loud-page {
+    padding: var(--site-content-top) var(--site-gutter)
       max(3.5rem, env(safe-area-inset-bottom));
   }
 
@@ -3083,9 +3101,9 @@ html:has(.about-page) .site-anchor,
   }
 
   .about-orbit-heading {
-    top: calc(var(--site-content-top) + 1.25rem);
-    left: 1rem;
-    width: min(18rem, 72vw);
+    top: var(--site-content-top);
+    left: var(--site-gutter);
+    width: min(18rem, calc(100vw - (2 * var(--site-gutter))));
   }
 
   .about-orbit-heading h1 {
@@ -3238,7 +3256,7 @@ html:has(.out-loud-page) .volume {
 .out-loud-page {
   position: relative;
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 16vh;
+  padding: var(--site-content-top) var(--site-gutter) 16vh;
   background: #f4efe4;
 }
 
@@ -3587,7 +3605,7 @@ html:has(.out-loud-page) .volume {
   flex-direction: column;
   height: 100dvh;
   min-height: 0;
-  padding: var(--site-content-top) 6vw 1.5vh;
+  padding: var(--site-content-top) var(--site-gutter) 1.5vh;
   overflow: hidden;
   background: #000;
   color: #f6f1e8;
@@ -5022,7 +5040,7 @@ html[data-theme="dark"] .appearance button.is-active {
   align-items: center;
   gap: clamp(2.5rem, 8vw, 8rem);
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 8vh;
+  padding: var(--site-content-top) var(--site-gutter) 8vh;
   color: #183c2b;
   background:
     radial-gradient(circle at 75% 55%, rgba(78, 138, 92, 0.16), transparent 40%),
@@ -5198,7 +5216,7 @@ html:has(.radar-page) .site-anchor {
 .privacy-page {
   max-width: 42rem;
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 16vh;
+  padding: var(--site-content-top) var(--site-gutter) 16vh;
 }
 
 .privacy-page h1 {
@@ -5226,7 +5244,7 @@ html:has(.radar-page) .site-anchor {
 
 .admin-page {
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 14vh;
+  padding: var(--site-content-top) var(--site-gutter) 14vh;
   color: #1c231e;
   font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
   background: #edf0e6;
@@ -5919,7 +5937,7 @@ html:has(.clemi-map-shell) .site-anchor {
     grid-template-columns: 1fr;
     align-content: start;
     gap: 2.5rem;
-    padding: var(--site-content-top) 1.25rem 4rem;
+    padding: var(--site-content-top) var(--site-gutter) 4rem;
   }
 
   .radar-scope {
@@ -5928,7 +5946,7 @@ html:has(.clemi-map-shell) .site-anchor {
 
   .privacy-page,
   .admin-page {
-    padding: var(--site-content-top) 1.25rem
+    padding: var(--site-content-top) var(--site-gutter)
       max(4rem, env(safe-area-inset-bottom));
   }
 
@@ -5992,7 +6010,7 @@ html:has(.cia-page) .site-anchor {
   --cia-rule: rgba(35, 31, 24, 0.28);
   --cia-paper: #f5f0e3;
   min-height: 100dvh;
-  padding: var(--site-content-top) 6vw 10vh;
+  padding: var(--site-content-top) var(--site-gutter) 10vh;
   color: var(--cia-ink);
   background:
     linear-gradient(90deg, transparent 0 49.8%, rgba(72, 61, 42, 0.035) 50% 50.2%, transparent 50.2%),
@@ -6365,7 +6383,7 @@ html:has(.cia-page) .site-anchor {
 
 @media (max-width: 767px) {
   .cia-page {
-    padding: var(--site-content-top) 1.25rem
+    padding: var(--site-content-top) var(--site-gutter)
       max(4rem, env(safe-area-inset-bottom));
     background: #e8e1cf;
   }

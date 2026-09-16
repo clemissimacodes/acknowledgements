@@ -60,8 +60,9 @@ export default async function AboutPage() {
 
   return (
     <main className="about-page">
-      <AboutList title="Teeny Tiny Things" notes={[...notes, ...visitorNotes]} />
-      <TeenyQuestionOrb />
+      <AboutList title="Teeny Tiny Things" notes={[...notes, ...visitorNotes]}>
+        <TeenyQuestionOrb />
+      </AboutList>
     </main>
   );
 }
