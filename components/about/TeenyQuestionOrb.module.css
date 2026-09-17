@@ -50,6 +50,7 @@
   padding: 1rem;
   background: rgba(250, 245, 236, 0.82);
   backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
 
 .dialog {
