@@ -124,7 +124,8 @@
 }
 
 .dialogDrawing {
-  width: min(96vw, 56rem, 96dvh);
+  box-sizing: border-box;
+  width: min(calc(100vw - 2rem), 56rem, calc(100dvh - 2rem));
   padding: clamp(2rem, 4vmin, 3rem);
 }
 
@@ -290,7 +291,7 @@
   }
 
   .dialogDrawing {
-    width: min(96vw, 96dvh);
+    width: min(calc(100vw - 2rem), calc(100dvh - 2rem));
     padding: 1.25rem;
   }
 
