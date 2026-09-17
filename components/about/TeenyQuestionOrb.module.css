@@ -271,6 +271,22 @@
   text-align: center;
 }
 
+.sentWrap {
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+}
+
+.sentWrap button {
+  padding: 0.6rem 0.9rem;
+  color: #302d29;
+  background: rgba(250, 245, 236, 0.58);
+  border: 1px solid rgba(61, 57, 52, 0.42);
+  border-radius: 999px;
+  font: 0.72rem/1 var(--font-book), "Palatino Linotype", serif;
+  cursor: pointer;
+}
+
 .error {
   color: #8b3f32;
 }

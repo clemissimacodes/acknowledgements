@@ -62,7 +62,6 @@ export default async function StorePage() {
 
       <footer className="store-footer">
         <p>All sales are final because all disclosures are irreversible.</p>
-        <Link href="/privacy">Privacy</Link>
       </footer>
     </main>
   );

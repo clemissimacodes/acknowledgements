@@ -362,7 +362,7 @@ async function nominatim(
       headers: {
         Accept: "application/json",
         "Accept-Language": "en",
-        "User-Agent": "Clemi-Tracker/2.0 (https://clemissima.com/privacy)",
+        "User-Agent": "Clemi-Tracker/2.0 (https://clemissima.com)",
       },
       cache: "no-store",
       signal: AbortSignal.timeout(8_000),

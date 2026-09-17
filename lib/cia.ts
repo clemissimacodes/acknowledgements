@@ -843,7 +843,7 @@ async function boundedTextResponse(
       redirect: "error",
       signal: controller.signal,
       headers: {
-        "User-Agent": "ClementineCIA/1.0 (+https://clemissima.com/privacy)",
+        "User-Agent": "ClementineCIA/1.0 (+https://clemissima.com)",
         Accept: "text/html,text/plain;q=0.9",
         ...init.headers,
       },

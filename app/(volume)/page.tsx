@@ -128,9 +128,6 @@ export default function HomePage() {
             />
           </svg>
         </MailLink>
-        <Link className="index-privacy" href="/privacy">
-          privacy
-        </Link>
       </nav>
     </main>
   );

@@ -14,7 +14,28 @@ const initialState: TeenyQuestionFormState = {
 };
 
 export function TeenyQuestionOrb() {
-  const [open, setOpen] = useState(false);
+  const [session, setSession] = useState({ id: 0, open: false });
+  const resetSession = useCallback((open: boolean) => {
+    setSession((current) => ({ id: current.id + 1, open }));
+  }, []);
+
+  return (
+    <TeenyQuestionOrbSession
+      key={session.id}
+      initiallyOpen={session.open}
+      onReset={resetSession}
+    />
+  );
+}
+
+function TeenyQuestionOrbSession({
+  initiallyOpen,
+  onReset,
+}: {
+  initiallyOpen: boolean;
+  onReset: (open: boolean) => void;
+}) {
+  const [open, setOpen] = useState(initiallyOpen);
   const [step, setStep] = useState<"words" | "nose">("words");
   const [hasNoseEvidence, setHasNoseEvidence] = useState(false);
   const [hideEvidenceError, setHideEvidenceError] = useState(false);
@@ -26,12 +47,8 @@ export function TeenyQuestionOrb() {
 
   const closeDialog = useCallback(() => {
     setOpen(false);
-    setStep("words");
-    setHasNoseEvidence(false);
-    setHideEvidenceError(false);
-    setDrawingNose(false);
-    window.requestAnimationFrame(() => openerRef.current?.focus());
-  }, []);
+    onReset(false);
+  }, [onReset]);
   const handleEvidenceValidity = useCallback((valid: boolean) => {
     setHasNoseEvidence(valid);
     if (valid) setHideEvidenceError(true);
@@ -75,6 +92,7 @@ export function TeenyQuestionOrb() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         ref={openerRef}
+        data-teeny-question-opener
       >
         <span>ur welcome to<br />stick ur nose in too</span>
       </button>
@@ -111,7 +129,12 @@ export function TeenyQuestionOrb() {
               (or elephantine) thing
             </h2>
             {state.status === "sent" ? (
-              <p className={styles.sent}>{state.message}</p>
+              <div className={styles.sentWrap}>
+                <p className={styles.sent}>{state.message}</p>
+                <button type="button" onClick={() => onReset(true)}>
+                  ask another teeny tiny thing
+                </button>
+              </div>
             ) : (
               <form
                 action={action}
