@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(self), microphone=(), geolocation=()",
+            value: "camera=(self), microphone=(self), geolocation=()",
           },
         ],
       },
@@ -80,6 +80,16 @@ const nextConfig: NextConfig = {
         source: "/sunday-posties",
         destination: "/secrets/sunday-posties",
         permanent: true,
+      },
+      {
+        source: "/out-loud",
+        destination: "/secrets/out-loud",
+        permanent: false,
+      },
+      {
+        source: "/out-loud/:path*",
+        destination: "/secrets/out-loud/:path*",
+        permanent: false,
       },
       { source: "/cia", destination: "/secrets", permanent: true },
       {

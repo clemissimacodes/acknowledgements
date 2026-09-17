@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 export type AboutNote = {
   id?: string;
@@ -156,9 +156,11 @@ function trackCenter(
 export function AboutList({
   title,
   notes,
+  children,
 }: {
   title: string;
   notes: AboutNote[];
+  children?: ReactNode;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -409,23 +411,26 @@ export function AboutList({
         })}
       </div>
 
-      <div className="about-orbit-filter" aria-label="Choose tiny things">
-        <span className="about-orbit-filter-label">btw you can filter by</span>
-        <button
-          type="button"
-          className={view === "mine" ? "is-active" : ""}
-          onClick={() => setView("mine")}
-        >
-          my teeny tiny things
-        </button>
-        <span className="about-orbit-filter-or">or</span>
-        <button
-          type="button"
-          className={view === "internet" ? "is-active" : ""}
-          onClick={() => setView("internet")}
-        >
-          teeny tiny things nosy internet humans want to know about me
-        </button>
+      <div className="about-orbit-rail">
+        <div className="about-orbit-filter" aria-label="Choose tiny things">
+          <span className="about-orbit-filter-label">btw you can filter by</span>
+          <button
+            type="button"
+            className={view === "mine" ? "is-active" : ""}
+            onClick={() => setView("mine")}
+          >
+            my teeny tiny things
+          </button>
+          <span className="about-orbit-filter-or">or</span>
+          <button
+            type="button"
+            className={view === "internet" ? "is-active" : ""}
+            onClick={() => setView("internet")}
+          >
+            teeny tiny things nosy internet humans want to know about me
+          </button>
+        </div>
+        {children}
       </div>
 
       {activeNote ? (

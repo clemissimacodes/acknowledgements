@@ -17,6 +17,7 @@ import {
   updatePostiesRecord,
   updateWishRecord,
 } from "@/lib/admin";
+import { deleteMemo, deleteReply } from "@/lib/voice-memos";
 import {
   clearCurrentLocation,
   createTrackerToken,
@@ -209,4 +210,24 @@ export async function removePlace(formData: FormData) {
   await requireOwner();
   await deleteTravelPlace(formData.get("id"));
   refreshRadar();
+}
+
+function cleanVoiceId(value: FormDataEntryValue | null) {
+  const id = String(value ?? "").trim();
+  if (!/^[A-Za-z0-9-]{8,80}$/.test(id)) throw new Error("Invalid record.");
+  return id;
+}
+
+export async function removeVoiceMemo(formData: FormData) {
+  await requireOwner();
+  await deleteMemo(cleanVoiceId(formData.get("id")));
+  refreshControlRoom();
+  revalidatePath("/secrets/out-loud");
+}
+
+export async function removeVoiceReply(formData: FormData) {
+  await requireOwner();
+  await deleteReply(cleanVoiceId(formData.get("id")));
+  refreshControlRoom();
+  revalidatePath("/secrets/out-loud");
 }

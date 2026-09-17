@@ -123,6 +123,19 @@ export default async function CiaPage() {
               <span className="cia-file-count">private</span>
             </Link>
           </li>
+          <li>
+            <Link href="/secrets/out-loud">
+              <span className="cia-directorate-number">10</span>
+              <span>
+                <strong>Out Loud</strong>
+                <small>
+                  Live voice memos about people and thoughts, with voice
+                  replies.
+                </small>
+              </span>
+              <span className="cia-file-count">in progress</span>
+            </Link>
+          </li>
         </ol>
       </section>
 

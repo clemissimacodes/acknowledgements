@@ -1,8 +1,8 @@
 .orb {
-  position: fixed;
+  position: relative;
   z-index: 20;
-  left: clamp(1rem, 5vw, 4rem);
-  bottom: clamp(1rem, 5vw, 4rem);
+  flex-shrink: 0;
+  pointer-events: auto;
   width: clamp(5.8rem, 10vw, 8rem);
   aspect-ratio: 1;
   padding: 1rem;

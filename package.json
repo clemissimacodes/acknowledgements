@@ -9,6 +9,7 @@
   "dependencies": {
     "@clerk/nextjs": "^7.9.1",
     "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.8.0",
     "drawesome": "^0.1.1",
     "maplibre-gl": "^6.7.0",
     "next": "^15.5.2",
