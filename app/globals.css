@@ -1371,6 +1371,23 @@ input {
   text-decoration-thickness: 1px;
 }
 
+.index-question-orb {
+  position: absolute;
+  z-index: 3;
+  top: 52%;
+  left: clamp(21rem, 34vw, 38rem);
+  transform: translateY(-50%);
+}
+
+.index-question-orb > button {
+  width: clamp(7rem, 11vw, 9.5rem);
+  font-size: 0.68rem;
+  filter: saturate(1.12);
+  box-shadow:
+    inset 0 0 2rem rgba(255, 255, 255, 0.7),
+    0 1rem 3rem rgba(75, 64, 50, 0.14);
+}
+
 .elsewhere {
   position: relative;
   z-index: 1;
@@ -1424,6 +1441,17 @@ input {
       max(0.55rem, env(safe-area-inset-bottom));
     overflow-x: hidden;
     overflow-y: visible;
+  }
+
+  .index-question-orb {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    top: auto;
+    left: auto;
+    align-self: flex-end;
+    margin: 2rem 0 0;
+    transform: none;
   }
 
   .index-portrait {
