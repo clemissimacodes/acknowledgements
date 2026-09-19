@@ -3,6 +3,13 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { del, head } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
+import {
+  SAMPLE_MEMOS,
+  isSampleMemoId,
+  sampleMemoBySlug,
+  sampleRepliesForMemo,
+  workshopMemosIfEmpty,
+} from "@/lib/out-loud-samples";
 
 export const VISITOR_MAX_MS = 60_000;
 export const MEMO_MAX_MS = 10 * 60_000;
@@ -187,58 +194,69 @@ async function deleteBlobs(urls: string[]) {
 }
 
 export async function listPublishedMemos(): Promise<VoiceMemo[]> {
-  if (!databaseUrl()) return [];
-  await ensureTables();
-  const rows = await db()`
-    SELECT
-      m.id,
-      m.slug,
-      m.kind,
-      m.title,
-      m.recorded_at,
-      m.duration_ms,
-      m.blob_url,
-      m.blob_pathname,
-      m.published,
-      m.created_at,
-      COUNT(r.id)::int AS reply_count
-    FROM voice_memos m
-    LEFT JOIN voice_replies r ON r.memo_id = m.id
-    WHERE m.published = TRUE
-    GROUP BY m.id
-    ORDER BY m.recorded_at DESC
-  `;
-  return rows.map((row) =>
-    mapMemo(row as Record<string, unknown>, Number(row.reply_count ?? 0)),
-  );
+  try {
+    if (!databaseUrl()) return SAMPLE_MEMOS;
+    await ensureTables();
+    const rows = await db()`
+      SELECT
+        m.id,
+        m.slug,
+        m.kind,
+        m.title,
+        m.recorded_at,
+        m.duration_ms,
+        m.blob_url,
+        m.blob_pathname,
+        m.published,
+        m.created_at,
+        COUNT(r.id)::int AS reply_count
+      FROM voice_memos m
+      LEFT JOIN voice_replies r ON r.memo_id = m.id
+      WHERE m.published = TRUE
+      GROUP BY m.id
+      ORDER BY m.recorded_at DESC
+    `;
+    return workshopMemosIfEmpty(
+      rows.map((row) =>
+        mapMemo(row as Record<string, unknown>, Number(row.reply_count ?? 0)),
+      ),
+    );
+  } catch {
+    return SAMPLE_MEMOS;
+  }
 }
 
 export async function getPublishedMemo(slug: string) {
-  if (!databaseUrl()) return null;
-  await ensureTables();
-  const rows = await db()`
-    SELECT
-      m.id,
-      m.slug,
-      m.kind,
-      m.title,
-      m.recorded_at,
-      m.duration_ms,
-      m.blob_url,
-      m.blob_pathname,
-      m.published,
-      m.created_at,
-      COUNT(r.id)::int AS reply_count
-    FROM voice_memos m
-    LEFT JOIN voice_replies r ON r.memo_id = m.id
-    WHERE m.slug = ${slug} AND m.published = TRUE
-    GROUP BY m.id
-    LIMIT 1
-  `;
-  const row = rows[0];
-  return row
-    ? mapMemo(row as Record<string, unknown>, Number(row.reply_count ?? 0))
-    : null;
+  const sample = sampleMemoBySlug(slug);
+  try {
+    if (!databaseUrl()) return sample;
+    await ensureTables();
+    const rows = await db()`
+      SELECT
+        m.id,
+        m.slug,
+        m.kind,
+        m.title,
+        m.recorded_at,
+        m.duration_ms,
+        m.blob_url,
+        m.blob_pathname,
+        m.published,
+        m.created_at,
+        COUNT(r.id)::int AS reply_count
+      FROM voice_memos m
+      LEFT JOIN voice_replies r ON r.memo_id = m.id
+      WHERE m.slug = ${slug} AND m.published = TRUE
+      GROUP BY m.id
+      LIMIT 1
+    `;
+    const row = rows[0];
+    return row
+      ? mapMemo(row as Record<string, unknown>, Number(row.reply_count ?? 0))
+      : sample;
+  } catch {
+    return sample;
+  }
 }
 
 export async function getMemoById(id: string) {
@@ -257,14 +275,20 @@ export async function getMemoById(id: string) {
 }
 
 export async function repliesForMemo(memoId: string) {
-  await ensureTables();
-  const rows = await db()`
-    SELECT id, memo_id, author_name, duration_ms, blob_url, blob_pathname, created_at
-    FROM voice_replies
-    WHERE memo_id = ${memoId}
-    ORDER BY created_at ASC
-  `;
-  return rows.map((row) => mapReply(row as Record<string, unknown>));
+  if (isSampleMemoId(memoId)) return sampleRepliesForMemo(memoId);
+  try {
+    if (!databaseUrl()) return [];
+    await ensureTables();
+    const rows = await db()`
+      SELECT id, memo_id, author_name, duration_ms, blob_url, blob_pathname, created_at
+      FROM voice_replies
+      WHERE memo_id = ${memoId}
+      ORDER BY created_at ASC
+    `;
+    return rows.map((row) => mapReply(row as Record<string, unknown>));
+  } catch {
+    return [];
+  }
 }
 
 export async function listAdminMemos(): Promise<VoiceMemoWithReplies[]> {
@@ -356,6 +380,9 @@ export async function createReply(input: {
   blobUrl: string;
   blobPathname: string;
 }) {
+  if (isSampleMemoId(input.memoId)) {
+    throw new Error("Replies to this memo are not being kept yet.");
+  }
   await ensureTables();
   await assertOwnedBlob(input.blobUrl, input.blobPathname);
   if (
@@ -388,6 +415,7 @@ export async function createReply(input: {
 }
 
 export async function deleteMemo(id: string) {
+  if (isSampleMemoId(id)) return false;
   await ensureTables();
   const replies = await db()`
     SELECT blob_url FROM voice_replies WHERE memo_id = ${id}
