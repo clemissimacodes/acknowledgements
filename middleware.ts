@@ -30,6 +30,9 @@ export default clerkMiddleware(async (auth, request) => {
     isPostiesSubmission;
 
   if (isDontTry || isOutLoud) {
+    if (/\.(?:mp3|webm|wav|ogg|m4a|aac)$/i.test(pathname)) {
+      return NextResponse.next();
+    }
     const destination = new URL(`/secrets${pathname}`, request.url);
     destination.search = request.nextUrl.search;
     return NextResponse.redirect(destination);
@@ -70,6 +73,6 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    "/((?!api/radar/shortcut(?:/|$)|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!api/radar/shortcut(?:/|$)|_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|mp3|webm|wav|ogg|m4a|aac)).*)",
   ],
 };

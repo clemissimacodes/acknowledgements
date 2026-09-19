@@ -87,8 +87,9 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/out-loud/:path*",
-        destination: "/secrets/out-loud/:path*",
+        source:
+          "/out-loud/:path((?!.*\\.(?:mp3|webm|wav|ogg|m4a|aac)$).*)",
+        destination: "/secrets/out-loud/:path",
         permanent: false,
       },
       { source: "/cia", destination: "/secrets", permanent: true },

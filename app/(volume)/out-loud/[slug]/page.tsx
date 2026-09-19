@@ -31,7 +31,7 @@ export default async function OutLoudMemoPage({
   const memo = await getPublishedMemo(slug).catch(() => null);
   if (!memo) notFound();
   const [replies, user] = await Promise.all([
-    repliesForMemo(memo.id),
+    repliesForMemo(memo.id).catch(() => []),
     currentUser(),
   ]);
   const heading =

@@ -2,6 +2,7 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
+import { isSampleMemoId } from "@/lib/out-loud-samples";
 import {
   AUDIO_CONTENT_TYPES,
   MEMO_MAX_BYTES,
@@ -77,6 +78,9 @@ export async function POST(request: Request) {
           };
         }
 
+        if (isSampleMemoId(payload.memoId)) {
+          throw new Error("Replies to this memo are not being kept yet.");
+        }
         const memo = await getMemoById(payload.memoId);
         if (!memo?.published) throw new Error("Unknown memo.");
         if (!pathname.startsWith(`out-loud/replies/${memo.id}/`)) {

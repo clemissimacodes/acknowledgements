@@ -46,8 +46,9 @@ export function PlaybackProvider({ children }: { children: React.ReactNode }) {
   const load = useCallback((src: string) => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (audio.src !== src) {
-      audio.src = src;
+    const resolved = new URL(src, window.location.href).href;
+    if (audio.src !== resolved) {
+      audio.src = resolved;
     }
   }, []);
 
