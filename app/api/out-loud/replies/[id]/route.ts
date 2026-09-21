@@ -35,9 +35,9 @@ export async function DELETE(
     }
     if (existing) {
       const memo = await getMemoById(existing.memoId);
-      if (memo) revalidatePath(`/secrets/out-loud/${memo.slug}`);
+      if (memo) revalidatePath(`/controlroom/out-loud/${memo.slug}`);
     }
-    revalidatePath("/secrets/out-loud");
+    revalidatePath("/controlroom/out-loud");
     revalidatePath("/controlroom");
     return NextResponse.json({ ok: true });
   } catch {

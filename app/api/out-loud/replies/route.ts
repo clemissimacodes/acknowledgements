@@ -115,8 +115,8 @@ export async function POST(request: Request) {
       blobUrl: String(payload.url ?? "").trim(),
       blobPathname: String(payload.pathname ?? "").trim().replace(/^\//, ""),
     });
-    revalidatePath(`/secrets/out-loud/${memo.slug}`);
-    revalidatePath("/secrets/out-loud");
+    revalidatePath(`/controlroom/out-loud/${memo.slug}`);
+    revalidatePath("/controlroom/out-loud");
     revalidatePath("/controlroom");
     const response = NextResponse.json({ reply });
     response.cookies.set(RATE_COOKIE, `${rate.today}:${rate.count + 1}`, {

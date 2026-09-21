@@ -19,7 +19,7 @@ export function ContactCard({ note }: { note: Note }) {
     <div className="card">
       <header className="card-bar">
         <span />
-        <Link className="card-done" href={`/acknowledgements/${note.slug}`}>
+        <Link className="card-done" href={`/controlroom/acknowledgements/${note.slug}`}>
           Done
         </Link>
       </header>

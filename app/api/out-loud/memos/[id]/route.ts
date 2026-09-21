@@ -33,8 +33,8 @@ export async function DELETE(
     if (!deleted) {
       return NextResponse.json({ error: "Unknown memo." }, { status: 404 });
     }
-    revalidatePath("/secrets/out-loud");
-    if (existing) revalidatePath(`/secrets/out-loud/${existing.slug}`);
+    revalidatePath("/controlroom/out-loud");
+    if (existing) revalidatePath(`/controlroom/out-loud/${existing.slug}`);
     revalidatePath("/controlroom");
     return NextResponse.json({ ok: true });
   } catch {

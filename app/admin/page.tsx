@@ -12,6 +12,7 @@ import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
 import { formatVoiceDuration } from "@/lib/format";
+import { getSecretsAttemptReport } from "@/lib/secrets-attempts";
 import { getTrackerAdminData } from "@/lib/tracker";
 import {
   getAllTeenyQuestions,
@@ -20,6 +21,7 @@ import {
 import { listAdminMemos } from "@/lib/voice-memos";
 import {
   changePlaceStatus,
+  clearSecretsAttemptLog,
   emergencyGoDark,
   moderateCiaRecord,
   removeAllVisits,
@@ -47,6 +49,20 @@ function date(value: string) {
     timeZone: "America/Los_Angeles",
   }).format(new Date(value));
 }
+
+const vaultPages = [
+  { title: "Don’t Try", href: "/controlroom/dont-try" },
+  { title: "Don’t Try protocol", href: "/controlroom/dont-try/protocol" },
+  { title: "Out Loud", href: "/controlroom/out-loud" },
+  { title: "Clemi Radar", href: "/controlroom/radar" },
+  { title: "Clemi Store", href: "/controlroom/shop" },
+  { title: "Sunday Posties", href: "/controlroom/sunday-posties" },
+  { title: "Acknowledgements", href: "/controlroom/acknowledgements" },
+  { title: "SaaS Inflation Index", href: "/controlroom/saas-inflation" },
+  { title: "Startup Graveyard", href: "/controlroom/startup-graveyard" },
+  { title: "Founder Apology Archive", href: "/controlroom/founder-apologies" },
+  { title: "Quality Control Bureau", href: "/controlroom/quality-control" },
+] as const;
 
 const statusActions: Partial<Record<CiaStatus, Array<[CiaStatus, string]>>> = {
   draft: [
@@ -95,6 +111,7 @@ export default async function AdminPage({
     pendingTeenyQuestions,
     teenyQuestions,
     voiceMemos,
+    breakIns,
   ] =
     await Promise.all([
       getAdminData(),
@@ -103,6 +120,7 @@ export default async function AdminPage({
       getPendingTeenyQuestionCount(),
       getAllTeenyQuestions(),
       listAdminMemos().catch(() => []),
+      getSecretsAttemptReport(),
     ]);
   const ciaProject = (await searchParams)?.ciaProject;
   const visibleCiaEntries = CIA_PROJECTS.includes(
@@ -123,6 +141,143 @@ export default async function AdminPage({
         </div>
         <UserButton />
       </header>
+
+      <nav className="admin-vault" aria-label="Vault">
+        <p className="admin-eyebrow">the vault · formerly secrets</p>
+        <ul>
+          {vaultPages.map((page) => (
+            <li key={page.href}>
+              <Link href={page.href}>{page.title}</Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <section className="admin-section admin-break-ins" id="secrets-attempts">
+        <div className="admin-section-heading">
+          <div>
+            <h2>Secrets break-in log</h2>
+            <p className="admin-private">
+              Every guess at the <Link href="/secrets">/secrets</Link> door,
+              exactly as typed. Guessers are matched by a guest cookie and a
+              hashed IP; a Clerk identity is shown when one was signed in.
+            </p>
+          </div>
+          {breakIns.total > 0 ? (
+            <form action={clearSecretsAttemptLog}>
+              <ConfirmButton
+                className="admin-danger"
+                message="Permanently delete every break-in attempt record?"
+              >
+                Clear log
+              </ConfirmButton>
+            </form>
+          ) : null}
+        </div>
+        <div className="admin-break-in-stats">
+          <span>
+            <strong>{breakIns.total}</strong> attempts
+          </span>
+          <span>
+            <strong>{breakIns.last24h}</strong> in 24h
+          </span>
+          <span>
+            <strong>{breakIns.guessers.length}</strong> guessers
+          </span>
+          <span>
+            <strong>{breakIns.cracked}</strong> cracked
+          </span>
+          <span>
+            <strong>{breakIns.globalFailuresThisHour}</strong> /{" "}
+            {breakIns.globalFailuresPerHourCap} global wrong-guess cap this hour
+          </span>
+        </div>
+        {breakIns.guessers.length ? (
+          <div className="admin-cards admin-cards-small">
+            {breakIns.guessers.map((guesser) => (
+              <article className="admin-card" key={guesser.handle}>
+                <div className="admin-card-head">
+                  <h3>{guesser.clerkEmail ?? guesser.handle}</h3>
+                  <span
+                    className={`admin-place-status is-${
+                      guesser.cracked ? "published" : "draft"
+                    }`}
+                  >
+                    {guesser.cracked ? "cracked" : `${guesser.wrong} wrong`}
+                  </span>
+                </div>
+                <p className="admin-record-status">
+                  {[guesser.city, guesser.country].filter(Boolean).join(", ") ||
+                    "somewhere"}{" "}
+                  · {guesser.device} · {guesser.attempts} tries · last{" "}
+                  {date(guesser.lastSeen)}
+                </p>
+                <p>
+                  last guess: <code className="admin-guess">{guesser.lastGuess}</code>
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="admin-muted">Nobody has knocked yet.</p>
+        )}
+        {breakIns.attempts.length ? (
+          <div className="admin-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Guesser</th>
+                  <th>Where</th>
+                  <th>Device</th>
+                  <th>Guess</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakIns.attempts.map((attempt) => (
+                  <tr key={attempt.id}>
+                    <td>{date(attempt.createdAt)}</td>
+                    <td>
+                      {attempt.clerkEmail ? (
+                        <>
+                          {attempt.clerkEmail}
+                          <br />
+                        </>
+                      ) : null}
+                      <small>
+                        guest-{attempt.guestId.slice(0, 8)}
+                        {attempt.ipHash ? ` · ip-${attempt.ipHash.slice(0, 8)}` : ""}
+                      </small>
+                    </td>
+                    <td>
+                      {[attempt.city, attempt.country].filter(Boolean).join(", ") ||
+                        "—"}
+                    </td>
+                    <td>{attempt.device}</td>
+                    <td>
+                      <code className="admin-guess">{attempt.guess}</code>
+                    </td>
+                    <td>
+                      <span
+                        className={`admin-place-status is-${
+                          attempt.outcome === "cracked"
+                            ? "published"
+                            : attempt.outcome === "locked"
+                              ? "rejected"
+                              : "draft"
+                        }`}
+                      >
+                        {attempt.outcome}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
 
       <section className="admin-section admin-teeny-inbox" id="teeny-questions">
         <div className="admin-section-heading">
@@ -236,7 +391,7 @@ export default async function AdminPage({
             <form action={removeRadar}>
               <button type="submit">Take Clemi off radar</button>
             </form>
-            <Link href="/secrets/radar">View public radar</Link>
+            <Link href="/controlroom/radar">View radar</Link>
           </div>
         ) : (
           <p className="admin-muted">Clemi is currently off radar.</p>
@@ -647,6 +802,9 @@ export default async function AdminPage({
         <a href="#teeny-questions">
           <strong>{pendingTeenyQuestions}</strong> teeny questions
         </a>
+        <a href="#secrets-attempts">
+          <strong>{breakIns.total}</strong> break-in attempts
+        </a>
         <a href="#visits">
           <strong>{data.visits.length}</strong> visits / {uniqueVisitors} visitors
         </a>
@@ -660,7 +818,7 @@ export default async function AdminPage({
               Record or upload a memo. Visitor voice replies go live immediately.
             </p>
           </div>
-          <Link href="/secrets/out-loud">View the archive →</Link>
+          <Link href="/controlroom/out-loud">View the archive →</Link>
         </div>
         <OutLoudPublisher />
         <div className="admin-cards">
@@ -686,7 +844,7 @@ export default async function AdminPage({
                 {memo.replyCount === 1 ? "reply" : "replies"}
               </p>
               <p>
-                <Link href={`/secrets/out-loud/${memo.slug}`}>{memo.slug}</Link>
+                <Link href={`/controlroom/out-loud/${memo.slug}`}>{memo.slug}</Link>
               </p>
               {memo.replies.length ? (
                 <ol className="admin-out-loud-replies">

@@ -200,7 +200,7 @@ export function ConversationList({ notes, activeSlug }: ConversationListProps) {
           return (
             <Link
               key={note.slug}
-              href={`/acknowledgements/${note.slug}`}
+              href={`/controlroom/acknowledgements/${note.slug}`}
               className={active ? "row is-active" : "row"}
               aria-current={active ? "page" : undefined}
             >

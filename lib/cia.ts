@@ -1040,5 +1040,5 @@ export async function runCiaDiscovery() {
 }
 
 export function ciaProjectPath(project: CiaProject) {
-  return `/secrets/${project}`;
+  return `/controlroom/${project}`;
 }

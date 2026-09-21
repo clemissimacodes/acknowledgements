@@ -1,68 +1,26 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { CIA_COOKIE, hasCiaCookie } from "@/lib/cia-gate";
 
+// /secrets gates itself (see app/(volume)/secrets/page.tsx). Everything that
+// used to sit behind that password now lives in the control room vault, which
+// needs a Clerk session here and the configured owner in the vault layout.
 export default clerkMiddleware(async (auth, request) => {
   const pathname = request.nextUrl.pathname;
-  const isAdmin =
+  const isControlRoom =
     pathname === "/controlroom" ||
     (pathname.startsWith("/controlroom/") &&
       pathname !== "/controlroom/login");
-  const isAcknowledgements =
-    pathname === "/acknowledgements" ||
-    pathname.startsWith("/acknowledgements/");
-  const isSecrets =
-    pathname === "/secrets" || pathname.startsWith("/secrets/");
-  const isDontTry =
-    pathname === "/dont-try" || pathname.startsWith("/dont-try/");
-  const isOutLoud =
-    pathname === "/out-loud" || pathname.startsWith("/out-loud/");
-  const isCia = pathname === "/cia" || pathname.startsWith("/cia/");
-  const isSecretsUnlock =
-    pathname === "/secrets/unlock" || pathname === "/cia/unlock";
-  const isStoreCheckout = pathname === "/api/shop/checkout";
-  const isPostiesSubmission = pathname === "/api/sunday-posties";
-  const isPasswordProtected =
-    isSecrets ||
-    isCia ||
-    isAcknowledgements ||
-    isStoreCheckout ||
-    isPostiesSubmission;
+  const isOwnerApi =
+    pathname === "/api/shop/checkout" || pathname === "/api/sunday-posties";
 
-  if (isDontTry || isOutLoud) {
-    const destination = new URL(`/secrets${pathname}`, request.url);
-    destination.search = request.nextUrl.search;
-    return NextResponse.redirect(destination);
-  }
-
-  if (isAdmin) {
+  if (isControlRoom || isOwnerApi) {
     const { userId } = await auth();
     if (!userId) {
-      const login = new URL("/controlroom/login", request.url);
-      return NextResponse.redirect(login);
+      if (isOwnerApi) {
+        return NextResponse.json({ error: "Not authorized." }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/controlroom/login", request.url));
     }
-  }
-
-  if (isPasswordProtected && !isSecretsUnlock) {
-    if (
-      await hasCiaCookie(
-        request.cookies.get(CIA_COOKIE)?.value,
-        process.env.CIA_PASSWORD?.trim(),
-      )
-    ) {
-      return NextResponse.next();
-    }
-
-    if (isPostiesSubmission) {
-      return NextResponse.json({ error: "Secrets is locked." }, { status: 401 });
-    }
-
-    const unlock = new URL("/secrets/unlock", request.url);
-    unlock.searchParams.set(
-      "next",
-      request.nextUrl.pathname + request.nextUrl.search,
-    );
-    return NextResponse.redirect(unlock);
   }
 
   return NextResponse.next();

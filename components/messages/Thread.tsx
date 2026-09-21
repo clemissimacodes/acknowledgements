@@ -18,12 +18,12 @@ export function Thread({ note }: { note: Note }) {
   return (
     <>
       <header className="thread-header">
-        <Link className="back" href="/acknowledgements" aria-label="Back to Messages">
+        <Link className="back" href="/controlroom/acknowledgements" aria-label="Back to Messages">
           <ChevronBack />
         </Link>
         <Link
           className="peer"
-          href={`/acknowledgements/${note.slug}/contact`}
+          href={`/controlroom/acknowledgements/${note.slug}/contact`}
           aria-label={`Open contact card for ${note.name}`}
         >
           <span className="avatar" aria-hidden="true">

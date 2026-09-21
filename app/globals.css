@@ -5516,6 +5516,65 @@ html:has(.admin-page) .site-anchor {
   text-underline-offset: 0.18em;
 }
 
+.admin-vault {
+  margin: 0 0 2.5rem;
+  padding: 1rem 1.2rem 1.1rem;
+  border: 1px solid rgba(28, 35, 30, 0.18);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.admin-vault .admin-eyebrow {
+  margin-bottom: 0.6rem;
+}
+
+.admin-vault ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-vault a {
+  font-size: 0.92rem;
+  text-underline-offset: 0.18em;
+}
+
+.admin-break-in-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  margin: 0 0 1.2rem;
+  color: rgba(28, 35, 30, 0.62);
+  font-size: 0.82rem;
+}
+
+.admin-break-in-stats strong {
+  color: #1c231e;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.admin-break-ins .admin-cards {
+  margin-bottom: 1.4rem;
+}
+
+.admin-guess {
+  padding: 0.1rem 0.35rem;
+  background: rgba(28, 35, 30, 0.07);
+  border-radius: 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+.admin-break-ins td small {
+  color: rgba(28, 35, 30, 0.62);
+  font-size: 0.72rem;
+}
+
 .admin-teeny-nose {
   display: block;
   width: 7rem;

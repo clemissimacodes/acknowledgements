@@ -50,7 +50,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/secrets/shop/reveal",
+        source: "/secrets",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0",
+          },
+        ],
+      },
+      {
+        source: "/controlroom/shop/reveal",
         headers: [
           {
             key: "Cache-Control",
@@ -75,33 +84,31 @@ const nextConfig: NextConfig = {
       { source: "/contents", destination: "/", permanent: true },
       { source: "/foreword", destination: "/", permanent: true },
       { source: "/poetry/admin", destination: "/poetry", permanent: false },
-      { source: "/radar", destination: "/secrets/radar", permanent: true },
-      {
-        source: "/sunday-posties",
-        destination: "/secrets/sunday-posties",
-        permanent: true,
-      },
-      {
-        source: "/out-loud",
-        destination: "/secrets/out-loud",
-        permanent: false,
-      },
-      {
-        source: "/out-loud/:path*",
-        destination: "/secrets/out-loud/:path*",
-        permanent: false,
-      },
+      // Former Secrets pages now live in the control room vault.
+      ...[
+        "radar",
+        "sunday-posties",
+        "out-loud",
+        "dont-try",
+        "shop",
+        "acknowledgements",
+      ].flatMap((section) => [
+        {
+          source: `/${section}`,
+          destination: `/controlroom/${section}`,
+          permanent: false,
+        },
+        {
+          source: `/${section}/:path*`,
+          destination: `/controlroom/${section}/:path*`,
+          permanent: false,
+        },
+      ]),
+      // Anything under /secrets collapses to the challenge itself.
+      { source: "/secrets/:path+", destination: "/secrets", permanent: false },
+      { source: "/unlock", destination: "/secrets", permanent: false },
       { source: "/cia", destination: "/secrets", permanent: true },
-      {
-        source: "/shop/:path*",
-        destination: "/secrets/shop/:path*",
-        permanent: true,
-      },
-      {
-        source: "/cia/:path*",
-        destination: "/secrets/:path*",
-        permanent: true,
-      },
+      { source: "/cia/:path*", destination: "/secrets", permanent: true },
       {
         source: "/admin/:path*",
         destination: "/controlroom/:path*",

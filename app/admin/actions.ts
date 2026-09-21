@@ -17,6 +17,7 @@ import {
   updatePostiesRecord,
   updateWishRecord,
 } from "@/lib/admin";
+import { clearSecretsAttempts } from "@/lib/secrets-attempts";
 import { deleteMemo, deleteReply } from "@/lib/voice-memos";
 import {
   clearCurrentLocation,
@@ -40,7 +41,7 @@ function refreshControlRoom() {
 }
 
 function refreshCia(project?: FormDataEntryValue | null) {
-  revalidatePath("/secrets");
+  revalidatePath("/controlroom");
   if (
     project === "saas-inflation" ||
     project === "startup-graveyard" ||
@@ -158,7 +159,7 @@ export async function removeAllVisits() {
 
 function refreshRadar() {
   revalidatePath("/controlroom");
-  revalidatePath("/secrets/radar");
+  revalidatePath("/controlroom/radar");
 }
 
 export async function createShortcutToken(formData: FormData) {
@@ -222,12 +223,18 @@ export async function removeVoiceMemo(formData: FormData) {
   await requireOwner();
   await deleteMemo(cleanVoiceId(formData.get("id")));
   refreshControlRoom();
-  revalidatePath("/secrets/out-loud");
+  revalidatePath("/controlroom/out-loud");
 }
 
 export async function removeVoiceReply(formData: FormData) {
   await requireOwner();
   await deleteReply(cleanVoiceId(formData.get("id")));
   refreshControlRoom();
-  revalidatePath("/secrets/out-loud");
+  revalidatePath("/controlroom/out-loud");
+}
+
+export async function clearSecretsAttemptLog() {
+  await requireOwner();
+  await clearSecretsAttempts();
+  refreshControlRoom();
 }

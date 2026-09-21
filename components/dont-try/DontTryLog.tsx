@@ -7,7 +7,7 @@ import {
   saveAndPublishDontTryDay,
   saveDontTryDay,
   unpublishDontTryDay,
-} from "@/app/(volume)/dont-try/actions";
+} from "@/app/controlroom/(vault)/(volume)/dont-try/actions";
 
 type Filter = "all" | Exclude<DontTryStatus, "pending">;
 

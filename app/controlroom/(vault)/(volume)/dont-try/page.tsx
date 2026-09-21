@@ -83,7 +83,7 @@ export default async function DontTryPage() {
     <main className="dont-try-page">
       <header className="dont-try-hero">
         <div className="dont-try-rail" aria-label="Challenge details">
-          <Link href="/secrets/dont-try/protocol">Don’t Try protocol</Link>
+          <Link href="/controlroom/dont-try/protocol">Don’t Try protocol</Link>
           <span>September 10 — December 18, 2026</span>
         </div>
         <h1>DON’T TRY</h1>
@@ -130,7 +130,7 @@ export default async function DontTryPage() {
             </li>
           ))}
         </ol>
-        <Link className="dont-try-protocol-link" href="/secrets/dont-try/protocol">
+        <Link className="dont-try-protocol-link" href="/controlroom/dont-try/protocol">
           Read the full protocol →
         </Link>
       </section>

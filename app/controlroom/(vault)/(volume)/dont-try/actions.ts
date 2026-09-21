@@ -14,7 +14,7 @@ async function requireOwner() {
 }
 
 function refresh() {
-  revalidatePath("/secrets/dont-try");
+  revalidatePath("/controlroom/dont-try");
 }
 
 function entryFromForm(formData: FormData) {
