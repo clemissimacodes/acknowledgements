@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { randomSecretsQuote } from "@/lib/secrets-quotes";
 import styles from "./SecretsUnlockForm.module.css";
 
 function napLength(seconds: number) {
@@ -54,9 +55,9 @@ export function SecretsUnlockForm() {
         return;
       }
 
-      fail("why would u even try");
+      fail(randomSecretsQuote(feedback));
     } catch {
-      fail("why would u even try");
+      fail(randomSecretsQuote(feedback));
     } finally {
       setBusy(false);
     }
