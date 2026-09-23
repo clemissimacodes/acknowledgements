@@ -3,6 +3,9 @@ import { neon } from "@neondatabase/serverless";
 
 export type PoemNoteKind = "note" | "question";
 
+/** Sentinel anchors: -2 title, -1 dedication, -3 general note beneath the poem. */
+export const GENERAL_NOTE_ANCHOR = -3;
+
 export type PoemNote = {
   id: string;
   poem: string;
@@ -31,7 +34,7 @@ async function ensureTable() {
       id TEXT PRIMARY KEY,
       poem_slug TEXT NOT NULL,
       line_index INTEGER NOT NULL
-        CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -2),
+        CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -3),
       kind TEXT NOT NULL CHECK (kind IN ('note', 'question')),
       author_name TEXT,
       body TEXT NOT NULL,
@@ -44,18 +47,12 @@ async function ensureTable() {
     DROP CONSTRAINT IF EXISTS poem_notes_line_index_check
   `;
   await sql`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'poem_notes_anchor_check'
-      ) THEN
-        ALTER TABLE poem_notes
-        ADD CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -2);
-      END IF;
-    END
-    $$
+    ALTER TABLE poem_notes
+    DROP CONSTRAINT IF EXISTS poem_notes_anchor_check
+  `;
+  await sql`
+    ALTER TABLE poem_notes
+    ADD CONSTRAINT poem_notes_anchor_check CHECK (line_index >= -3)
   `;
   await sql`
     CREATE INDEX IF NOT EXISTS poem_notes_poem_line_idx

@@ -2,7 +2,12 @@ import { cookies } from "next/headers";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
-import { addPoemNote, notesForPoem, type PoemNoteKind } from "@/lib/poem-comments";
+import {
+  GENERAL_NOTE_ANCHOR,
+  addPoemNote,
+  notesForPoem,
+  type PoemNoteKind,
+} from "@/lib/poem-comments";
 import { getPoem, poemLines } from "@/lib/poems";
 
 const RATE_COOKIE = "poetry_notes_day";
@@ -98,14 +103,14 @@ export async function POST(request: Request) {
   const lines = poemLines(poem);
   const line = Number(payload.line);
   const targetText =
-    line === -2
+    line === GENERAL_NOTE_ANCHOR || line === -2
       ? poem.title
       : line === -1
         ? poem.dedication ?? ""
         : lines[line] ?? "";
   if (
     !Number.isInteger(line) ||
-    line < -2 ||
+    line < GENERAL_NOTE_ANCHOR ||
     line >= lines.length ||
     !targetText.trim()
   ) {

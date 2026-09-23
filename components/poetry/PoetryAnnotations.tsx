@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { PoemNote } from "@/lib/poem-comments";
+import { GENERAL_NOTE_ANCHOR, type PoemNote } from "@/lib/poem-comments";
+import {
+  POEM_REACTIONS,
+  type PoemReactionId,
+  type PoemReactionState,
+} from "@/lib/poem-reactions";
 
 const NAME_KEY = "clemissima-poetry-name";
+
+const EMPTY_REACTIONS: PoemReactionState = {
+  counts: { twice: 0, molars: 0, whispered: 0 },
+  mine: [],
+};
 
 type PoetryAnnotationsProps = {
   slug: string;
@@ -40,11 +50,15 @@ export function PoetryAnnotations({
   const [active, setActive] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [body, setBody] = useState("");
+  const [footBody, setFootBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [footError, setFootError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [reactions, setReactions] = useState<PoemReactionState>(EMPTY_REACTIONS);
+  const [reacting, setReacting] = useState<PoemReactionId | null>(null);
 
   useEffect(() => {
     setName(window.localStorage.getItem(NAME_KEY)?.trim() ?? "");
@@ -70,11 +84,56 @@ export function PoetryAnnotations({
       }
     }
 
+    async function loadReactions() {
+      try {
+        const response = await fetch(
+          `/api/poetry/reactions?poem=${encodeURIComponent(slug)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const data = (await response.json()) as PoemReactionState;
+        if (!cancelled && data.counts) setReactions(data);
+      } catch {
+        // Reactions are decorative; the poem still reads without them.
+      }
+    }
+
     void load();
+    void loadReactions();
     return () => {
       cancelled = true;
     };
   }, [slug]);
+
+  async function react(reaction: PoemReactionId) {
+    if (reacting) return;
+    setReacting(reaction);
+    const wasMine = reactions.mine.includes(reaction);
+    setReactions((current) => ({
+      counts: {
+        ...current.counts,
+        [reaction]: Math.max(0, current.counts[reaction] + (wasMine ? -1 : 1)),
+      },
+      mine: wasMine
+        ? current.mine.filter((item) => item !== reaction)
+        : [...current.mine, reaction],
+    }));
+    try {
+      const response = await fetch("/api/poetry/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poem: slug, reaction }),
+      });
+      const data = (await response.json()) as PoemReactionState & {
+        error?: string;
+      };
+      if (response.ok && data.counts) setReactions(data);
+    } catch {
+      // Keep the optimistic state; it reconciles on the next load.
+    } finally {
+      setReacting(null);
+    }
+  }
 
   const byLine = useMemo(() => {
     const grouped = new Map<number, PoemNote[]>();
@@ -86,16 +145,23 @@ export function PoetryAnnotations({
     return grouped;
   }, [notes]);
 
+  const footNotes = byLine.get(GENERAL_NOTE_ANCHOR) ?? [];
+
   function openLine(index: number) {
     setActive(index);
     setError("");
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (active === null || busy || body.trim().length < 2) return;
+  async function postNote(input: {
+    line: number;
+    text: string;
+    form: HTMLFormElement;
+    onError: (message: string) => void;
+    onSent: () => void;
+  }) {
+    if (busy || input.text.trim().length < 2) return;
     setBusy(true);
-    setError("");
+    input.onError("");
 
     try {
       const response = await fetch("/api/poetry/comments", {
@@ -103,11 +169,11 @@ export function PoetryAnnotations({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           poem: slug,
-          line: active,
-          kind: body.trim().endsWith("?") ? "question" : "note",
+          line: input.line,
+          kind: input.text.trim().endsWith("?") ? "question" : "note",
           name,
-          body,
-          website: new FormData(event.currentTarget).get("website"),
+          body: input.text,
+          website: new FormData(input.form).get("website"),
         }),
       });
       const data = (await response.json()) as {
@@ -116,7 +182,7 @@ export function PoetryAnnotations({
       };
       const createdNote = data.note;
       if (!response.ok || !createdNote) {
-        setError(data.error ?? "The margin did not take it.");
+        input.onError(data.error ?? "The margin did not take it.");
         return;
       }
       if (name.trim()) {
@@ -125,12 +191,35 @@ export function PoetryAnnotations({
         window.localStorage.removeItem(NAME_KEY);
       }
       setNotes((current) => ordered([...current, createdNote]));
-      setBody("");
+      input.onSent();
     } catch {
-      setError("The margin did not take it.");
+      input.onError("The margin did not take it.");
     } finally {
       setBusy(false);
     }
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (active === null) return;
+    void postNote({
+      line: active,
+      text: body,
+      form: event.currentTarget,
+      onError: setError,
+      onSent: () => setBody(""),
+    });
+  }
+
+  function submitFoot(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void postNote({
+      line: GENERAL_NOTE_ANCHOR,
+      text: footBody,
+      form: event.currentTarget,
+      onError: setFootError,
+      onSent: () => setFootBody(""),
+    });
   }
 
   function beginEdit(note: PoemNote) {
@@ -201,6 +290,51 @@ export function PoetryAnnotations({
     }
   }
 
+  function editForm() {
+    return (
+      <form className="note-form margin-edit-form" onSubmit={saveEdit}>
+        <input
+          value={editName}
+          maxLength={60}
+          placeholder="your earthly name or alter ego"
+          aria-label="Author name"
+          onChange={(event) => setEditName(event.target.value)}
+        />
+        <textarea
+          required
+          minLength={2}
+          maxLength={600}
+          rows={4}
+          value={editBody}
+          aria-label="Annotation"
+          onChange={(event) => setEditBody(event.target.value)}
+        />
+        <div className="margin-admin-actions">
+          <button type="submit" disabled={busy}>
+            Save
+          </button>
+          <button type="button" onClick={() => setEditingId(null)}>
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  function adminActions(note: PoemNote) {
+    if (!admin) return null;
+    return (
+      <div className="margin-admin-actions">
+        <button type="button" onClick={() => beginEdit(note)}>
+          Edit
+        </button>
+        <button type="button" disabled={busy} onClick={() => void remove(note)}>
+          Delete
+        </button>
+      </div>
+    );
+  }
+
   function annotationMargin(index: number) {
     const targetNotes = byLine.get(index) ?? [];
     const isActive = active === index;
@@ -233,60 +367,14 @@ export function PoetryAnnotations({
               <ol className="line-annot-notes">
                 {targetNotes.map((note) =>
                   editingId === note.id ? (
-                    <li key={note.id}>
-                      <form
-                        className="note-form margin-edit-form"
-                        onSubmit={saveEdit}
-                      >
-                        <input
-                          value={editName}
-                          maxLength={60}
-                          placeholder="your earthly name or alter ego"
-                          aria-label="Author name"
-                          onChange={(event) => setEditName(event.target.value)}
-                        />
-                        <textarea
-                          required
-                          minLength={2}
-                          maxLength={600}
-                          rows={4}
-                          value={editBody}
-                          aria-label="Annotation"
-                          onChange={(event) => setEditBody(event.target.value)}
-                        />
-                        <div className="margin-admin-actions">
-                          <button type="submit" disabled={busy}>
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </li>
+                    <li key={note.id}>{editForm()}</li>
                   ) : (
                     <li key={note.id}>
                       <p className="margin-meta">
                         <span>{displayName(note)}</span>
                       </p>
                       <p>{note.body}</p>
-                      {admin ? (
-                        <div className="margin-admin-actions">
-                          <button type="button" onClick={() => beginEdit(note)}>
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => void remove(note)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ) : null}
+                      {adminActions(note)}
                     </li>
                   ),
                 )}
@@ -473,6 +561,106 @@ export function PoetryAnnotations({
             );
           })}
         </div>
+
+        <footer className="poem-foot">
+          <div
+            className="poem-reactions"
+            role="group"
+            aria-label="React to this poem"
+          >
+            {POEM_REACTIONS.map((reaction) => {
+              const mine = reactions.mine.includes(reaction.id);
+              const count = reactions.counts[reaction.id];
+              return (
+                <button
+                  key={reaction.id}
+                  className={`poem-reaction${mine ? " is-mine" : ""}`}
+                  type="button"
+                  aria-pressed={mine}
+                  disabled={reacting !== null}
+                  onClick={() => void react(reaction.id)}
+                >
+                  <span className="poem-reaction-label">{reaction.label}</span>
+                  {count ? (
+                    <span className="poem-reaction-count">{count}</span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <section className="poem-guestbook" aria-labelledby={`guestbook-${slug}`}>
+            <h2 id={`guestbook-${slug}`}>leave a note beneath the poem</h2>
+            {footNotes.length ? (
+              <ol className="poem-guestbook-notes">
+                {footNotes.map((note) =>
+                  editingId === note.id ? (
+                    <li key={note.id}>{editForm()}</li>
+                  ) : (
+                    <li key={note.id}>
+                      <p className="margin-meta">
+                        <span>{displayName(note)}</span>
+                      </p>
+                      <p>{note.body}</p>
+                      {adminActions(note)}
+                    </li>
+                  ),
+                )}
+              </ol>
+            ) : null}
+            {footError ? (
+              <p className="poem-margin-error" role="status">
+                {footError}
+              </p>
+            ) : null}
+            <form className="note-form poem-guestbook-form" onSubmit={submitFoot}>
+              <textarea
+                minLength={2}
+                maxLength={600}
+                rows={2}
+                value={footBody}
+                placeholder="a thought about the whole thing"
+                aria-label="Note about the poem"
+                onChange={(event) => setFootBody(event.target.value)}
+              />
+              <input
+                className="poem-note-honeypot"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+              />
+              <div className="poem-note-footer">
+                <input
+                  value={name}
+                  maxLength={60}
+                  autoComplete="nickname"
+                  placeholder="your earthly name or alter ego"
+                  aria-label="Name, optional"
+                  onChange={(event) => setName(event.target.value)}
+                />
+                <p className="poem-note-public">
+                  your earthly name or alter ego
+                </p>
+                <button
+                  className="poem-note-send"
+                  type="submit"
+                  disabled={busy || footBody.trim().length < 2}
+                  aria-label="Post note"
+                  title="Post"
+                >
+                  {busy ? (
+                    "…"
+                  ) : (
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M4.5 10.5 12 3l7.5 7.5M12 3v18" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </form>
+          </section>
+        </footer>
       </article>
     </div>
   );
