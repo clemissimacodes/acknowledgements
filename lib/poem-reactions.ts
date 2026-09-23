@@ -2,9 +2,9 @@ import { randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
 
 export const POEM_REACTIONS = [
-  { id: "twice", label: "read it twice" },
-  { id: "molars", label: "felt it in my molars" },
-  { id: "whispered", label: "whispered it aloud" },
+  { id: "twice", label: "i like so much i read twice" },
+  { id: "molars", label: "no understand );" },
+  { id: "whispered", label: "meow" },
 ] as const;
 
 export type PoemReactionId = (typeof POEM_REACTIONS)[number]["id"];
