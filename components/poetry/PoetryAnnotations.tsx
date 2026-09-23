@@ -7,6 +7,7 @@ import {
   type PoemReactionId,
   type PoemReactionState,
 } from "@/lib/poem-reactions";
+import { ReactionIcon } from "./ReactionIcon";
 
 const NAME_KEY = "clemissima-poetry-name";
 
@@ -580,6 +581,7 @@ export function PoetryAnnotations({
                   disabled={reacting !== null}
                   onClick={() => void react(reaction.id)}
                 >
+                  <ReactionIcon id={reaction.id} />
                   <span className="poem-reaction-label">{reaction.label}</span>
                   {count ? (
                     <span className="poem-reaction-count">{count}</span>
@@ -589,8 +591,7 @@ export function PoetryAnnotations({
             })}
           </div>
 
-          <section className="poem-guestbook" aria-labelledby={`guestbook-${slug}`}>
-            <h2 id={`guestbook-${slug}`}>leave a note beneath the poem</h2>
+          <section className="poem-guestbook" aria-label="Notes beneath the poem">
             {footNotes.length ? (
               <ol className="poem-guestbook-notes">
                 {footNotes.map((note) =>
@@ -619,8 +620,8 @@ export function PoetryAnnotations({
                 maxLength={600}
                 rows={2}
                 value={footBody}
-                placeholder="a thought about the whole thing"
-                aria-label="Note about the poem"
+                placeholder="leave a note"
+                aria-label="Leave a note"
                 onChange={(event) => setFootBody(event.target.value)}
               />
               <input
