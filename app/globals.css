@@ -2859,18 +2859,21 @@ html:has(.about-page) .site-anchor,
 .poem-reactions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.55rem;
+  gap: 0.6rem;
+  padding-top: 1.4rem;
 }
 
 .poem-reaction {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
+  position: relative;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  place-items: center;
   color: var(--mute);
   background: transparent;
   border: 1px solid rgba(22, 20, 18, 0.22);
-  border-radius: 999px;
+  border-radius: 50%;
   font: italic 0.8rem/1 var(--font-book), "Palatino Linotype", serif;
   cursor: pointer;
   transition:
@@ -2895,7 +2898,7 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-reaction:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 .poem-reaction:disabled {
@@ -2903,9 +2906,8 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-reaction-icon {
-  flex: none;
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 1.05rem;
+  height: 1.05rem;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.7;
@@ -2918,10 +2920,47 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-reaction-count {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  min-width: 1.05rem;
+  padding: 0.15rem 0.3rem;
+  color: var(--ink);
+  background: var(--paper, #f6f1e8);
+  border: 1px solid rgba(22, 20, 18, 0.22);
+  border-radius: 999px;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   font-style: normal;
-  opacity: 0.85;
+  line-height: 1;
+  text-align: center;
+}
+
+.poem-reaction-label {
+  position: absolute;
+  bottom: calc(100% + 0.45rem);
+  left: 50%;
+  padding: 0.3rem 0.6rem;
+  color: var(--ink);
+  background: var(--aqua);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 0.25rem);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease,
+    visibility 140ms;
+  pointer-events: none;
+}
+
+.poem-reaction:hover .poem-reaction-label,
+.poem-reaction:focus-visible .poem-reaction-label {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
 }
 
 .poem-guestbook {

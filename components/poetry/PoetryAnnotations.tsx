@@ -578,14 +578,19 @@ export function PoetryAnnotations({
                   className={`poem-reaction${mine ? " is-mine" : ""}`}
                   type="button"
                   aria-pressed={mine}
+                  aria-label={reaction.label}
                   disabled={reacting !== null}
                   onClick={() => void react(reaction.id)}
                 >
                   <ReactionIcon id={reaction.id} />
-                  <span className="poem-reaction-label">{reaction.label}</span>
                   {count ? (
-                    <span className="poem-reaction-count">{count}</span>
+                    <span className="poem-reaction-count" aria-hidden="true">
+                      {count}
+                    </span>
                   ) : null}
+                  <span className="poem-reaction-label" aria-hidden="true">
+                    {reaction.label}
+                  </span>
                 </button>
               );
             })}
