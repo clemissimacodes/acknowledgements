@@ -3,6 +3,9 @@
   --site-content-top: calc(var(--site-anchor-top) + 3rem);
   --site-masthead-height: var(--site-content-top);
   --site-gutter: 6vw;
+  /* Clemissima feature accent */
+  --aqua: #cff8f8;
+  --aqua-rgb: 207, 248, 248;
   --doc-ink: #000;
   --doc-paper: #fff;
   --imessage: #007aff;
@@ -1727,7 +1730,7 @@ html:has(.about-page) .site-anchor,
 
 .about-generated-watercolor::after {
   inset: 2% 11% 10% 1%;
-  border: 1px solid rgba(125, 173, 194, 0.18);
+  border: 1px solid rgba(var(--aqua-rgb), 0.7);
   filter: blur(1.5px);
   transform: rotate(-13deg);
 }
@@ -1735,7 +1738,7 @@ html:has(.about-page) .site-anchor,
 .about-generated-thing.is-visitor .about-generated-watercolor {
   box-shadow:
     0 0 0 0.35rem rgba(250, 245, 236, 0.6),
-    0 0 0 0.42rem rgba(125, 173, 194, 0.2);
+    0 0 0 0.42rem rgba(var(--aqua-rgb), 0.85);
 }
 
 @keyframes about-watercolor-drift {
@@ -2485,7 +2488,7 @@ html:has(.about-page) .site-anchor,
 .poem-heading-button:hover,
 .poem-heading-button:focus-visible,
 .poem-line-row.is-active .poem-heading-button {
-  background: rgba(205, 239, 237, 0.12);
+  background: rgba(var(--aqua-rgb), 0.55);
   outline: none;
 }
 
@@ -2619,14 +2622,18 @@ html:has(.about-page) .site-anchor,
 .poem-line-button:hover,
 .poem-line-button:focus-visible,
 .poem-line-button.is-active {
-  background: rgba(205, 239, 237, 0.12);
+  background: rgba(var(--aqua-rgb), 0.55);
   outline: none;
 }
 
 .poem-note-count,
 .poem-note-plus {
   flex: 0 0 1.4rem;
-  color: #789e9c;
+  align-self: center;
+  padding: 0.2em 0;
+  color: var(--ink);
+  background: var(--aqua);
+  border-radius: 999px;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 0.66rem;
   line-height: 1;
@@ -2759,7 +2766,7 @@ html:has(.about-page) .site-anchor,
   margin: 0;
   padding: 0.65rem 0.7rem 0.7rem;
   overflow-y: auto;
-  border-left: 1px solid rgba(112, 166, 163, 0.24);
+  border-left: 1px solid var(--aqua);
   background: rgba(250, 253, 250, 0.94);
 }
 
@@ -2795,7 +2802,7 @@ html:has(.about-page) .site-anchor,
   font-size: 0.86rem;
   line-height: 1.4;
   background: rgba(250, 253, 250, 0.92);
-  border-left: 1px solid rgba(112, 166, 163, 0.22);
+  border-left: 1px solid var(--aqua);
   box-shadow: none;
   opacity: 0;
   visibility: hidden;
@@ -2876,15 +2883,15 @@ html:has(.about-page) .site-anchor,
 .poem-reaction:hover,
 .poem-reaction:focus-visible {
   color: var(--ink);
-  background: rgba(205, 239, 237, 0.16);
-  border-color: rgba(112, 166, 163, 0.5);
+  background: rgba(var(--aqua-rgb), 0.7);
+  border-color: var(--aqua);
   outline: none;
 }
 
 .poem-reaction.is-mine {
-  color: #f7f1e6;
-  background: #5d8a88;
-  border-color: #5d8a88;
+  color: var(--ink);
+  background: var(--aqua);
+  border-color: var(--aqua);
 }
 
 .poem-reaction:active {
@@ -2907,7 +2914,7 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-reaction.is-mine .poem-reaction-icon {
-  fill: rgba(247, 241, 230, 0.28);
+  fill: rgba(255, 255, 255, 0.6);
 }
 
 .poem-reaction-count {
@@ -3002,7 +3009,7 @@ html:has(.about-page) .site-anchor,
 }
 
 .margin-notes li.is-on-line {
-  background: rgba(205, 239, 237, 0.12);
+  background: rgba(var(--aqua-rgb), 0.55);
   margin-left: -0.35em;
   margin-right: -0.35em;
   padding-left: 0.35em;
@@ -3115,7 +3122,7 @@ html:has(.about-page) .site-anchor,
 
 .note-form .poem-note-send:hover,
 .note-form .poem-note-send:focus-visible {
-  background: rgba(205, 239, 237, 0.16);
+  background: rgba(var(--aqua-rgb), 0.7);
   outline: none;
 }
 
@@ -3219,7 +3226,7 @@ html:has(.about-page) .site-anchor,
     max-height: min(78dvh, 38rem);
     margin: 0;
     padding: 1rem;
-    border: 1px solid rgba(112, 166, 163, 0.2);
+    border: 1px solid var(--aqua);
     box-shadow: 0 0.5rem 2rem rgba(60, 42, 30, 0.09);
   }
 

@@ -10,8 +10,8 @@
   background:
     radial-gradient(circle at 34% 31%, rgba(255, 255, 255, 0.92), transparent 25%),
     radial-gradient(circle at 63% 68%, rgba(244, 185, 140, 0.14), transparent 54%),
-    radial-gradient(circle at 34% 58%, rgba(137, 190, 216, 0.58), transparent 64%),
-    rgba(210, 226, 235, 0.48);
+    radial-gradient(circle at 34% 58%, rgba(var(--aqua-rgb), 0.9), transparent 64%),
+    rgba(var(--aqua-rgb), 0.55);
   border: 1px solid rgba(76, 70, 63, 0.28);
   border-radius: 52% 48% 57% 43% / 46% 57% 43% 54%;
   box-shadow:
@@ -78,7 +78,7 @@
   content: "";
   position: absolute;
   inset: 8%;
-  border: 1px solid rgba(125, 173, 194, 0.35);
+  border: 1px solid var(--aqua);
   border-radius: inherit;
   pointer-events: none;
   animation: ripple 2.4s ease-out infinite;

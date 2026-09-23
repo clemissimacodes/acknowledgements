@@ -22,7 +22,7 @@
   aspect-ratio: 1;
   overflow: hidden;
   background:
-    radial-gradient(circle, rgba(180, 208, 222, 0.34), transparent 68%),
+    radial-gradient(circle, rgba(var(--aqua-rgb), 0.7), transparent 68%),
     rgba(255, 255, 255, 0.35);
   border: 1px solid rgba(61, 57, 52, 0.28);
   border-radius: 50%;
@@ -55,7 +55,7 @@
 }
 
 .cropper:focus-visible {
-  outline: 1px solid #53798c;
+  outline: 2px solid var(--aqua);
   outline-offset: 0.2rem;
 }
 
@@ -87,7 +87,7 @@
   width: 100% !important;
   padding: 0 !important;
   border: 0 !important;
-  accent-color: #7f9ead;
+  accent-color: var(--aqua);
 }
 
 .cropControls button {
@@ -132,7 +132,7 @@
   width: auto !important;
   margin: 0;
   padding: 0 !important;
-  accent-color: #7f9ead;
+  accent-color: var(--aqua);
 }
 
 .error {
