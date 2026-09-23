@@ -14,41 +14,41 @@ const initialState: TeenyQuestionFormState = {
 };
 
 export function TeenyQuestionOrb() {
-  const [session, setSession] = useState({ id: 0, open: false });
-  const resetSession = useCallback((open: boolean) => {
-    setSession((current) => ({ id: current.id + 1, open }));
-  }, []);
-
-  return (
-    <TeenyQuestionOrbSession
-      key={session.id}
-      initiallyOpen={session.open}
-      onReset={resetSession}
-    />
-  );
-}
-
-function TeenyQuestionOrbSession({
-  initiallyOpen,
-  onReset,
-}: {
-  initiallyOpen: boolean;
-  onReset: (open: boolean) => void;
-}) {
-  const [open, setOpen] = useState(initiallyOpen);
+  const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"words" | "nose">("words");
   const [hasNoseEvidence, setHasNoseEvidence] = useState(false);
   const [hideEvidenceError, setHideEvidenceError] = useState(false);
   const [drawingNose, setDrawingNose] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+  const [dismissedId, setDismissedId] = useState<string | null>(null);
   const [state, action, pending] = useActionState(sendTeenyQuestion, initialState);
   const dialogRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const showSent =
+    state.status === "sent" &&
+    Boolean(state.submissionId) &&
+    state.submissionId !== dismissedId;
+
+  const resetComposer = useCallback((submissionId?: string) => {
+    if (submissionId) setDismissedId(submissionId);
+    setStep("words");
+    setHasNoseEvidence(false);
+    setHideEvidenceError(false);
+    setDrawingNose(false);
+    setFormKey((key) => key + 1);
+  }, []);
 
   const closeDialog = useCallback(() => {
+    resetComposer(state.submissionId);
     setOpen(false);
-    onReset(false);
-  }, [onReset]);
+    window.requestAnimationFrame(() => openerRef.current?.focus());
+  }, [resetComposer, state.submissionId]);
+
+  const askAnother = useCallback(() => {
+    resetComposer(state.submissionId);
+  }, [resetComposer, state.submissionId]);
+
   const handleEvidenceValidity = useCallback((valid: boolean) => {
     setHasNoseEvidence(valid);
     if (valid) setHideEvidenceError(true);
@@ -80,9 +80,11 @@ function TeenyQuestionOrbSession({
       }
     };
     window.addEventListener("keydown", handleKeys);
-    dialogRef.current?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+    if (!showSent) {
+      dialogRef.current?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+    }
     return () => window.removeEventListener("keydown", handleKeys);
-  }, [closeDialog, open]);
+  }, [closeDialog, open, showSent]);
 
   return (
     <>
@@ -105,7 +107,7 @@ function TeenyQuestionOrbSession({
         >
           <div
             className={`${styles.dialog}${
-              state.status === "sent" ? ` ${styles.dialogSent}` : ""
+              showSent ? ` ${styles.dialogSent}` : ""
             }${step === "nose" ? ` ${styles.dialogNose}` : ""}${
               drawingNose ? ` ${styles.dialogDrawing}` : ""
             }`}
@@ -128,15 +130,16 @@ function TeenyQuestionOrbSession({
               <br />
               (or elephantine) thing
             </h2>
-            {state.status === "sent" ? (
+            {showSent ? (
               <div className={styles.sentWrap}>
                 <p className={styles.sent}>{state.message}</p>
-                <button type="button" onClick={() => onReset(true)}>
+                <button type="button" onClick={askAnother}>
                   ask another teeny tiny thing
                 </button>
               </div>
             ) : (
               <form
+                key={formKey}
                 action={action}
                 ref={formRef}
                 onSubmit={() => setHideEvidenceError(false)}

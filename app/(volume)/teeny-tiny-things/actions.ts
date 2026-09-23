@@ -13,6 +13,7 @@ import {
 export type TeenyQuestionFormState = {
   status: "idle" | "sent" | "error";
   message: string;
+  submissionId?: string;
 };
 
 export async function sendTeenyQuestion(
@@ -33,6 +34,7 @@ export async function sendTeenyQuestion(
     return {
       status: "sent",
       message: "Your tiny thing is in my orbit ◡̈",
+      submissionId: crypto.randomUUID(),
     };
   } catch (error) {
     return {
