@@ -14,33 +14,23 @@ export function Abbr({ short, full }: { short: string; full: string }) {
   );
 }
 
-// The top row of the photography pages, laid on the same four columns as
-// the index: initials, section links, about.
+// Section links, laid on the same four columns as the index so they sit
+// above the "P." column. The site anchor (top left) carries the name.
 export function PhotoHeader({ current }: { current: "photography" | "roll" }) {
   return (
-    <header className="photo-header">
-      <span className="photo-col-no photo-name">
-        <Link href="/" aria-label="Clementine Kay Shao">
-          <span className="photo-abbr" data-short="C." data-full="Clementine Kay Shao" />
-        </Link>
-      </span>
-      <span className="photo-col-title photo-name">
-        <Link href="/" aria-label="Clementine Kay Shao">
-          <span className="photo-abbr" data-short="K. S." data-full="" />
-        </Link>
-      </span>
+    <nav className="photo-header" aria-label="Sections">
+      <span className="photo-col-no" aria-hidden="true" />
+      <span className="photo-col-title" aria-hidden="true" />
       <span className="photo-col-note">
         <Link
           href="/photography"
           className={current === "photography" ? "is-current" : undefined}
+          aria-current={current === "photography" ? "page" : undefined}
         >
           Photography,
         </Link>{" "}
         <Link href="/poetry">Poetry</Link>
       </span>
-      <span className="photo-col-year">
-        <Link href="/about">About</Link>
-      </span>
-    </header>
+    </nav>
   );
 }

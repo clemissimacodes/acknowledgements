@@ -7353,25 +7353,18 @@ html:has(.store-page) .site-anchor {
 /* ------------------------------------------------------------------ */
 
 .photo-page {
-  --photo-font:
-    "Suisse Intl", "Helvetica Neue", Helvetica, Inter, -apple-system, Arial,
-    sans-serif;
-  --photo-row: 1.35rem;
+  /* Same type as the rest of the site: EB Garamond at body size, with the
+     reference's fixed-height rows. */
+  --photo-row: 1.7rem;
   --photo-cols: 3.6rem minmax(0, 17rem) minmax(0, 17rem) 5.5rem;
   --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
   position: relative;
   min-height: 100dvh;
-  padding: var(--site-anchor-top) var(--site-gutter) 14vh;
+  padding: var(--site-content-top) var(--site-gutter) 14vh;
   background: var(--paper);
-  font-family: var(--photo-font);
-  font-size: 0.9rem;
+  font-size: 1.02rem;
   line-height: var(--photo-row);
   overflow-x: clip;
-}
-
-/* The header row stands in for the site anchor on these pages. */
-html:has(.photo-page) .site-anchor {
-  display: none;
 }
 
 /* Everything in the list blends with mix-blend-mode: difference, so "grey"
@@ -7409,11 +7402,19 @@ html:has(.photo-page) .site-anchor {
   transition: color 0.2s ease;
 }
 
-.photo-header .photo-col-no a,
-.photo-header .photo-col-title a,
-.photo-header a.is-current,
-.photo-header a:hover {
+.photo-header a.is-current {
   color: var(--photo-ink);
+}
+
+/* Links underline on hover like everywhere else on the site. */
+.photo-header a:hover,
+.photo-header a:focus-visible,
+.photo-roll-nav a:hover,
+.photo-roll-nav a:focus-visible {
+  color: var(--photo-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
 }
 
 /* Abbreviations reveal their full word on hover: N. → No, C. K. S. →
@@ -7422,23 +7423,8 @@ html:has(.photo-page) .site-anchor {
   content: attr(data-short);
 }
 
-.photo-abbr:hover::after,
-a:hover > .photo-abbr::after,
-a:focus-visible > .photo-abbr::after,
-.photo-header:has(.photo-name a:hover) .photo-name .photo-abbr::after,
-.photo-header:has(.photo-name a:focus-visible) .photo-name .photo-abbr::after {
+.photo-abbr:hover::after {
   content: attr(data-full);
-}
-
-/* Keep the initials' boxes while their text swaps so hover never flickers;
-   the full name overflows from the first column into the emptied second. */
-.photo-name {
-  white-space: nowrap;
-}
-
-.photo-name a {
-  display: block;
-  min-height: var(--photo-row);
 }
 
 .photo-empty {
@@ -7635,14 +7621,20 @@ a:focus-visible > .photo-abbr::after,
 
 .photo-roll h1 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.85rem;
+  font-style: italic;
   font-weight: 400;
-  line-height: var(--photo-row);
+  line-height: 1.2;
+}
+
+.photo-roll-meta {
+  font-size: 0.86rem;
 }
 
 .photo-roll-note {
-  margin-top: var(--photo-row);
-  max-width: 34rem;
+  margin-top: 1.2rem;
+  max-width: 28em;
+  line-height: 1.55;
 }
 
 .photo-roll-note p {
@@ -7715,10 +7707,6 @@ a:focus-visible > .photo-abbr::after,
 
 .photo-roll-nav a {
   color: var(--mute);
-}
-
-.photo-roll-nav a:hover {
-  color: var(--ink);
 }
 
 .photo-roll-nav a:last-child {
