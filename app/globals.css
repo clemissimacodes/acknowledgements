@@ -7503,7 +7503,7 @@ html:has(.store-page) .site-anchor {
 }
 
 .photo-index.is-peeking .photo-row {
-  opacity: 0.38;
+  opacity: 0.55;
 }
 
 .photo-index.is-peeking .photo-row.is-active {
