@@ -33,6 +33,7 @@ export type PhotoRoll = {
   title: string;
   note: string;
   year: number | null;
+  month: number | null;
   published: boolean;
   coverFrameId: string | null;
   cover: PhotoFrame | null;
@@ -86,14 +87,19 @@ export function slugify(value: string) {
     .slice(0, 80);
 }
 
-function cleanYear(value: unknown) {
+// Accepts "YYYY-MM" (from <input type="month">) or a bare year.
+function cleanWhen(value: unknown): { year: number | null; month: number | null } {
   const text = String(value ?? "").trim();
-  if (!text) return null;
-  const year = Number(text);
-  if (!Number.isInteger(year) || year < 1900 || year > 2100) {
-    throw new Error("Check the year.");
+  if (!text) return { year: null, month: null };
+  const match = /^(\d{4})(?:-(\d{1,2}))?$/.exec(text);
+  if (!match) throw new Error("Check the date.");
+  const year = Number(match[1]);
+  const month = match[2] ? Number(match[2]) : null;
+  if (year < 1900 || year > 2100) throw new Error("Check the year.");
+  if (month !== null && (month < 1 || month > 12)) {
+    throw new Error("Check the month.");
   }
-  return year;
+  return { year, month };
 }
 
 let ready: Promise<void> | null = null;
@@ -108,6 +114,7 @@ function ensureTables() {
           title TEXT NOT NULL,
           note TEXT NOT NULL DEFAULT '',
           year INTEGER,
+          month INTEGER,
           published BOOLEAN NOT NULL DEFAULT FALSE,
           cover_frame_id TEXT,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -126,6 +133,9 @@ function ensureTables() {
           position INTEGER NOT NULL DEFAULT 0,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `;
+      await db()`
+        ALTER TABLE photo_rolls ADD COLUMN IF NOT EXISTS month INTEGER
       `;
       await db()`
         CREATE INDEX IF NOT EXISTS photo_frames_roll_idx
@@ -163,6 +173,8 @@ function mapRoll(row: Record<string, unknown>, frames: PhotoFrame[]): PhotoRoll 
     title: String(row.title),
     note: String(row.note ?? ""),
     year: row.year === null || row.year === undefined ? null : Number(row.year),
+    month:
+      row.month === null || row.month === undefined ? null : Number(row.month),
     published: Boolean(row.published),
     coverFrameId,
     cover,
@@ -197,17 +209,17 @@ async function listRolls(onlyPublished: boolean) {
   await ensureTables();
   const rows = (onlyPublished
     ? await db()`
-        SELECT id, slug, title, note, year, published, cover_frame_id,
+        SELECT id, slug, title, note, year, month, published, cover_frame_id,
                created_at, updated_at
         FROM photo_rolls
         WHERE published = TRUE
-        ORDER BY year DESC NULLS LAST, created_at DESC
+        ORDER BY year DESC NULLS LAST, month DESC NULLS LAST, created_at DESC
       `
     : await db()`
-        SELECT id, slug, title, note, year, published, cover_frame_id,
+        SELECT id, slug, title, note, year, month, published, cover_frame_id,
                created_at, updated_at
         FROM photo_rolls
-        ORDER BY year DESC NULLS LAST, created_at DESC
+        ORDER BY year DESC NULLS LAST, month DESC NULLS LAST, created_at DESC
       `) as Array<Record<string, unknown>>;
   const frames = await framesForRolls(rows.map((row) => String(row.id)));
   return rows
@@ -228,7 +240,7 @@ export async function getRollBySlug(slugValue: string) {
   if (!/^[a-z0-9_-]{1,80}$/.test(slug) || !databaseUrl()) return null;
   await ensureTables();
   const rows = (await db()`
-    SELECT id, slug, title, note, year, published, cover_frame_id,
+    SELECT id, slug, title, note, year, month, published, cover_frame_id,
            created_at, updated_at
     FROM photo_rolls
     WHERE slug = ${slug}
@@ -245,7 +257,7 @@ export async function getRollById(idValue: unknown) {
   if (!databaseUrl()) return null;
   await ensureTables();
   const rows = (await db()`
-    SELECT id, slug, title, note, year, published, cover_frame_id,
+    SELECT id, slug, title, note, year, month, published, cover_frame_id,
            created_at, updated_at
     FROM photo_rolls
     WHERE id = ${id}
@@ -272,18 +284,21 @@ async function uniqueSlug(base: string, exceptId?: string) {
 export async function createRoll(input: {
   title: unknown;
   note: unknown;
-  year: unknown;
+  when: unknown;
 }) {
   const title = cleanLine(input.title, 120);
   if (title.length < 1) throw new Error("Give the roll a title.");
   const note = cleanText(input.note, 2000);
-  const year = cleanYear(input.year) ?? new Date().getFullYear();
+  const now = new Date();
+  const when = cleanWhen(input.when);
+  const year = when.year ?? now.getFullYear();
+  const month = when.year ? when.month : now.getMonth() + 1;
   await ensureTables();
   const id = randomUUID();
   const slug = await uniqueSlug(slugify(title));
   await db()`
-    INSERT INTO photo_rolls (id, slug, title, note, year)
-    VALUES (${id}, ${slug}, ${title}, ${note}, ${year})
+    INSERT INTO photo_rolls (id, slug, title, note, year, month)
+    VALUES (${id}, ${slug}, ${title}, ${note}, ${year}, ${month})
   `;
   return { id, slug };
 }
@@ -292,21 +307,21 @@ export async function updateRoll(input: {
   id: unknown;
   title: unknown;
   note: unknown;
-  year: unknown;
+  when: unknown;
   slug: unknown;
 }) {
   const id = cleanId(input.id);
   const title = cleanLine(input.title, 120);
   if (title.length < 1) throw new Error("Give the roll a title.");
   const note = cleanText(input.note, 2000);
-  const year = cleanYear(input.year);
+  const { year, month } = cleanWhen(input.when);
   await ensureTables();
   const requested = slugify(String(input.slug ?? "")) || slugify(title);
   const slug = await uniqueSlug(requested, id);
   await db()`
     UPDATE photo_rolls
-    SET title = ${title}, note = ${note}, year = ${year}, slug = ${slug},
-        updated_at = NOW()
+    SET title = ${title}, note = ${note}, year = ${year}, month = ${month},
+        slug = ${slug}, updated_at = NOW()
     WHERE id = ${id}
   `;
   return { slug };

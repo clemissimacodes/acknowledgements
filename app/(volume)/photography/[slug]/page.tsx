@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PhotoHeader } from "@/components/photography/PhotoHeader";
 import { isAdminUser } from "@/lib/admin";
 import { getRollBySlug, listPublishedRolls } from "@/lib/photography";
+import { formatRollTime, rollNumber } from "@/lib/photography-format";
 
 export const dynamic = "force-dynamic";
 
@@ -50,25 +52,18 @@ export default async function PhotoRollPage({ params }: { params: Params }) {
 
   return (
     <main className="photo-page photo-roll">
+      <PhotoHeader current="roll" />
       <header className="photo-masthead">
-        <p className="photo-kicker">
-          <Link href="/photography">Photography</Link>
-          {index >= 0 ? (
-            <span className="photo-kicker-no">
-              {" "}
-              · no. {String(index).padStart(3, "0")}
-            </span>
-          ) : null}
-          {!roll.published ? (
-            <span className="photo-kicker-no"> · draft, only you see this</span>
-          ) : null}
+        <p className="photo-roll-meta">
+          {index >= 0 ? <span>{rollNumber(index)}</span> : null}
+          {formatRollTime(roll) ? <span>{formatRollTime(roll)}</span> : null}
+          <span>
+            {roll.frameCount}{" "}
+            {roll.frameCount === 1 ? "photograph" : "photographs"}
+          </span>
+          {!roll.published ? <span>draft, only you see this</span> : null}
         </p>
         <h1>{roll.title}</h1>
-        <p className="photo-roll-meta">
-          {roll.year ?? ""}
-          {roll.year ? " · " : ""}
-          {roll.frameCount} {roll.frameCount === 1 ? "frame" : "frames"}
-        </p>
         {roll.note ? (
           <div className="photo-roll-note">
             {paragraphs(roll.note).map((block, position) => (

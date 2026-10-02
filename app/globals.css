@@ -7353,104 +7353,93 @@ html:has(.store-page) .site-anchor {
 /* ------------------------------------------------------------------ */
 
 .photo-page {
+  --photo-font:
+    "Suisse Intl", "Helvetica Neue", Helvetica, Inter, -apple-system, Arial,
+    sans-serif;
+  --photo-row: 1.35rem;
+  --photo-cols: 3.6rem minmax(0, 17rem) minmax(0, 17rem) 5.5rem;
+  --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
   position: relative;
   min-height: 100dvh;
-  padding: var(--site-content-top) var(--site-gutter) 14vh;
+  padding: var(--site-anchor-top) var(--site-gutter) 14vh;
   background: var(--paper);
+  font-family: var(--photo-font);
+  font-size: 0.9rem;
+  line-height: var(--photo-row);
   overflow-x: clip;
 }
 
-.photo-masthead {
-  position: relative;
-  max-width: 34rem;
-  margin-bottom: clamp(2.4rem, 6vh, 4.5rem);
+/* The header row stands in for the site anchor on these pages. */
+html:has(.photo-page) .site-anchor {
+  display: none;
 }
 
-.photo-kicker {
-  margin: 0 0 2.4rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+/* Everything in the list blends with mix-blend-mode: difference, so "grey"
+   is a semi-transparent white: on paper it reads as grey, over a photo it
+   inverts. Never use opacity on these rows — it would create a stacking
+   context and the blend would stop seeing the peek image. */
+.photo-page {
+  --photo-ink: #fff;
+  --photo-grey: rgba(255, 255, 255, 0.42);
 }
 
-.photo-kicker a {
+.photo-page a {
+  color: inherit;
   text-decoration: none;
 }
 
-.photo-kicker a:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.photo-kicker-no {
-  color: var(--mute);
-  letter-spacing: 0.12em;
-}
-
-.photo-page h1 {
-  margin: 0 0 1.2rem;
-  font-size: 1.85rem;
-  font-style: italic;
-  font-weight: 400;
-}
-
-.photo-lede,
-.photo-roll-meta {
-  margin: 0;
-  max-width: 28em;
-  line-height: 1.5;
-}
-
-.photo-roll-meta {
-  color: var(--mute);
-  font-size: 0.86rem;
-}
-
-.photo-empty {
-  color: var(--mute);
-  font-style: italic;
-}
-
-/* Index ------------------------------------------------------------ */
-
-.photo-index {
-  --photo-cols: 3.6rem minmax(0, 1.25fr) minmax(0, 1.75fr) 3.6rem;
-  --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
-  position: relative;
-  margin: 0 calc(var(--site-gutter) * -0.35);
-}
-
+/* Four fixed columns shared by the header, the column labels and rows. */
+.photo-header,
 .photo-index-head,
 .photo-row a {
   display: grid;
   grid-template-columns: var(--photo-cols);
   column-gap: var(--photo-gap);
   align-items: baseline;
-  padding: 0 calc(var(--site-gutter) * 0.35);
-  font-size: 0.95rem;
-  line-height: 2;
+  min-height: var(--photo-row);
+}
+
+.photo-header {
+  position: relative;
+  margin-bottom: calc(var(--photo-row) * 2);
+}
+
+.photo-header a {
+  color: var(--photo-grey);
+  transition: color 0.2s ease;
+}
+
+.photo-header .photo-col-no a,
+.photo-header .photo-col-title a,
+.photo-header a.is-current,
+.photo-header a:hover {
+  color: var(--photo-ink);
+}
+
+.photo-empty {
+  margin: 0;
+  color: var(--photo-grey);
+  mix-blend-mode: difference;
+}
+
+/* Index ------------------------------------------------------------ */
+
+.photo-index {
+  position: relative;
 }
 
 /* No z-index anywhere between the rows and the root: a stacking context
    here would stop mix-blend-mode from seeing the fixed peek image. */
-.photo-index .photo-masthead {
-  padding: 0 calc(var(--site-gutter) * 0.35);
-}
-
-.photo-index .photo-masthead,
 .photo-index-head,
-.photo-row a {
-  color: #fff;
+.photo-row a,
+.photo-header {
+  color: var(--photo-ink);
   mix-blend-mode: difference;
 }
 
 .photo-index-head {
   position: relative;
-  margin-bottom: 0.9rem;
-  opacity: 0.55;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  margin-bottom: var(--photo-row);
 }
 
 .photo-index-list {
@@ -7460,16 +7449,18 @@ html:has(.store-page) .site-anchor {
   padding: 0;
 }
 
+/* Rows rest in grey; only the hovered one comes up to full ink. */
 .photo-row {
   position: relative;
-  transition:
-    opacity 0.28s ease,
-    background-color 0.28s ease,
-    box-shadow 0.28s ease;
 }
 
 .photo-row a {
-  text-decoration: none;
+  color: var(--photo-grey);
+  transition: color 0.2s ease;
+}
+
+.photo-row.is-active a {
+  color: var(--photo-ink);
 }
 
 .photo-row a:focus-visible {
@@ -7489,27 +7480,8 @@ html:has(.store-page) .site-anchor {
   white-space: nowrap;
 }
 
-.photo-col-year {
-  text-align: right;
-}
-
-.photo-frames {
-  opacity: 0.5;
-  font-size: 0.82em;
-}
-
 .photo-row-thumb {
   display: none;
-}
-
-.photo-index.is-peeking .photo-row {
-  opacity: 0.55;
-}
-
-.photo-index.is-peeking .photo-row.is-active {
-  opacity: 1;
-  background: rgba(var(--aqua-rgb), 0.22);
-  box-shadow: inset 0 0 0 1px var(--aqua);
 }
 
 .photo-peek {
@@ -7536,42 +7508,70 @@ html:has(.store-page) .site-anchor {
 }
 
 @media (max-width: 720px), (hover: none) {
-  .photo-index {
+  .photo-page {
     --photo-cols: 2.6rem minmax(0, 1fr) 4.2rem;
-    margin: 0;
   }
 
-  .photo-index-head,
-  .photo-row a {
-    padding: 0.5rem 0;
-    align-items: center;
+  .photo-header .photo-col-note {
+    grid-column: 2;
+    text-align: right;
   }
 
   .photo-index-head .photo-col-note,
   .photo-row .photo-col-note,
   .photo-index-head .photo-col-year,
-  .photo-row .photo-col-year,
   .photo-peek {
     display: none;
   }
 
-  .photo-index .photo-masthead,
-  .photo-index-head,
   .photo-row a {
-    color: var(--ink);
+    grid-template-columns: 2.6rem minmax(0, 1fr) 4.2rem;
+    grid-template-areas:
+      "no title thumb"
+      "no time thumb";
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+
+  .photo-row .photo-col-no {
+    grid-area: no;
+    align-self: start;
+  }
+
+  .photo-row .photo-col-title {
+    grid-area: title;
+    white-space: normal;
+  }
+
+  .photo-row .photo-col-year {
+    grid-area: time;
+    text-align: left;
+    color: var(--mute);
+  }
+
+  .photo-page {
+    --photo-ink: var(--ink);
+    --photo-grey: var(--mute);
+  }
+
+  .photo-header,
+  .photo-index-head,
+  .photo-row a,
+  .photo-empty {
     mix-blend-mode: normal;
   }
 
-  .photo-index .photo-masthead {
-    padding: 0;
+  .photo-row a {
+    color: var(--ink);
   }
 
-  .photo-col-title {
-    white-space: normal;
+  .photo-row + .photo-row {
+    border-top: 1px solid rgba(22, 20, 18, 0.1);
   }
 
   .photo-row-thumb {
     display: block;
+    grid-area: thumb;
     aspect-ratio: 3 / 2;
     overflow: hidden;
     background: rgba(22, 20, 18, 0.06);
@@ -7583,20 +7583,11 @@ html:has(.store-page) .site-anchor {
     height: 100%;
     object-fit: cover;
   }
-
-  .photo-index.is-peeking .photo-row {
-    opacity: 1;
-    background: none;
-    box-shadow: none;
-  }
-
-  .photo-row + .photo-row {
-    border-top: 1px solid rgba(22, 20, 18, 0.1);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .photo-row,
+  .photo-row a,
+  .photo-header a,
   .photo-peek {
     transition: none;
   }
@@ -7606,12 +7597,27 @@ html:has(.store-page) .site-anchor {
 
 .photo-roll .photo-masthead {
   max-width: 38rem;
+  margin-bottom: clamp(2.4rem, 6vh, 4.5rem);
+}
+
+.photo-roll-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.2rem;
+  margin: 0 0 var(--photo-row);
+  color: var(--mute);
+}
+
+.photo-roll h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: var(--photo-row);
 }
 
 .photo-roll-note {
-  margin-top: 1.6rem;
+  margin-top: var(--photo-row);
   max-width: 34rem;
-  line-height: 1.55;
 }
 
 .photo-roll-note p {
@@ -7663,7 +7669,6 @@ html:has(.store-page) .site-anchor {
   max-width: 34rem;
   color: var(--mute);
   font-size: 0.84rem;
-  line-height: 1.5;
 }
 
 .photo-frame:nth-child(3n + 2) figcaption {
@@ -7672,7 +7677,6 @@ html:has(.store-page) .site-anchor {
 
 .photo-frame-no {
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
 }
 
 .photo-roll-nav {
@@ -7681,17 +7685,15 @@ html:has(.store-page) .site-anchor {
   gap: 1.5rem;
   margin-top: clamp(4rem, 12vh, 8rem);
   padding-top: 1.4rem;
-  border-top: 1px dotted rgba(22, 20, 18, 0.35);
-  font-size: 0.92rem;
+  border-top: 1px solid rgba(22, 20, 18, 0.16);
 }
 
 .photo-roll-nav a {
-  text-decoration: none;
+  color: var(--mute);
 }
 
 .photo-roll-nav a:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  color: var(--ink);
 }
 
 .photo-roll-nav a:last-child {

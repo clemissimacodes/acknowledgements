@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { formatRollTime, rollNumber } from "@/lib/photography-format";
 
 export type PhotoIndexRoll = {
   slug: string;
   title: string;
-  note: string;
+  photograph: string;
   year: number | null;
-  frameCount: number;
+  month: number | null;
   cover: { url: string; width: number; height: number } | null;
 };
 
@@ -17,13 +18,7 @@ function ratio(cover: PhotoIndexRoll["cover"]) {
   return cover.width / cover.height;
 }
 
-export function PhotoIndex({
-  rolls,
-  heading,
-}: {
-  rolls: PhotoIndexRoll[];
-  heading?: React.ReactNode;
-}) {
+export function PhotoIndex({ rolls }: { rolls: PhotoIndexRoll[] }) {
   const [active, setActive] = useState<number | null>(null);
   const [shown, setShown] = useState<number | null>(null);
   const warmed = useRef(false);
@@ -72,12 +67,11 @@ export function PhotoIndex({
           <img src={preview.cover.url} alt="" decoding="async" />
         ) : null}
       </div>
-      {heading}
       <div className="photo-index-head" aria-hidden="true">
-        <span className="photo-col-no">no.</span>
-        <span className="photo-col-title">roll</span>
-        <span className="photo-col-note">note</span>
-        <span className="photo-col-year">year</span>
+        <span className="photo-col-no">N.</span>
+        <span className="photo-col-title">R.</span>
+        <span className="photo-col-note">P.</span>
+        <span className="photo-col-year">T.</span>
       </div>
       <ol className="photo-index-list">
         {rolls.map((roll, index) => (
@@ -91,18 +85,10 @@ export function PhotoIndex({
               onFocus={() => setActive(index)}
               onBlur={() => setActive(null)}
             >
-              <span className="photo-col-no">
-                {String(index).padStart(3, "0")}
-              </span>
-              <span className="photo-col-title">
-                {roll.title}
-                <span className="photo-frames" aria-label={`${roll.frameCount} frames`}>
-                  {" "}
-                  ×{roll.frameCount}
-                </span>
-              </span>
-              <span className="photo-col-note">{roll.note}</span>
-              <span className="photo-col-year">{roll.year ?? ""}</span>
+              <span className="photo-col-no">{rollNumber(index)}</span>
+              <span className="photo-col-title">{roll.title}</span>
+              <span className="photo-col-note">{roll.photograph}</span>
+              <span className="photo-col-year">{formatRollTime(roll)}</span>
               <span className="photo-row-thumb" aria-hidden="true">
                 {roll.cover ? (
                   // eslint-disable-next-line @next/next/no-img-element

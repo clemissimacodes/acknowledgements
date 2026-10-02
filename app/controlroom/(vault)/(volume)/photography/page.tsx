@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { RollUploader } from "@/components/admin/RollUploader";
 import { listAllRolls, ROLL_MAX_FRAMES } from "@/lib/photography";
+import { formatRollTime, rollMonthInputValue } from "@/lib/photography-format";
 import {
   captionFrameAction,
   coverFrameAction,
@@ -21,7 +22,8 @@ export const metadata = {
 
 export default async function PhotographyControlPage() {
   const rolls = await listAllRolls().catch(() => []);
-  const thisYear = new Date().getFullYear();
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   return (
     <main className="admin-page admin-rolls">
@@ -54,17 +56,11 @@ export default async function PhotographyControlPage() {
             />
           </label>
           <label>
-            Year
-            <input
-              name="year"
-              type="number"
-              min={1900}
-              max={2100}
-              defaultValue={thisYear}
-            />
+            Time (shows as 9月 2026)
+            <input name="when" type="month" defaultValue={thisMonth} />
           </label>
           <label>
-            Note
+            Note — the first line is the “P.” photograph column in the index
             <textarea
               name="note"
               maxLength={2000}
@@ -95,7 +91,8 @@ export default async function PhotographyControlPage() {
                 </span>
               </h2>
               <p className="admin-private">
-                {roll.frameCount} / {ROLL_MAX_FRAMES} frames ·{" "}
+                {formatRollTime(roll) || "no date"} · {roll.frameCount} /{" "}
+                {ROLL_MAX_FRAMES} frames ·{" "}
                 <Link href={`/photography/${roll.slug}`}>
                   /photography/{roll.slug}
                 </Link>
@@ -126,7 +123,7 @@ export default async function PhotographyControlPage() {
           </div>
 
           <details className="admin-roll-details">
-            <summary>Edit title, year, note, slug</summary>
+            <summary>Edit title, time, note, slug</summary>
             <form className="admin-edit-form admin-roll-form" action={updateRollAction}>
               <input type="hidden" name="id" value={roll.id} />
               <label>
@@ -134,13 +131,11 @@ export default async function PhotographyControlPage() {
                 <input name="title" required maxLength={120} defaultValue={roll.title} />
               </label>
               <label>
-                Year
+                Time (shows as 9月 2026)
                 <input
-                  name="year"
-                  type="number"
-                  min={1900}
-                  max={2100}
-                  defaultValue={roll.year ?? ""}
+                  name="when"
+                  type="month"
+                  defaultValue={rollMonthInputValue(roll)}
                 />
               </label>
               <label>

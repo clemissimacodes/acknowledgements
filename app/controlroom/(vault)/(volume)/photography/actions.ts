@@ -35,7 +35,7 @@ export async function createRollAction(formData: FormData) {
   await createRoll({
     title: formData.get("title"),
     note: formData.get("note"),
-    year: formData.get("year"),
+    when: formData.get("when"),
   });
   refresh();
 }
@@ -47,7 +47,7 @@ export async function updateRollAction(formData: FormData) {
     id: formData.get("id"),
     title: formData.get("title"),
     note: formData.get("note"),
-    year: formData.get("year"),
+    when: formData.get("when"),
     slug: formData.get("slug"),
   });
   refresh([before?.slug, after.slug]);
