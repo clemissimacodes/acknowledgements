@@ -7416,6 +7416,31 @@ html:has(.photo-page) .site-anchor {
   color: var(--photo-ink);
 }
 
+/* Abbreviations reveal their full word on hover: N. → No, C. K. S. →
+   Clementine Kay Shao. The swap is CSS attr() so it is instant. */
+.photo-abbr::after {
+  content: attr(data-short);
+}
+
+.photo-abbr:hover::after,
+a:hover > .photo-abbr::after,
+a:focus-visible > .photo-abbr::after,
+.photo-header:has(.photo-name a:hover) .photo-name .photo-abbr::after,
+.photo-header:has(.photo-name a:focus-visible) .photo-name .photo-abbr::after {
+  content: attr(data-full);
+}
+
+/* Keep the initials' boxes while their text swaps so hover never flickers;
+   the full name overflows from the first column into the emptied second. */
+.photo-name {
+  white-space: nowrap;
+}
+
+.photo-name a {
+  display: block;
+  min-height: var(--photo-row);
+}
+
 .photo-empty {
   margin: 0;
   color: var(--photo-grey);

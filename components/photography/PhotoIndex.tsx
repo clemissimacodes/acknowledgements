@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatRollTime, rollNumber } from "@/lib/photography-format";
+import { Abbr } from "./PhotoHeader";
 
 export type PhotoIndexRoll = {
   slug: string;
@@ -68,10 +69,18 @@ export function PhotoIndex({ rolls }: { rolls: PhotoIndexRoll[] }) {
         ) : null}
       </div>
       <div className="photo-index-head" aria-hidden="true">
-        <span className="photo-col-no">N.</span>
-        <span className="photo-col-title">R.</span>
-        <span className="photo-col-note">P.</span>
-        <span className="photo-col-year">T.</span>
+        <span className="photo-col-no">
+          <Abbr short="N." full="No" />
+        </span>
+        <span className="photo-col-title">
+          <Abbr short="R." full="Roll" />
+        </span>
+        <span className="photo-col-note">
+          <Abbr short="P." full="Photograph" />
+        </span>
+        <span className="photo-col-year">
+          <Abbr short="T." full="Time" />
+        </span>
       </div>
       <ol className="photo-index-list">
         {rolls.map((roll, index) => (
