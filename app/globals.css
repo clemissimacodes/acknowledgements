@@ -7347,3 +7347,555 @@ html:has(.store-page) .site-anchor {
     display: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Photography: rolls index with a hover peek, and the roll itself.    */
+/* ------------------------------------------------------------------ */
+
+.photo-page {
+  position: relative;
+  min-height: 100dvh;
+  padding: var(--site-content-top) var(--site-gutter) 14vh;
+  background: var(--paper);
+  overflow-x: clip;
+}
+
+.photo-masthead {
+  position: relative;
+  max-width: 34rem;
+  margin-bottom: clamp(2.4rem, 6vh, 4.5rem);
+}
+
+.photo-kicker {
+  margin: 0 0 2.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.photo-kicker a {
+  text-decoration: none;
+}
+
+.photo-kicker a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.photo-kicker-no {
+  color: var(--mute);
+  letter-spacing: 0.12em;
+}
+
+.photo-page h1 {
+  margin: 0 0 1.2rem;
+  font-size: 1.85rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.photo-lede,
+.photo-roll-meta {
+  margin: 0;
+  max-width: 28em;
+  line-height: 1.5;
+}
+
+.photo-roll-meta {
+  color: var(--mute);
+  font-size: 0.86rem;
+}
+
+.photo-empty {
+  color: var(--mute);
+  font-style: italic;
+}
+
+/* Index ------------------------------------------------------------ */
+
+.photo-index {
+  --photo-cols: 3.6rem minmax(0, 1.25fr) minmax(0, 1.75fr) 3.6rem;
+  --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
+  position: relative;
+  margin: 0 calc(var(--site-gutter) * -0.35);
+}
+
+.photo-index-head,
+.photo-row a {
+  display: grid;
+  grid-template-columns: var(--photo-cols);
+  column-gap: var(--photo-gap);
+  align-items: baseline;
+  padding: 0 calc(var(--site-gutter) * 0.35);
+  font-size: 0.95rem;
+  line-height: 2;
+}
+
+/* No z-index anywhere between the rows and the root: a stacking context
+   here would stop mix-blend-mode from seeing the fixed peek image. */
+.photo-index .photo-masthead {
+  padding: 0 calc(var(--site-gutter) * 0.35);
+}
+
+.photo-index .photo-masthead,
+.photo-index-head,
+.photo-row a {
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+.photo-index-head {
+  position: relative;
+  margin-bottom: 0.9rem;
+  opacity: 0.55;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.photo-index-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.photo-row {
+  position: relative;
+  transition:
+    opacity 0.28s ease,
+    background-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.photo-row a {
+  text-decoration: none;
+}
+
+.photo-row a:focus-visible {
+  outline: none;
+}
+
+.photo-col-title,
+.photo-col-note {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.photo-col-no,
+.photo-col-year {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.photo-col-year {
+  text-align: right;
+}
+
+.photo-frames {
+  opacity: 0.5;
+  font-size: 0.82em;
+}
+
+.photo-row-thumb {
+  display: none;
+}
+
+.photo-index.is-peeking .photo-row {
+  opacity: 0.38;
+}
+
+.photo-index.is-peeking .photo-row.is-active {
+  opacity: 1;
+  background: rgba(var(--aqua-rgb), 0.22);
+  box-shadow: inset 0 0 0 1px var(--aqua);
+}
+
+.photo-peek {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: min(56vw, calc(70vh * var(--peek-ratio, 1.5)));
+  aspect-ratio: var(--peek-ratio, 1.5);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.32s ease;
+}
+
+.photo-index.is-peeking .photo-peek {
+  opacity: 1;
+}
+
+.photo-peek img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 720px), (hover: none) {
+  .photo-index {
+    --photo-cols: 2.6rem minmax(0, 1fr) 4.2rem;
+    margin: 0;
+  }
+
+  .photo-index-head,
+  .photo-row a {
+    padding: 0.5rem 0;
+    align-items: center;
+  }
+
+  .photo-index-head .photo-col-note,
+  .photo-row .photo-col-note,
+  .photo-index-head .photo-col-year,
+  .photo-row .photo-col-year,
+  .photo-peek {
+    display: none;
+  }
+
+  .photo-index .photo-masthead,
+  .photo-index-head,
+  .photo-row a {
+    color: var(--ink);
+    mix-blend-mode: normal;
+  }
+
+  .photo-index .photo-masthead {
+    padding: 0;
+  }
+
+  .photo-col-title {
+    white-space: normal;
+  }
+
+  .photo-row-thumb {
+    display: block;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    background: rgba(22, 20, 18, 0.06);
+  }
+
+  .photo-row-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-index.is-peeking .photo-row {
+    opacity: 1;
+    background: none;
+    box-shadow: none;
+  }
+
+  .photo-row + .photo-row {
+    border-top: 1px solid rgba(22, 20, 18, 0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-row,
+  .photo-peek {
+    transition: none;
+  }
+}
+
+/* A roll --------------------------------------------------------- */
+
+.photo-roll .photo-masthead {
+  max-width: 38rem;
+}
+
+.photo-roll-note {
+  margin-top: 1.6rem;
+  max-width: 34rem;
+  line-height: 1.55;
+}
+
+.photo-roll-note p {
+  margin: 0 0 1em;
+}
+
+.photo-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(3.5rem, 10vh, 8rem);
+  max-width: 76rem;
+}
+
+.photo-frame figure {
+  margin: 0;
+  display: grid;
+  gap: 0.7rem;
+  justify-items: start;
+}
+
+.photo-frame img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 86vh;
+  background: rgba(22, 20, 18, 0.05);
+}
+
+.photo-frame.is-portrait img {
+  max-width: min(100%, 44rem);
+}
+
+.photo-frame:nth-child(3n + 2) figure {
+  justify-items: end;
+  text-align: right;
+}
+
+.photo-frame:nth-child(3n) figure {
+  justify-items: center;
+  text-align: center;
+}
+
+.photo-frame figcaption {
+  display: flex;
+  gap: 0.8rem;
+  max-width: 34rem;
+  color: var(--mute);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.photo-frame:nth-child(3n + 2) figcaption {
+  flex-direction: row-reverse;
+}
+
+.photo-frame-no {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.photo-roll-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1.5rem;
+  margin-top: clamp(4rem, 12vh, 8rem);
+  padding-top: 1.4rem;
+  border-top: 1px dotted rgba(22, 20, 18, 0.35);
+  font-size: 0.92rem;
+}
+
+.photo-roll-nav a {
+  text-decoration: none;
+}
+
+.photo-roll-nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.photo-roll-nav a:last-child {
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .photo-frame figure,
+  .photo-frame:nth-child(3n + 2) figure,
+  .photo-frame:nth-child(3n) figure {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .photo-frame:nth-child(3n + 2) figcaption {
+    flex-direction: row;
+  }
+
+  .photo-frame img {
+    max-height: none;
+    width: 100%;
+  }
+
+  .photo-frame.is-portrait img {
+    max-width: 100%;
+  }
+}
+
+/* Control room darkroom ------------------------------------------- */
+
+.admin-rolls .admin-head {
+  align-items: flex-start;
+}
+
+.admin-rolls .admin-head .admin-private {
+  max-width: 40rem;
+  margin-top: 0.8rem;
+}
+
+.admin-roll h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 0.3rem;
+}
+
+.admin-roll-actions {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.admin-roll-actions button,
+.admin-frame-actions button,
+.admin-roll-form button,
+.admin-frame .admin-edit-form button {
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.admin-roll-actions button:disabled,
+.admin-frame-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  text-decoration: none;
+}
+
+.admin-roll-actions .admin-danger,
+.admin-frame-actions .admin-danger {
+  color: #8b241d;
+}
+
+.admin-roll-form {
+  max-width: 44rem;
+}
+
+.admin-roll-form button {
+  justify-self: start;
+}
+
+.admin-roll-details {
+  margin: 0.4rem 0 1rem;
+}
+
+.admin-roll-details summary {
+  width: fit-content;
+  cursor: pointer;
+  font-size: 0.86rem;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.admin-roll-uploader {
+  margin: 1rem 0 1.4rem;
+}
+
+.admin-roll-drop {
+  display: block;
+  padding: 1.1rem 1rem;
+  border: 1px dashed rgba(28, 35, 30, 0.4);
+  border-radius: 0.6rem;
+  background: rgba(var(--aqua-rgb), 0.35);
+  cursor: pointer;
+  text-align: center;
+}
+
+.admin-roll-drop.is-busy {
+  cursor: progress;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.admin-roll-drop input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.admin-roll-drop:has(input:disabled) {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.admin-error {
+  margin: 0.5rem 0 0;
+  color: #8b241d;
+  font-size: 0.86rem;
+}
+
+.admin-frames {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.admin-frame {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 0.6rem;
+}
+
+.admin-frame-image {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: rgba(28, 35, 30, 0.08);
+}
+
+.admin-frame-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-frame-cover {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  background: var(--aqua);
+  color: #161412;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+
+.admin-frame-body {
+  padding: 0.6rem 0.8rem 0.9rem;
+}
+
+.admin-frame-body > .admin-muted {
+  margin: 0;
+  font-size: 0.74rem;
+}
+
+.admin-frame .admin-edit-form {
+  margin-top: 0.4rem;
+  padding: 0;
+  background: none;
+}
+
+.admin-frame .admin-edit-form textarea {
+  min-height: 3rem;
+}
+
+.admin-frame-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin-top: 0.7rem;
+  font-size: 0.86rem;
+}

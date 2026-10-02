@@ -54,6 +54,7 @@ const vaultPages = [
   { title: "Don’t Try", href: "/controlroom/dont-try" },
   { title: "Don’t Try protocol", href: "/controlroom/dont-try/protocol" },
   { title: "Out Loud", href: "/controlroom/out-loud" },
+  { title: "Photography darkroom", href: "/controlroom/photography" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },
   { title: "Sunday Posties", href: "/controlroom/sunday-posties" },

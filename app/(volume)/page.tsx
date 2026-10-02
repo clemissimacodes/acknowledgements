@@ -11,6 +11,7 @@ const works = [
     external: true,
   },
   { title: "Poetry", href: "/poetry" },
+  { title: "Photography", href: "/photography" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Secrets", href: "/secrets" },
 ];
