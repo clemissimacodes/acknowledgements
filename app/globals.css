@@ -1391,6 +1391,24 @@ input {
     0 1rem 3rem rgba(75, 64, 50, 0.14);
 }
 
+/* Mid-size windows (laptops, split screens): the portrait is pinned to the
+   right gutter and shrunk to fit, and the orb moves left of it, so the two
+   never overlap and Clemi is never cut off by the window edge. */
+@media (min-width: 768px) and (max-width: 1240px) {
+  .index-portrait {
+    left: auto;
+    right: var(--site-gutter);
+    width: min(36vw, 30rem);
+    max-width: 36vw;
+    object-position: right center;
+    transform: translateY(-50%);
+  }
+
+  .index-question-orb {
+    left: clamp(22rem, 36vw, 38rem);
+  }
+}
+
 .elsewhere {
   position: relative;
   z-index: 1;
