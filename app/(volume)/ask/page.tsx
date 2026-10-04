@@ -23,7 +23,7 @@ export default async function AskIndexPage() {
     <main className="photo-page ask-page">
       <PhotoHeader current="ask" />
       <h1 className="visually-hidden">Ask Me Anything</h1>
-      <p className="ask-welcome">i welcome all questions, thoughts, &amp; well wishes</p>
+      <p className="photo-lede">i welcome all questions, thoughts, &amp; well wishes</p>
       <AskComposer maxLength={ASK_MAX_LENGTH} />
       {questions.length ? (
         <HoverIndex

@@ -2302,7 +2302,7 @@ html:has(.about-page) .site-anchor,
   position: relative;
   min-height: 100dvh;
   padding: var(--site-content-top) var(--site-gutter) 16vh;
-  background: #f4efe4;
+  background: var(--paper);
   overflow-x: hidden;
 }
 
@@ -8048,8 +8048,10 @@ html:has(.store-page) .site-anchor {
   white-space: nowrap;
 }
 
-.ask-welcome {
+.photo-lede {
   margin: 0 0 var(--photo-row);
+  font-size: inherit;
+  font-weight: 400;
   font-style: italic;
   color: var(--photo-grey);
   mix-blend-mode: difference;
@@ -8190,7 +8192,7 @@ html:has(.store-page) .site-anchor {
     white-space: normal;
   }
 
-  .ask-welcome {
+  .photo-lede {
     mix-blend-mode: normal;
   }
 
@@ -8236,4 +8238,51 @@ html:has(.store-page) .site-anchor {
 
 .admin-ask > form + form {
   margin-top: 0.6rem;
+}
+
+/* Poetry in the lined index ---------------------------------------- */
+
+.poetry-adored-index {
+  /* No time column here, so the poem title gets the room (titles carry
+     their original-language form too). */
+  --photo-cols: 3.6rem minmax(0, 17rem) minmax(0, 30rem) 0;
+  margin-top: calc(var(--photo-row) * 3);
+}
+
+.poetry-adored-index .photo-col-year {
+  display: none;
+}
+
+/* The poem page keeps its reading layout but wears the shared section
+   header and a roll-style meta line. No peek here, so blend normally
+   (the .poetry-inner stacking context would break difference anyway). */
+.poetry-read {
+  --photo-row: 1.7rem;
+  --photo-cols: 3.6rem minmax(0, 17rem) minmax(0, 17rem) 5.5rem;
+  --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
+  --photo-ink: var(--ink);
+  --photo-grey: var(--mute);
+}
+
+.poetry-read .photo-header {
+  mix-blend-mode: normal;
+}
+
+.poetry-read .photo-header a {
+  text-decoration: none;
+}
+
+.poetry-read .photo-header a:hover,
+.poetry-read .photo-header a:focus-visible {
+  text-decoration: underline;
+}
+
+.poem-meta {
+  margin-bottom: 0.6rem;
+}
+
+@media (max-width: 720px), (hover: none) {
+  .poetry-read {
+    --photo-cols: 2.6rem minmax(0, 1fr) 4.2rem;
+  }
 }

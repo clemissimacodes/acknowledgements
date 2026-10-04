@@ -18,13 +18,39 @@ export type HoverIndexRow = {
   image: { url: string; width: number; height: number } | null;
   // Shown in the centre instead of an image while the row is hovered.
   peekText?: string;
+  // Opens in a new tab (poems that live elsewhere).
+  external?: boolean;
 };
 
 export type HoverIndexLabels = {
   a: { short: string; full: string };
   b: { short: string; full: string };
-  time: { short: string; full: string };
+  // Omit when the rows have no time; the column is left blank.
+  time?: { short: string; full: string };
 };
+
+type RowProps = {
+  row: HoverIndexRow;
+  children: React.ReactNode;
+  onMouseEnter: () => void;
+  onFocus: () => void;
+  onBlur: () => void;
+};
+
+function Row({ row, children, ...handlers }: RowProps) {
+  if (row.external) {
+    return (
+      <a href={row.href} target="_blank" rel="noreferrer" {...handlers}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={row.href} {...handlers}>
+      {children}
+    </Link>
+  );
+}
 
 function ratio(image: HoverIndexRow["image"]) {
   if (!image || !image.width || !image.height) return 3 / 2;
@@ -103,7 +129,9 @@ export function HoverIndex({
           <Abbr short={labels.b.short} full={labels.b.full} />
         </span>
         <span className="photo-col-year">
-          <Abbr short={labels.time.short} full={labels.time.full} />
+          {labels.time ? (
+            <Abbr short={labels.time.short} full={labels.time.full} />
+          ) : null}
         </span>
       </div>
       <ol className="photo-index-list">
@@ -112,8 +140,8 @@ export function HoverIndex({
             key={row.key}
             className={`photo-row${active === index ? " is-active" : ""}`}
           >
-            <Link
-              href={row.href}
+            <Row
+              row={row}
               onMouseEnter={() => setActive(index)}
               onFocus={() => setActive(index)}
               onBlur={() => setActive(null)}
@@ -128,7 +156,7 @@ export function HoverIndex({
                   <img src={row.image.url} alt="" loading="lazy" decoding="async" />
                 ) : null}
               </span>
-            </Link>
+            </Row>
           </li>
         ))}
       </ol>

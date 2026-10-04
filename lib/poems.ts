@@ -1,6 +1,8 @@
 export type Poem = {
   slug: string;
   title: string;
+  // Year written; the index sorts newest first.
+  year: number;
   dedication?: string;
   body: string;
   swarm?: boolean;
@@ -15,6 +17,7 @@ export type Poem = {
 export const poems: Poem[] = [
   {
     slug: "teahouse-in-fog",
+    year: 2023,
     title: "Teahouse in Fog",
     dedication: "Isaiah",
     body: `How great that you and I are blind
@@ -64,6 +67,7 @@ Even your God hums in obedience.`,
   },
   {
     slug: "red-river",
+    year: 2022,
     title: "Red River",
     dedication: "Jacky",
     body: `Swim well across the Rubicon,
@@ -93,6 +97,7 @@ Unfinished woman, small.`,
   },
   {
     slug: "a-thousand-blackberries-for-love",
+    year: 2022,
     title: "A Thousand Blackberries for Love",
     body: `We mosey out naked on mother’s milk,
 blind, untrammeled, born so briefly gorgeous,
@@ -113,6 +118,7 @@ and you are gorgeous, once and everywhere.`,
   },
   {
     slug: "on-salmon",
+    year: 2021,
     title: "On Salmon",
     dedication: "Mommy",
     body: `When salmon love,
@@ -132,6 +138,7 @@ slippery and eternal.`,
   },
   {
     slug: "the-runaway-poets",
+    year: 2022,
     title: "The Runaway Poets",
     body: `When I carve myself more hollow,
 when I can tread water like I belong,
@@ -165,6 +172,7 @@ This is the valley where I will come to die.`,
   },
   {
     slug: "the-first-sun-thief",
+    year: 2023,
     title: "The First Sun Thief",
     dedication: "Daniel",
     body: `To die or to be killed. What’s the difference, if any at all?
@@ -204,6 +212,7 @@ But only once it is safe for you, and your blue striped pajamas.`,
   },
   {
     slug: "no-one-wants-to-play",
+    year: 2023,
     title: "No One Wants to Play",
     body: `Born weeping and fair faced on a Monday,
 I came a dormant geologic storm,
@@ -230,6 +239,7 @@ one passed is no more, one’s past is no more.`,
   },
   {
     slug: "turnip-poem",
+    year: 2024,
     title: "Turnip Poem",
     swarm: true,
     body: `And barefoot I arrive,
@@ -246,6 +256,40 @@ I am obliged to nobody
 but the soil and the copper sun.`,
   },
 ];
+
+// Newest first; poems from the same year keep their written order.
+export const poemsNewestFirst: Poem[] = [...poems].sort(
+  (a, b) => b.year - a.year,
+);
+
+export const adoredPoems = [
+  {
+    title: "The Quiet World",
+    author: "Jeffrey McDaniel",
+    href: "https://www.poetryfoundation.org/poems/49238/the-quiet-world",
+  },
+  {
+    title: "The Vase",
+    author: "Jeffrey McDaniel",
+    href: "https://www.are.na/block/45010448",
+  },
+  {
+    title: "Crossing Half of China to Sleep with You",
+    alternateTitle: "穿过大半个中国去睡你",
+    author: "Yu Xiuhua 余秀华",
+    href: "https://onbeing.org/poetry/crossing-half-of-china-to-sleep-with-you/",
+  },
+  {
+    title: "Zazen on Ching-t’ing Mountain",
+    author: "Li Po, translated by Sam Hamill",
+    href: "https://www.poetryfoundation.org/poems/48711/zazen-on-ching-ting-mountain",
+  },
+  {
+    title: "[love is more thicker than forget]",
+    author: "E. E. Cummings",
+    href: "https://www.poetryfoundation.org/poetrymagazine/poems/22224/love-is-more-thicker-than-forget",
+  },
+] as const;
 
 export function getPoem(slug: string): Poem | undefined {
   return poems.find((poem) => poem.slug === slug);

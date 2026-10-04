@@ -1,35 +1,6 @@
-import Link from "next/link";
-import { poems } from "@/lib/poems";
-
-const adoredPoems = [
-  {
-    title: "The Quiet World",
-    author: "Jeffrey McDaniel",
-    href: "https://www.poetryfoundation.org/poems/49238/the-quiet-world",
-  },
-  {
-    title: "The Vase",
-    author: "Jeffrey McDaniel",
-    href: "https://www.are.na/block/45010448",
-  },
-  {
-    title: "Crossing Half of China to Sleep with You",
-    alternateTitle: "穿过大半个中国去睡你",
-    alternateHref: "https://baike.so.com/doc/7927612-32387111.html",
-    author: "Yu Xiuhua 余秀华",
-    href: "https://onbeing.org/poetry/crossing-half-of-china-to-sleep-with-you/",
-  },
-  {
-    title: "Zazen on Ching-t’ing Mountain",
-    author: "Li Po, translated by Sam Hamill",
-    href: "https://www.poetryfoundation.org/poems/48711/zazen-on-ching-ting-mountain",
-  },
-  {
-    title: "[love is more thicker than forget]",
-    author: "E. E. Cummings",
-    href: "https://www.poetryfoundation.org/poetrymagazine/poems/22224/love-is-more-thicker-than-forget",
-  },
-] as const;
+import { HoverIndex } from "@/components/photography/HoverIndex";
+import { PhotoHeader } from "@/components/photography/PhotoHeader";
+import { adoredPoems, poemsNewestFirst } from "@/lib/poems";
 
 export const metadata = {
   title: "Poetry",
@@ -37,56 +8,49 @@ export const metadata = {
 
 export default function PoetryIndexPage() {
   return (
-    <main className="poetry-page">
-      <div className="poetry-inner">
-        <h1>Poetry</h1>
-        <div className="poetry-columns">
-          <section
-            className="poetry-written"
-            aria-labelledby="poetry-written-title"
-          >
-            <h2 id="poetry-written-title">Poems I wrote</h2>
-            <p className="poetry-lede">
-              To read me is to know me. Read me with great care!
-            </p>
-            <ol className="poetry-index">
-              {poems.map((poem) => (
-                <li key={poem.slug}>
-                  <Link href={`/poetry/${poem.slug}`}>{poem.title}</Link>
-                </li>
-              ))}
-            </ol>
-          </section>
-          <section
-            className="poetry-adored"
-            aria-labelledby="poetry-adored-title"
-          >
-            <h2 id="poetry-adored-title">poems i adore</h2>
-            <ul className="poetry-adored-list">
-              {adoredPoems.map((poem) => (
-                <li key={`${poem.title}-${poem.author}`}>
-                  <span className="poetry-adored-name">
-                    <a href={poem.href} target="_blank" rel="noreferrer">
-                      {poem.title}
-                    </a>
-                    {"alternateTitle" in poem ? (
-                      <a
-                        href={poem.alternateHref}
-                        target="_blank"
-                        rel="noreferrer"
-                        lang="zh-Hans"
-                      >
-                        {poem.alternateTitle}
-                      </a>
-                    ) : null}
-                  </span>
-                  <span className="poetry-adored-author">by {poem.author}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-      </div>
+    <main className="photo-page poetry-index-page">
+      <PhotoHeader current="poetry" />
+      <h1 className="visually-hidden">Poetry</h1>
+      <p className="photo-lede">To read me is to know me. Read me with great care!</p>
+      <HoverIndex
+        labels={{
+          a: { short: "P.", full: "Poem" },
+          b: { short: "D.", full: "Dedication" },
+          time: { short: "T.", full: "Time" },
+        }}
+        rows={poemsNewestFirst.map((poem) => ({
+          key: poem.slug,
+          href: `/poetry/${poem.slug}`,
+          a: poem.title,
+          b: poem.dedication ? `for ${poem.dedication}` : "—",
+          time: String(poem.year),
+          image: null,
+        }))}
+      />
+
+      <section className="poetry-adored-index" aria-labelledby="poetry-adored-title">
+        <h2 id="poetry-adored-title" className="photo-lede">
+          poems i adore
+        </h2>
+        <HoverIndex
+          labels={{
+            a: { short: "A.", full: "Author" },
+            b: { short: "P.", full: "Poem" },
+          }}
+          rows={adoredPoems.map((poem) => ({
+            key: poem.href,
+            href: poem.href,
+            external: true,
+            a: poem.author,
+            b:
+              "alternateTitle" in poem
+                ? `${poem.title} ${poem.alternateTitle}`
+                : poem.title,
+            time: "",
+            image: null,
+          }))}
+        />
+      </section>
     </main>
   );
 }
