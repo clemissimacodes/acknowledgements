@@ -13,6 +13,7 @@ const works = [
   { title: "Poetry", href: "/poetry" },
   { title: "Photography", href: "/photography" },
   { title: "Art History", href: "/art-history" },
+  { title: "Ask Me Anything", href: "/ask" },
   { title: "Blow on a Fat Dandelion", href: "/dandelion" },
   { title: "Secrets", href: "/secrets" },
 ];

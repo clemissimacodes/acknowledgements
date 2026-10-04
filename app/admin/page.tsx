@@ -18,6 +18,7 @@ import {
   getAllTeenyQuestions,
   getPendingTeenyQuestionCount,
 } from "@/lib/teeny-questions";
+import { getPendingAskCount } from "@/lib/ask";
 import { listAdminMemos } from "@/lib/voice-memos";
 import {
   changePlaceStatus,
@@ -56,6 +57,7 @@ const vaultPages = [
   { title: "Out Loud", href: "/controlroom/out-loud" },
   { title: "Photography darkroom", href: "/controlroom/photography" },
   { title: "Art History gallery", href: "/controlroom/art-history" },
+  { title: "Ask Me Anything replies", href: "/controlroom/ask" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },
   { title: "Sunday Posties", href: "/controlroom/sunday-posties" },
@@ -114,6 +116,7 @@ export default async function AdminPage({
     teenyQuestions,
     voiceMemos,
     breakIns,
+    pendingAsks,
   ] =
     await Promise.all([
       getAdminData(),
@@ -123,6 +126,7 @@ export default async function AdminPage({
       getAllTeenyQuestions(),
       listAdminMemos().catch(() => []),
       getSecretsAttemptReport(),
+      getPendingAskCount().catch(() => 0),
     ]);
   const ciaProject = (await searchParams)?.ciaProject;
   const visibleCiaEntries = CIA_PROJECTS.includes(
@@ -149,7 +153,12 @@ export default async function AdminPage({
         <ul>
           {vaultPages.map((page) => (
             <li key={page.href}>
-              <Link href={page.href}>{page.title}</Link>
+              <Link href={page.href}>
+                {page.title}
+                {page.href === "/controlroom/ask" && pendingAsks > 0
+                  ? ` (${pendingAsks} waiting)`
+                  : ""}
+              </Link>
             </li>
           ))}
         </ul>

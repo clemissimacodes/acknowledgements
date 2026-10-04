@@ -7606,6 +7606,11 @@ html:has(.store-page) .site-anchor {
     background: rgba(22, 20, 18, 0.06);
   }
 
+  /* Rows without an image (questions) keep the layout but not the box. */
+  .photo-row-thumb:empty {
+    background: transparent;
+  }
+
   .photo-row-thumb img {
     display: block;
     width: 100%;
@@ -8031,4 +8036,204 @@ html:has(.store-page) .site-anchor {
   .admin-art-piece {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Ask me anything ------------------------------------------------- */
+
+/* Four section links need more than the "P." column; let them run to
+   the right edge of the grid. */
+.photo-header .photo-col-note {
+  grid-column: 3 / -1;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.ask-welcome {
+  margin: 0 0 var(--photo-row);
+  font-style: italic;
+  color: var(--photo-grey);
+  mix-blend-mode: difference;
+}
+
+/* The composer is one more ruled line in the index: a growing field and
+   the single word "send". No name, no email. */
+.ask-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "field send"
+    "status status";
+  column-gap: var(--photo-gap);
+  align-items: end;
+  max-width: calc(3.6rem + 17rem + 17rem + 5.5rem + 3 * var(--photo-gap));
+  margin: 0 0 calc(var(--photo-row) * 2);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.22);
+}
+
+.ask-composer textarea {
+  grid-area: field;
+  width: 100%;
+  min-height: var(--photo-row);
+  max-height: 40vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  line-height: var(--photo-row);
+  resize: none;
+  overflow: hidden;
+}
+
+.ask-composer textarea::placeholder {
+  color: var(--mute);
+  font-style: italic;
+}
+
+.ask-composer textarea:focus {
+  outline: none;
+}
+
+.ask-composer button {
+  grid-area: send;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mute);
+  font: inherit;
+  line-height: var(--photo-row);
+  cursor: pointer;
+}
+
+.ask-composer button:hover,
+.ask-composer button:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  outline: none;
+}
+
+.ask-composer button:disabled {
+  cursor: default;
+  color: var(--mute);
+  text-decoration: none;
+}
+
+.ask-composer-status {
+  grid-area: status;
+  min-height: var(--photo-row);
+  margin: 0;
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--mute);
+}
+
+.ask-composer-status.is-error {
+  color: #8a2f1d;
+}
+
+/* Hovering a question reveals its reply (or the question itself while
+   it waits) in the centre, where a photograph would be. */
+.photo-peek.is-text {
+  width: min(56vw, 40rem);
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-peek-text {
+  margin: 0;
+  max-height: 70vh;
+  overflow: hidden;
+  font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+  font-style: italic;
+  line-height: 1.3;
+  text-align: center;
+  color: rgba(22, 20, 18, 0.72);
+  display: -webkit-box;
+  -webkit-line-clamp: 9;
+  -webkit-box-orient: vertical;
+}
+
+.ask-thread .photo-roll h1,
+.ask-thread h1 {
+  max-width: 28em;
+}
+
+.ask-reply {
+  max-width: 38rem;
+}
+
+.ask-reply-body {
+  margin-top: 0;
+}
+
+.ask-reply-body.is-pending {
+  color: var(--mute);
+  font-style: italic;
+}
+
+.ask-reply-meta {
+  color: var(--mute);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 720px), (hover: none) {
+  .photo-header .photo-col-note {
+    grid-column: 2 / -1;
+    white-space: normal;
+  }
+
+  .ask-welcome {
+    mix-blend-mode: normal;
+  }
+
+  .ask-composer {
+    max-width: none;
+  }
+
+  .photo-peek.is-text {
+    display: none;
+  }
+
+  /* Questions have no thumbnail, so give the text the whole line. */
+  .ask-page .photo-row a {
+    grid-template-columns: 2.6rem minmax(0, 1fr);
+    grid-template-areas:
+      "no title"
+      "no time";
+  }
+
+  .ask-page .photo-row-thumb {
+    display: none;
+  }
+}
+
+/* Control room: ask ------------------------------------------------ */
+
+.admin-ask-list {
+  display: grid;
+  gap: 1.6rem;
+}
+
+.admin-ask {
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(22, 20, 18, 0.12);
+}
+
+.admin-ask blockquote {
+  margin: 0.4rem 0 0.9rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(22, 20, 18, 0.2);
+  font-style: italic;
+}
+
+.admin-ask > form + form {
+  margin-top: 0.6rem;
 }

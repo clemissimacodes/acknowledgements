@@ -16,6 +16,8 @@ export type HoverIndexRow = {
   b: string;
   time: string;
   image: { url: string; width: number; height: number } | null;
+  // Shown in the centre instead of an image while the row is hovered.
+  peekText?: string;
 };
 
 export type HoverIndexLabels = {
@@ -69,19 +71,25 @@ export function HoverIndex({
 
   return (
     <div
-      className={`photo-index${active !== null ? " is-peeking" : ""}`}
+      className={`photo-index${
+        active !== null && (rows[active]?.image || rows[active]?.peekText)
+          ? " is-peeking"
+          : ""
+      }`}
       onMouseLeave={() => setActive(null)}
     >
       {/* Painted first so the rows (positioned, later in tree order) can
           blend against it with mix-blend-mode: difference. */}
       <div
-        className="photo-peek"
+        className={`photo-peek${preview?.image ? "" : " is-text"}`}
         aria-hidden="true"
         style={{ "--peek-ratio": ratio(preview?.image ?? null) } as React.CSSProperties}
       >
         {preview?.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview.image.url} alt="" decoding="async" />
+        ) : preview?.peekText ? (
+          <p className="photo-peek-text">{preview.peekText}</p>
         ) : null}
       </div>
       <div className="photo-index-head" aria-hidden="true">
