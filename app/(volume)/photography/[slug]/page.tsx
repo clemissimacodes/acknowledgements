@@ -52,7 +52,7 @@ export default async function PhotoRollPage({ params }: { params: Params }) {
 
   return (
     <main className="photo-page photo-roll">
-      <PhotoHeader current="roll" />
+      <PhotoHeader current="photography" />
       <header className="photo-masthead">
         <p className="photo-roll-meta">
           {index >= 0 ? <span>{rollNumber(index)}</span> : null}

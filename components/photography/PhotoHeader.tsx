@@ -14,22 +14,35 @@ export function Abbr({ short, full }: { short: string; full: string }) {
   );
 }
 
+type Section = "photography" | "art-history" | "poetry";
+
+const SECTIONS: Array<{ id: Section; href: string; label: string }> = [
+  { id: "photography", href: "/photography", label: "Photography" },
+  { id: "art-history", href: "/art-history", label: "Art History" },
+  { id: "poetry", href: "/poetry", label: "Poetry" },
+];
+
 // Section links, laid on the same four columns as the index so they sit
 // above the "P." column. The site anchor (top left) carries the name.
-export function PhotoHeader({ current }: { current: "photography" | "roll" }) {
+export function PhotoHeader({ current }: { current: Section }) {
   return (
     <nav className="photo-header" aria-label="Sections">
       <span className="photo-col-no" aria-hidden="true" />
       <span className="photo-col-title" aria-hidden="true" />
       <span className="photo-col-note">
-        <Link
-          href="/photography"
-          className={current === "photography" ? "is-current" : undefined}
-          aria-current={current === "photography" ? "page" : undefined}
-        >
-          Photography,
-        </Link>{" "}
-        <Link href="/poetry">Poetry</Link>
+        {SECTIONS.map((section, index) => (
+          <span key={section.id}>
+            <Link
+              href={section.href}
+              className={section.id === current ? "is-current" : undefined}
+              aria-current={section.id === current ? "page" : undefined}
+            >
+              {section.label}
+              {index < SECTIONS.length - 1 ? "," : ""}
+            </Link>
+            {index < SECTIONS.length - 1 ? " " : ""}
+          </span>
+        ))}
       </span>
     </nav>
   );
