@@ -34,7 +34,7 @@ export default async function ArtHistoryIndexPage() {
           }))}
         />
       ) : (
-        <p className="photo-empty">The gallery is being hung.</p>
+        <p className="photo-empty">check back tomorrow</p>
       )}
     </main>
   );

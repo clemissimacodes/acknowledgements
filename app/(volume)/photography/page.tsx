@@ -34,7 +34,7 @@ export default async function PhotographyIndexPage() {
           }))}
         />
       ) : (
-        <p className="photo-empty">The first roll is still in the camera.</p>
+        <p className="photo-empty">check back tomorrow</p>
       )}
     </main>
   );

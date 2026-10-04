@@ -74,7 +74,7 @@ export default async function AskQuestionPage({ params }: { params: Params }) {
           </div>
         ) : (
           <p className="photo-roll-note ask-reply-body is-pending">
-            not yet. i usually respond day of.
+            check back tomorrow
           </p>
         )}
       </section>

@@ -43,7 +43,7 @@ export default async function AskIndexPage() {
           }))}
         />
       ) : (
-        <p className="photo-empty">Nothing asked yet. You could be first.</p>
+        <p className="photo-empty">check back tomorrow</p>
       )}
     </main>
   );
