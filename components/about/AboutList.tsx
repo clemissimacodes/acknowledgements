@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 export type AboutNote = {
   id?: string;
   text: string;
   label: string;
-  byline?: string;
-  response?: string;
-  kind?: "visitor";
-  noseShy?: boolean;
   href?: string;
-  image?: {
-    src: string;
-    alt: string;
-  };
 };
 
 type Point = { x: number; y: number };
@@ -36,21 +28,6 @@ const GENERATED_CENTERS: Point[] = [
   { x: 0.16, y: 0.5 },
   { x: 0.72, y: 0.18 },
   { x: 0.46, y: 0.82 },
-];
-
-const VISITOR_CENTERS: Point[] = [
-  { x: 0.1, y: 0.17 },
-  { x: 0.88, y: 0.16 },
-  { x: 0.91, y: 0.39 },
-  { x: 0.84, y: 0.61 },
-  { x: 0.9, y: 0.84 },
-  { x: 0.68, y: 0.88 },
-  { x: 0.43, y: 0.9 },
-  { x: 0.2, y: 0.87 },
-  { x: 0.08, y: 0.7 },
-  { x: 0.11, y: 0.42 },
-  { x: 0.3, y: 0.12 },
-  { x: 0.66, y: 0.1 },
 ];
 
 function focusBackgroundPosition(point: Point) {
@@ -156,11 +133,9 @@ function trackCenter(
 export function AboutList({
   title,
   notes,
-  children,
 }: {
   title: string;
   notes: AboutNote[];
-  children?: ReactNode;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -169,15 +144,8 @@ export function AboutList({
   const [stageSize, setStageSize] = useState<Size>({ width: 0, height: 0 });
   const centersRef = useRef<Point[]>(INITIAL_CENTERS);
   const [active, setActive] = useState<number | null>(null);
-  const [view, setView] = useState<"mine" | "internet">("mine");
   const [snapshot, setSnapshot] = useState("");
   const activeNote = active === null ? null : notes[active];
-  const visitorIndexes = notes.reduce<number[]>((indexes, note, index) => {
-    if (note.kind === "visitor") indexes.push(index);
-    return indexes;
-  }, []);
-  const activeVisitorPosition =
-    active === null ? -1 : visitorIndexes.indexOf(active);
   const activeCenter =
     centers[active ?? 0] ??
     GENERATED_CENTERS[((active ?? INITIAL_CENTERS.length) - INITIAL_CENTERS.length) % GENERATED_CENTERS.length] ??
@@ -322,10 +290,7 @@ export function AboutList({
   }
 
   return (
-    <section
-      className={`about-orbit is-viewing-${view}`}
-      aria-labelledby="about-orbit-title"
-    >
+    <section className="about-orbit" aria-labelledby="about-orbit-title">
       <h1 className="visually-hidden" id="about-orbit-title">
         {title}
       </h1>
@@ -376,12 +341,7 @@ export function AboutList({
         })}
         {notes.slice(INITIAL_CENTERS.length).map((note, extraIndex) => {
           const index = INITIAL_CENTERS.length + extraIndex;
-          const visitorIndex = notes
-            .slice(INITIAL_CENTERS.length, index)
-            .filter((item) => item.kind === "visitor").length;
-          const position = note.kind === "visitor"
-            ? VISITOR_CENTERS[visitorIndex % VISITOR_CENTERS.length]
-            : GENERATED_CENTERS[extraIndex % GENERATED_CENTERS.length];
+          const position = GENERATED_CENTERS[extraIndex % GENERATED_CENTERS.length];
           const style = {
             left: `${(position?.x ?? 0.5) * 100}%`,
             top: `${(position?.y ?? 0.5) * 100}%`,
@@ -390,9 +350,7 @@ export function AboutList({
 
           return (
             <div
-              className={`about-generated-thing ${
-                note.kind === "visitor" ? "is-visitor" : "is-personal"
-              }`}
+              className="about-generated-thing is-personal"
               key={note.id ?? note.text}
               style={style}
             >
@@ -409,28 +367,6 @@ export function AboutList({
             </div>
           );
         })}
-      </div>
-
-      <div className="about-orbit-rail">
-        <div className="about-orbit-filter" aria-label="Choose tiny things">
-          <span className="about-orbit-filter-label">btw you can filter by</span>
-          <button
-            type="button"
-            className={view === "mine" ? "is-active" : ""}
-            onClick={() => setView("mine")}
-          >
-            my teeny tiny things
-          </button>
-          <span className="about-orbit-filter-or">or</span>
-          <button
-            type="button"
-            className={view === "internet" ? "is-active" : ""}
-            onClick={() => setView("internet")}
-          >
-            teeny tiny things nosy internet humans want to know about me
-          </button>
-        </div>
-        {children}
       </div>
 
       {activeNote ? (
@@ -476,64 +412,6 @@ export function AboutList({
                 activeNote.text
               )}
             </p>
-            {activeNote.byline ? (
-              <span className="about-focus-byline">
-                internet human — {activeNote.byline}
-              </span>
-            ) : null}
-            {activeNote.response ? (
-              <p className="about-focus-response">
-                <span>me</span>
-                {activeNote.response}
-              </p>
-            ) : null}
-            {activeNote.kind === "visitor" && visitorIndexes.length > 1 ? (
-              <nav className="about-focus-nav" aria-label="Browse internet questions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    openNote(
-                      visitorIndexes[
-                        (activeVisitorPosition - 1 + visitorIndexes.length) %
-                          visitorIndexes.length
-                      ] ?? visitorIndexes[0] ?? 0,
-                    )
-                  }
-                >
-                  ← previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    openNote(
-                      visitorIndexes[
-                        (activeVisitorPosition + 1) % visitorIndexes.length
-                      ] ?? visitorIndexes[0] ?? 0,
-                    )
-                  }
-                >
-                  next →
-                </button>
-              </nav>
-            ) : null}
-            {activeNote.image ? (
-              activeNote.noseShy ? (
-                <figure className="about-focus-nose-shy">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={activeNote.image.src} alt={activeNote.image.alt} />
-                  <figcaption>this internet human was nose shy</figcaption>
-                </figure>
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  className={
-                    activeNote.kind === "visitor" ? "about-focus-nose" : undefined
-                  }
-                  src={activeNote.image.src}
-                  alt={activeNote.image.alt}
-                />
-              )
-            ) : null}
           </div>
         </div>
       ) : null}

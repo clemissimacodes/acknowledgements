@@ -85,7 +85,6 @@ export const SECRETS_QUOTES = [
   "try again. the door is not judging. the door is a little judging",
   "u typed that like u meant it. respect. denied",
   "nope. the door is rooting for u from behind itself",
-  "wrong. but ur nose looked great doing it",
   "the door would like to see more of that energy and less of that password",
   "that guess has been added to the door’s memoir",
   "not it. the door suggests a walk and then a better idea",
