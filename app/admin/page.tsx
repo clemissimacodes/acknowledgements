@@ -58,6 +58,7 @@ const vaultPages = [
   { title: "Photography darkroom", href: "/controlroom/photography" },
   { title: "Art History gallery", href: "/controlroom/art-history" },
   { title: "Ask Me Anything replies", href: "/controlroom/ask" },
+  { title: "Stick ur nose in (parked orb)", href: "/controlroom/nose" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },
   { title: "Sunday Posties", href: "/controlroom/sunday-posties" },

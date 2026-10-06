@@ -8286,3 +8286,16 @@ html:has(.store-page) .site-anchor {
     --photo-cols: 2.6rem minmax(0, 1fr) 4.2rem;
   }
 }
+
+/* Control room: the parked nose orb ------------------------------- */
+
+.admin-nose-orb {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0 5rem;
+}
+
+.admin-nose-orb > button {
+  width: clamp(8rem, 14vw, 11rem);
+  font-size: 0.72rem;
+}

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Clemi } from "@/components/Clemi";
 import { MailLink } from "@/components/MailLink";
-import { TeenyQuestionOrb } from "@/components/about/TeenyQuestionOrb";
 
 const works = [
   { title: "Teeny Tiny Things", href: "/teeny-tiny-things" },
@@ -45,9 +44,6 @@ export default function HomePage() {
           ))}
         </ol>
       </nav>
-      <div className="index-question-orb">
-        <TeenyQuestionOrb />
-      </div>
       <nav className="elsewhere" aria-label="Elsewhere">
         <a
           href="https://www.instagram.com/clemissima/"
