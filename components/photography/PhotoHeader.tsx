@@ -14,10 +14,10 @@ export function Abbr({ short, full }: { short: string; full: string }) {
   );
 }
 
-type Section = "photography" | "ask";
+type Section = "poetry" | "ask";
 
 const SECTIONS: Array<{ id: Section; href: string; label: string }> = [
-  { id: "photography", href: "/photography", label: "Photography" },
+  { id: "poetry", href: "/poetry", label: "Poetry" },
   { id: "ask", href: "/ask", label: "Ask Me Anything" },
 ];
 
