@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { SecretsReveal } from "@/components/SecretsReveal";
 import { SecretsUnlockForm } from "@/components/SecretsUnlockForm";
 import { SECRETS_COOKIE, hasSecretsCookie } from "@/lib/secrets-gate";
 import styles from "./page.module.css";
@@ -20,15 +21,7 @@ export default async function SecretsPage() {
   if (unlocked) {
     return (
       <main className={styles.page}>
-        <p className={styles.line}>you made it. here is my secret.</p>
-        <div className={styles.video}>
-          <iframe
-            src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0"
-            title="my secret"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
+        <SecretsReveal />
       </main>
     );
   }
