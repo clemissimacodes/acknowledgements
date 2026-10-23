@@ -238,7 +238,7 @@ export function Dandelion() {
 
       <div className="dandelion-plant">
         <p className="dandelion-lede">
-          this fat dandelion may make all your dreams come true!
+          make a wish, i’ll make sure to wish on it too
         </p>
         <form
           className="dandelion-form"

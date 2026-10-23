@@ -83,7 +83,6 @@ const nextConfig: NextConfig = {
       { source: "/dedication", destination: "/", permanent: true },
       { source: "/contents", destination: "/", permanent: true },
       { source: "/foreword", destination: "/", permanent: true },
-      { source: "/poetry/admin", destination: "/poetry", permanent: false },
       // Former Secrets pages now live in the control room vault.
       ...[
         "radar",

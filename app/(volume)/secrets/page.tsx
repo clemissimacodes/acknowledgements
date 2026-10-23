@@ -20,9 +20,15 @@ export default async function SecretsPage() {
   if (unlocked) {
     return (
       <main className={styles.page}>
-        <p className={styles.line}>
-          reduced to my atomic parts, i am just a shallow grave of lost loves
-        </p>
+        <p className={styles.line}>you made it. here is my secret.</p>
+        <div className={styles.video}>
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0"
+            title="my secret"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       </main>
     );
   }

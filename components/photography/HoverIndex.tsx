@@ -18,7 +18,7 @@ export type HoverIndexRow = {
   image: { url: string; width: number; height: number } | null;
   // Shown in the centre instead of an image while the row is hovered.
   peekText?: string;
-  // Opens in a new tab (poems that live elsewhere).
+  // Opens in a new tab.
   external?: boolean;
 };
 
