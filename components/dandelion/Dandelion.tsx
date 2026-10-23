@@ -250,7 +250,7 @@ export function Dandelion() {
           <input
             value={draft}
             maxLength={100}
-            placeholder="make a wish to see other people's wishes"
+            placeholder="start typing"
             autoComplete="off"
             autoCorrect="off"
             onChange={(event) => {
