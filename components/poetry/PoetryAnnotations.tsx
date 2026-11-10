@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { GENERAL_NOTE_ANCHOR, type PoemNote } from "@/lib/poem-comments";
 import {
   POEM_REACTIONS,
@@ -60,6 +60,31 @@ export function PoetryAnnotations({
   const [editBody, setEditBody] = useState("");
   const [reactions, setReactions] = useState<PoemReactionState>(EMPTY_REACTIONS);
   const [reacting, setReacting] = useState<PoemReactionId | null>(null);
+  const linesRef = useRef<HTMLDivElement>(null);
+
+  // Verse lines never wrap. When the screen is narrower than the longest
+  // line, shrink the type just enough for it to fit.
+  useLayoutEffect(() => {
+    const container = linesRef.current;
+    if (!container) return;
+    const fit = () => {
+      container.style.setProperty("--poem-fit", "1");
+      let needed = 0;
+      for (const button of container.querySelectorAll<HTMLElement>(".poem-line-button")) {
+        const row = button.parentElement;
+        const extra = row ? row.offsetWidth - button.offsetWidth : 0;
+        needed = Math.max(needed, button.scrollWidth + Math.max(0, extra));
+      }
+      const available = container.clientWidth;
+      const scale = needed > available ? Math.max(0.6, available / needed) : 1;
+      container.style.setProperty("--poem-fit", scale.toFixed(3));
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(container);
+    document.fonts?.ready.then(fit).catch(() => undefined);
+    return () => observer.disconnect();
+  }, [lines]);
 
   useEffect(() => {
     setName(window.localStorage.getItem(NAME_KEY)?.trim() ?? "");
@@ -518,7 +543,7 @@ export function PoetryAnnotations({
             {error}
           </p>
         ) : null}
-        <div className="poem-lines">
+        <div className="poem-lines" ref={linesRef}>
           {lines.map((line, index) => {
             const lineNotes = byLine.get(index) ?? [];
             const isActive = active === index;

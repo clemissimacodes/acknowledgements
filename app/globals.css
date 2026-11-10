@@ -2387,6 +2387,14 @@ html:has(.about-page) .site-anchor,
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
+}
+
+/* Grid/flex items default to min-width: auto, which would let the
+   unbreakable verse lines push the sheet wider than the screen. */
+.poem-sheet {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .poem-line-block {
@@ -2412,9 +2420,12 @@ html:has(.about-page) .site-anchor,
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 1.05rem;
+  /* A line of verse never breaks; --poem-fit shrinks the type on narrow
+     screens so the longest line still fits (set by PoetryAnnotations). */
+  font-size: calc(1.05rem * var(--poem-fit, 1));
   line-height: 1.38;
   text-align: left;
+  white-space: nowrap;
 }
 
 .poem-line-button {
@@ -3059,7 +3070,7 @@ html:has(.about-page) .site-anchor,
 
 @media (max-width: 860px) {
   .workshop {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .poetry-annotations .line-annot {
