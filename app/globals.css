@@ -2756,9 +2756,12 @@ html:has(.about-page) .site-anchor,
 }
 
 .poem-reaction-label {
+  /* Sits below the button: the fairy cursor hovers above-right of the
+     pointer and would cover a label placed on top. */
   position: absolute;
-  bottom: calc(100% + 0.45rem);
+  top: calc(100% + 0.45rem);
   left: 50%;
+  z-index: 1;
   padding: 0.3rem 0.6rem;
   color: var(--ink);
   background: var(--aqua);
@@ -2767,7 +2770,7 @@ html:has(.about-page) .site-anchor,
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transform: translate(-50%, 0.25rem);
+  transform: translate(-50%, -0.25rem);
   transition:
     opacity 140ms ease,
     transform 140ms ease,
