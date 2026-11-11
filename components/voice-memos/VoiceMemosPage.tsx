@@ -7,6 +7,7 @@ import {
   listRecordings,
 } from "@/lib/recordings";
 import { visitorHash } from "@/lib/recording-visitor";
+import { MacWindow } from "./MacWindow";
 import { VoiceMemosApp } from "./VoiceMemosApp";
 import styles from "./VoiceMemos.module.css";
 
@@ -23,15 +24,7 @@ export async function VoiceMemosPage({ slug }: { slug: string | null }) {
   return (
     <main className={`${styles.page} voice-memos-page`}>
       <h1 className="visually-hidden">Voice Memos</h1>
-      <div className={styles.window}>
-        <div className={styles.titlebar} aria-hidden="true">
-          <span className={styles.lights}>
-            <i />
-            <i />
-            <i />
-          </span>
-          <p className={styles.titlebarTitle}>Voice Memos</p>
-        </div>
+      <MacWindow>
         <VoiceMemosApp
           recordings={recordings}
           notes={notes}
@@ -40,7 +33,7 @@ export async function VoiceMemosPage({ slug }: { slug: string | null }) {
           initialSlug={slug}
           isOwner={isAdminUser(user)}
         />
-      </div>
+      </MacWindow>
       <p className={styles.shortcuts}>
         <kbd>space</kbd> play · <kbd>←</kbd> <kbd>→</kbd> 15s · <kbd>↑</kbd>{" "}
         <kbd>↓</kbd> recordings · <kbd>F</kbd> heart · <kbd>L</kbd> loop

@@ -75,20 +75,140 @@
   gap: 8px;
 }
 
-.lights i {
+.lights button {
+  position: relative;
   width: 12px;
   height: 12px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: #ff5f57;
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+  cursor: default;
 }
 
-.lights i:nth-child(2) {
+.close {
+  background: #ff5f57;
+}
+
+.minimize {
   background: #febc2e;
 }
 
-.lights i:nth-child(3) {
+.zoom {
   background: #28c840;
+}
+
+/* The glyphs appear when the pointer is over any of the three. */
+.lights button::before,
+.lights button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.lights:hover button::before,
+.lights:hover button::after {
+  opacity: 1;
+}
+
+.close::before,
+.close::after {
+  width: 8px;
+  height: 1.3px;
+}
+
+.close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.minimize::before {
+  width: 8px;
+  height: 1.3px;
+}
+
+.minimize::after {
+  display: none;
+}
+
+.zoom::before,
+.zoom::after {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  background: transparent;
+}
+
+.zoom::before {
+  border-width: 0 0 4.5px 4.5px;
+  border-color: transparent transparent rgba(0, 0, 0, 0.55) transparent;
+  transform: translate(-100%, 0);
+}
+
+.zoom::after {
+  border-width: 4.5px 4.5px 0 0;
+  border-color: rgba(0, 0, 0, 0.55) transparent transparent transparent;
+  transform: translate(0, -100%);
+}
+
+.zoomed {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+
+.zoomed:fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.minimized {
+  display: none;
+}
+
+.dock {
+  display: flex;
+  justify-content: center;
+  margin: 10vh auto 0;
+  padding: 8px 14px;
+  width: fit-content;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 1px var(--vm-rule);
+  backdrop-filter: blur(16px);
+}
+
+.dockIcon {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--vm-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: default;
+}
+
+.dockIcon svg {
+  width: 56px;
+  height: 56px;
+  transition: transform 160ms ease;
+}
+
+.dockIcon:hover svg {
+  transform: translateY(-4px) scale(1.06);
 }
 
 .titlebarTitle {
@@ -916,7 +1036,13 @@
   }
 
   .lights {
-    display: none;
+    position: absolute;
+    left: 12px;
+  }
+
+  .lights button {
+    width: 11px;
+    height: 11px;
   }
 
   .titlebarTitle {
