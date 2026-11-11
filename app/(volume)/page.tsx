@@ -11,7 +11,7 @@ const works = [
   },
   { title: "Poetry", href: "/poetry" },
   { title: "Ask Me Anything", href: "/ask" },
-  { title: "Blow on a Fat Dandelion", href: "/dandelion" },
+  { title: "Blow on a Fat Dandelion", href: "/blow-on-a-fat-dandelion" },
   { title: "Secrets", href: "/secrets" },
 ];
 

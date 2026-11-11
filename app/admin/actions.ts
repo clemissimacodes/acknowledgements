@@ -123,7 +123,7 @@ export async function saveWishRecord(formData: FormData) {
     age: formData.get("age"),
   });
   refreshControlRoom();
-  revalidatePath("/dandelion");
+  revalidatePath("/blow-on-a-fat-dandelion");
 }
 
 export async function saveIntroductionRecord(formData: FormData) {
@@ -148,7 +148,7 @@ export async function removeRecord(formData: FormData) {
   }
   await deleteAdminRecord(kind, formData.get("id"));
   refreshControlRoom();
-  if (kind === "wish") revalidatePath("/dandelion");
+  if (kind === "wish") revalidatePath("/blow-on-a-fat-dandelion");
 }
 
 export async function removeAllVisits() {
