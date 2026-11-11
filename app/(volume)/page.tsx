@@ -129,6 +129,36 @@ export default function HomePage() {
             />
           </svg>
         </MailLink>
+        <a
+          href="https://buymeacoffee.com/0xv2ILK6La"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Buy me a coffee"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M4.6 8.4h11.2v6.2a4.2 4.2 0 0 1-4.2 4.2H8.8a4.2 4.2 0 0 1-4.2-4.2V8.4z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M15.8 10.2h1.6a2.3 2.3 0 0 1 0 4.6h-1.6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M8.4 5.6c0-.9.8-1.1.8-1.9M11.6 5.6c0-.9.8-1.1.8-1.9"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+            />
+          </svg>
+        </a>
       </nav>
     </main>
   );
