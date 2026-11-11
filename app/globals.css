@@ -2908,13 +2908,6 @@ html:has(.about-page) .site-anchor,
   max-height: 7rem;
 }
 
-.poem-note-public {
-  margin: 0;
-  color: var(--mute);
-  font-size: 0.6rem;
-  line-height: 1.25;
-}
-
 .poem-note-footer {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -2927,10 +2920,6 @@ html:has(.about-page) .site-anchor,
   min-width: 0;
   padding: 0.2rem 0;
   font-size: 0.76rem;
-}
-
-.poem-note-footer .poem-note-public {
-  grid-column: 1;
 }
 
 .poem-note-honeypot {
