@@ -273,6 +273,49 @@ export function VoiceMemosApp({
     return () => window.cancelAnimationFrame(frame);
   }, [playing, loop, skipSilence, silences]);
 
+  // A play counts once someone has actually listened to half the recording,
+  // so seeking past the middle doesn't count, and once per recording per visit.
+  const countedPlays = useRef(new Set<string>());
+  useEffect(() => {
+    const audio = audioRef.current;
+    const id = selected?.id;
+    if (!audio || !id || isOwner) return;
+    let listened = 0;
+    let last = audio.currentTime;
+    const onTime = () => {
+      const delta = audio.currentTime - last;
+      last = audio.currentTime;
+      if (audio.paused || delta <= 0 || delta > 2) return;
+      listened += delta;
+      const total = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : duration;
+      if (!total || listened < total / 2 || countedPlays.current.has(id)) return;
+      countedPlays.current.add(id);
+      void fetch("/api/voice-memos/plays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data: { plays?: number } | null) => {
+          if (typeof data?.plays !== "number") return;
+          const plays = data.plays;
+          setRecordings((current) =>
+            current.map((item) => (item.id === id ? { ...item, plays } : item)),
+          );
+        })
+        .catch(() => countedPlays.current.delete(id));
+    };
+    const onSeek = () => {
+      last = audio.currentTime;
+    };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("seeked", onSeek);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("seeked", onSeek);
+    };
+  }, [selected?.id, isOwner, duration]);
+
   // Decode on demand: waveform peaks when the row has none yet, silences when
   // Skip Silence is switched on.
   useEffect(() => {
@@ -918,6 +961,11 @@ export function VoiceMemosApp({
                   <span>{formatRecordingDate(selected.recordedAt)}</span>
                   <span>{formatRecordingTime(selected.recordedAt)}</span>
                   <span className={styles.headingFolder}>{FOLDER_LABELS[selected.folder]}</span>
+                  {isOwner ? (
+                    <span>
+                      {selected.plays} {selected.plays === 1 ? "play" : "plays"}
+                    </span>
+                  ) : null}
                 </p>
               </header>
 

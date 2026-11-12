@@ -144,6 +144,7 @@ function ensureTables() {
         )
       `;
       await sql`ALTER TABLE recordings DROP CONSTRAINT IF EXISTS recordings_folder_check`;
+      await sql`ALTER TABLE recordings ADD COLUMN IF NOT EXISTS plays INTEGER NOT NULL DEFAULT 0`;
       await sql`
         CREATE TABLE IF NOT EXISTS recording_hearts (
           recording_id TEXT NOT NULL REFERENCES recordings (id) ON DELETE CASCADE,
@@ -221,6 +222,7 @@ function mapRecording(row: Record<string, unknown>): Recording {
     peaks: parsePeaks(row.peaks),
     favorite: Boolean(row.favorite),
     hearts: Number(row.hearts ?? 0),
+    plays: Number(row.plays ?? 0),
     noteCount: Number(row.note_count ?? 0),
     replyCount: Number(row.reply_count ?? 0),
     deletedAt: row.deleted_at ? iso(row.deleted_at) : null,
@@ -279,11 +281,23 @@ const REPLY_COLUMNS = `p.id, p.recording_id, p.author_name, p.duration_ms, p.blo
 
 const RECORDING_COLUMNS = `
   r.id, r.slug, r.title, r.folder, r.recorded_at, r.duration_ms,
-  r.blob_url, r.blob_pathname, r.peaks, r.favorite, r.deleted_at,
+  r.blob_url, r.blob_pathname, r.peaks, r.favorite, r.deleted_at, r.plays,
   (SELECT COUNT(*)::int FROM recording_hearts h WHERE h.recording_id = r.id) AS hearts,
   (SELECT COUNT(*)::int FROM recording_notes n WHERE n.recording_id = r.id) AS note_count,
   (SELECT COUNT(*)::int FROM recording_replies p WHERE p.recording_id = r.id) AS reply_count
 `;
+
+export async function countPlay(id: unknown) {
+  if (typeof id !== "string" || !id) throw new Error("Missing recording.");
+  await ensureTables();
+  const rows = await db()`
+    UPDATE recordings SET plays = plays + 1
+    WHERE id = ${id} AND deleted_at IS NULL
+    RETURNING plays
+  `;
+  if (!rows[0]) throw new Error("Recording not found.");
+  return { plays: Number(rows[0].plays) };
+}
 
 async function purgeOldTrash() {
   const rows = await db()`
