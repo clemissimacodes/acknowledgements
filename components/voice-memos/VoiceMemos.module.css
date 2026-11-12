@@ -12,13 +12,17 @@
   --vm-fill: rgba(120, 120, 128, 0.12);
   --vm-fill-strong: rgba(120, 120, 128, 0.2);
   --vm-accent: #007aff;
-  --vm-wave: #1d1d1f;
-  --vm-wave-dim: rgba(29, 29, 31, 0.3);
+  --vm-wave: #d8c7a2;
+  --vm-wave-dim: rgba(216, 199, 162, 0.3);
   --vm-loop: #ffcc00;
   --vm-loop-fill: rgba(255, 204, 0, 0.14);
-  --vm-grad-a: #0a84ff;
-  --vm-grad-b: #bf5af2;
-  --vm-glow: rgba(10, 132, 255, 0.14);
+  /* Played bars: mother-of-pearl. Body colour (r g b), rainbow strength, gloss. */
+  --vm-nacre: 196 186 172;
+  --vm-nacre-iris: 0.12;
+  --vm-nacre-gloss: 0.17;
+  --vm-sheen: rgba(255, 255, 255, 0.55);
+  --vm-glow: rgba(246, 230, 194, 0.7);
+  --vm-playhead: #b8945a;
   --vm-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
   --vm-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
     Inter, system-ui, "Helvetica Neue", Arial, sans-serif;
@@ -42,11 +46,14 @@
     --vm-fill: rgba(120, 120, 128, 0.24);
     --vm-fill-strong: rgba(120, 120, 128, 0.36);
     --vm-accent: #0a84ff;
-    --vm-wave: #f2f2f2;
-    --vm-wave-dim: rgba(242, 242, 242, 0.32);
-    --vm-grad-a: #4da3ff;
-    --vm-grad-b: #d58bff;
-    --vm-glow: rgba(77, 163, 255, 0.2);
+    --vm-wave: rgba(240, 226, 198, 0.42);
+    --vm-wave-dim: rgba(240, 226, 198, 0.2);
+    --vm-nacre: 234 228 220;
+    --vm-nacre-iris: 0.12;
+    --vm-nacre-gloss: 0.12;
+    --vm-sheen: rgba(255, 255, 255, 0.8);
+    --vm-glow: rgba(250, 232, 196, 0.16);
+    --vm-playhead: #f2d9a4;
     --vm-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
     color-scheme: dark;
     background: #111;

@@ -41,6 +41,37 @@ function iso(value: unknown) {
     : new Date(String(value)).toISOString();
 }
 
+/* The control room's datetime-local field sends Los Angeles wall time with no
+   zone; the server runs in UTC, so read zone-less values as LA time. */
+function parseRecordedAt(value: unknown) {
+  const raw = String(value ?? "").trim();
+  const wall = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (!wall) return raw && !Number.isNaN(Date.parse(raw)) ? new Date(raw).toISOString() : null;
+  const [, y, mo, d, h, mi, s] = wall.map(Number);
+  const asUtc = Date.UTC(y, mo - 1, d, h, mi, s || 0);
+  const offset = (at: number) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Los_Angeles",
+        hourCycle: "h23",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+      })
+        .formatToParts(new Date(at))
+        .map((part) => [part.type, Number(part.value)]),
+    );
+    return (
+      Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second) - at
+    );
+  };
+  const first = asUtc - offset(asUtc);
+  return new Date(asUtc - offset(first)).toISOString();
+}
+
 function cleanText(value: unknown, maximum: number) {
   return String(value ?? "")
     .replace(/\0/g, "")
@@ -367,11 +398,7 @@ export async function createRecording(input: {
     ? input.folder
     : "notes";
   const title = cleanText(input.title, 120).replace(/\n/g, " ") || "New Recording";
-  const recordedAtRaw = String(input.recordedAt ?? "");
-  const recordedAt =
-    recordedAtRaw && !Number.isNaN(Date.parse(recordedAtRaw))
-      ? new Date(recordedAtRaw).toISOString()
-      : new Date().toISOString();
+  const recordedAt = parseRecordedAt(input.recordedAt) ?? new Date().toISOString();
   const id = randomUUID();
   const peaks = cleanPeaks(input.peaks);
   await db()`
@@ -410,11 +437,10 @@ export async function updateRecording(
     await db()`UPDATE recordings SET favorite = ${favorite} WHERE id = ${id}`;
   }
   if (patch.recordedAt !== undefined) {
-    const raw = String(patch.recordedAt ?? "");
-    if (raw && !Number.isNaN(Date.parse(raw))) {
+    const recordedAt = parseRecordedAt(patch.recordedAt);
+    if (recordedAt) {
       await db()`
-        UPDATE recordings SET recorded_at = ${new Date(raw).toISOString()}
-        WHERE id = ${id}
+        UPDATE recordings SET recorded_at = ${recordedAt} WHERE id = ${id}
       `;
     }
   }
