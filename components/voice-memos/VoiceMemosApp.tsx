@@ -15,6 +15,7 @@ import {
   formatPlayhead,
   formatRecordingDate,
   formatRecordingTime,
+  isRecordingFolder,
   type Recording,
   type RecordingNote,
   type RecordingReply,
@@ -125,9 +126,7 @@ export function VoiceMemosApp({
     const needle = query.trim().toLowerCase();
     return recordings.filter((item) => {
       if (view === "favorites" && !item.favorite) return false;
-      if ((view === "notes" || view === "singing") && item.folder !== view) {
-        return false;
-      }
+      if (isRecordingFolder(view) && item.folder !== view) return false;
       if (needle && !item.title.toLowerCase().includes(needle)) return false;
       return true;
     });
