@@ -1,6 +1,18 @@
+import { execSync } from "child_process";
 import type { NextConfig } from "next";
 
+function lastUpdated() {
+  try {
+    return execSync("git log -1 --format=%cI", { encoding: "utf8" }).trim();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
 const nextConfig: NextConfig = {
+  env: {
+    SITE_UPDATED_AT: lastUpdated(),
+  },
   async headers() {
     return [
       {
