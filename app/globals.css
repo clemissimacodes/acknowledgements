@@ -282,13 +282,38 @@ input {
   }
 }
 
-.elsewhere {
+/* Every page ends with the same row of links. */
+.site-footer {
+  --ink: #161412;
+  --mute: rgba(22, 20, 18, 0.45);
   position: relative;
   z-index: 1;
+  padding: 0 var(--site-gutter) max(0.55rem, env(safe-area-inset-bottom));
+  font-family: var(--font-book), "Palatino Linotype", Palatino, "Times New Roman", serif;
+}
+
+/* The home page is one screen tall with the links on its bottom edge. */
+html:has(.voice-memos-page) body {
+  background: #f6f1e8;
+}
+
+html:has(.dandelion-page) .site-footer {
+  --ink: #fff;
+  --mute: rgba(255, 255, 255, 0.5);
+}
+
+html:has(.index) .volume {
+  min-height: 0;
+}
+
+.index {
+  min-height: calc(100dvh - 3.5rem);
+}
+
+.elsewhere {
   display: flex;
   align-items: flex-end;
   gap: 0.15rem;
-  margin-top: auto;
   padding-top: 2.4rem;
 }
 
