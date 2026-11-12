@@ -185,7 +185,7 @@ input {
   --ink: #161412;
   --paper: #f6f1e8;
   --mute: rgba(22, 20, 18, 0.45);
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   color: var(--ink);
   font-family: var(--font-book), "Palatino Linotype", Palatino, "Times New Roman", serif;
   font-weight: 400;
@@ -224,6 +224,30 @@ input {
   max-width: 28em;
   font-size: 1.02rem;
   line-height: 1.55;
+}
+
+.index-updated {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: 0 0 1.1rem;
+  color: var(--mute);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.index-bio a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(22, 20, 18, 0.28);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.index-bio a:hover,
+.index-bio a:focus-visible {
+  text-decoration-color: currentColor;
 }
 
 .toc {
@@ -283,12 +307,32 @@ input {
 }
 
 /* Every page ends with the same row of links. */
+:root {
+  --site-footer-height: 5.7rem;
+}
+
+body {
+  padding-bottom: var(--site-footer-height);
+  box-sizing: border-box;
+}
+
 .site-footer {
+  box-sizing: border-box;
   --ink: #161412;
   --mute: rgba(22, 20, 18, 0.45);
-  position: relative;
-  z-index: 1;
+  position: fixed;
+  z-index: 90;
+  inset: auto 0 0;
+  height: var(--site-footer-height);
+  display: flex;
+  align-items: flex-end;
   padding: 0 var(--site-gutter) max(0.55rem, env(safe-area-inset-bottom));
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--site-footer-bg, transparent) 45%
+  );
+  pointer-events: none;
   font-family: var(--font-book), "Palatino Linotype", Palatino, "Times New Roman", serif;
 }
 
@@ -307,14 +351,14 @@ html:has(.index) .volume {
 }
 
 .index {
-  min-height: calc(100dvh - 3.5rem);
+  min-height: calc(100dvh - var(--site-footer-height));
 }
 
 .elsewhere {
   display: flex;
   align-items: flex-end;
   gap: 0.15rem;
-  padding-top: 2.4rem;
+  pointer-events: auto;
 }
 
 .elsewhere a {
@@ -387,9 +431,6 @@ html:has(.index) .volume {
     padding: 0.2rem 0;
   }
 
-  .elsewhere {
-    padding-top: 1.6rem;
-  }
 }
 
 /* —— About —— */
@@ -2175,11 +2216,16 @@ html:has(.about-page) .site-anchor,
 
 /* —— Dandelion —— */
 
+html:has(.dandelion-page) .volume {
+  min-height: 0;
+}
+
+/* One screen tall including the site footer, so nothing needs a scroll. */
 .dandelion-page {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: calc(100dvh - var(--site-footer-height));
   min-height: 0;
   padding: var(--site-content-top) var(--site-gutter) 1.5vh;
   overflow: hidden;

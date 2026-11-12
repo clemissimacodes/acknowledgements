@@ -1,6 +1,38 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+
+function pageBackground() {
+  const main = document.querySelector("main");
+  for (const element of [main, document.body, document.documentElement]) {
+    if (!element) continue;
+    const color = getComputedStyle(element).backgroundColor;
+    if (color && color !== "transparent" && !/rgba\(.*,\s*0\)$/.test(color)) return color;
+  }
+  return "#fff";
+}
+
+/** Pinned to the bottom of every page, tinted to whatever the page sits on. */
 export function SiteFooter() {
+  const ref = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const footer = ref.current;
+    if (!footer) return;
+    const tint = () => footer.style.setProperty("--site-footer-bg", pageBackground());
+    tint();
+    const frame = window.requestAnimationFrame(tint);
+    const late = window.setTimeout(tint, 600);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(late);
+    };
+  }, [pathname]);
+
   return (
-    <footer className="site-footer">
+    <footer ref={ref} className="site-footer">
       <nav className="elsewhere" aria-label="Elsewhere">
         <a
           href="https://www.instagram.com/clemissima/"
