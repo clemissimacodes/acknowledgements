@@ -1,6 +1,3 @@
-export const VISITOR_MAX_MS = 60_000;
-export const MEMO_MAX_MS = 10 * 60_000;
-
 const RECORDER_TYPES = [
   "audio/mp4",
   "audio/webm;codecs=opus",

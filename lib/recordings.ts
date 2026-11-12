@@ -15,7 +15,20 @@ import {
   type RecordingReply,
 } from "@/lib/recording-types";
 
-export { AUDIO_CONTENT_TYPES } from "@/lib/voice-memos";
+export const AUDIO_CONTENT_TYPES = [
+  "audio/webm",
+  "audio/webm;codecs=opus",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/ogg",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/x-m4a",
+  "audio/aac",
+  "audio/m4a",
+  "video/webm",
+] as const;
 
 export const RECORDING_BLOB_PREFIX = "voice-memos/recordings/";
 export const REPLY_BLOB_PREFIX = "voice-memos/replies/";
