@@ -148,6 +148,7 @@ export function VoiceMemosApp({
       singing: recordings.filter((item) => item.folder === "singing").length,
       stories: recordings.filter((item) => item.folder === "stories").length,
       dreams: recordings.filter((item) => item.folder === "dreams").length,
+      poems: recordings.filter((item) => item.folder === "poems").length,
     }),
     [recordings],
   );
@@ -698,7 +699,7 @@ export function VoiceMemosApp({
 
         {pickingFolder ? (
           <ul className={styles.folderList}>
-            {(["all", "favorites", "stories", "dreams", "notes", "singing"] as RecordingView[]).map(
+            {(["all", "favorites", "stories", "dreams", "poems", "notes", "singing"] as RecordingView[]).map(
               (item) => (
                 <li key={item}>
                   <button
