@@ -7905,6 +7905,18 @@ html:has(.store-page) .site-anchor {
   -webkit-box-orient: vertical;
 }
 
+/* Questions and replies are words, not titles, so give them more room
+   than the photo index. The header keeps the shared grid. */
+@media (min-width: 721px) and (hover: hover) {
+  .ask-page .photo-index {
+    --photo-cols: 3.6rem minmax(0, 34rem) minmax(0, 34rem) 5.5rem;
+  }
+
+  .ask-page .ask-composer {
+    max-width: calc(3.6rem + 34rem + 34rem + 5.5rem + 3 * var(--photo-gap));
+  }
+}
+
 .ask-thread .photo-roll h1,
 .ask-thread h1 {
   max-width: 28em;
