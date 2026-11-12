@@ -10,6 +10,33 @@ function cssVar(element: HTMLElement, name: string, fallback: string) {
   return getComputedStyle(element).getPropertyValue(name).trim() || fallback;
 }
 
+function pearlStops(element: HTMLElement) {
+  return cssVar(element, "--vm-pearl", "#e8d3a6, #efc4cb, #cfc1ea, #b9ddd3")
+    .split(",")
+    .map((color) => color.trim())
+    .filter(Boolean);
+}
+
+/* A horizontal pearl sweep over from→to, laid down three times so `shift`
+   can slide it along without the edges ever showing. */
+function pearlGradient(
+  context: CanvasRenderingContext2D,
+  stops: string[],
+  from: number,
+  to: number,
+  shift = 0,
+) {
+  const span = Math.max(1, to - from);
+  const start = from - span + (((shift % span) + span) % span);
+  const gradient = context.createLinearGradient(start, 0, start + span * 3, 0);
+  const count = stops.length * 3;
+  for (let i = 0; i < count; i += 1) {
+    gradient.addColorStop(i / count, stops[i % stops.length]);
+  }
+  gradient.addColorStop(1, stops[0]);
+  return gradient;
+}
+
 function peakAt(peaks: number[], duration: number, from: number, to: number) {
   if (!peaks.length || duration <= 0) return 0;
   const start = Math.max(0, Math.floor((from / duration) * peaks.length));
@@ -93,12 +120,12 @@ export function Waveform({
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
 
-    const wave = cssVar(canvas, "--vm-wave", "#1d1d1f");
+    const wave = cssVar(canvas, "--vm-wave", "#cbb68c");
     const rule = cssVar(canvas, "--vm-rule", "rgba(60,60,67,0.18)");
-    const accent = cssVar(canvas, "--vm-accent", "#0a84ff");
-    const gradA = cssVar(canvas, "--vm-grad-a", "#0a84ff");
-    const gradB = cssVar(canvas, "--vm-grad-b", "#bf5af2");
-    const glow = cssVar(canvas, "--vm-glow", "rgba(10,132,255,0.18)");
+    const playhead = cssVar(canvas, "--vm-playhead", "#b8945a");
+    const pearl = pearlStops(canvas);
+    const sheen = cssVar(canvas, "--vm-sheen", "rgba(255,255,255,0.72)");
+    const glow = cssVar(canvas, "--vm-glow", "rgba(232,208,160,0.3)");
     const tickText = cssVar(canvas, "--vm-secondary", "#8e8e93");
 
     const rulerHeight = 26;
@@ -110,7 +137,8 @@ export function Waveform({
     // A soft halo behind the playhead so the "now" reads at a glance.
     const halo = context.createRadialGradient(cx, mid, 0, cx, mid, waveHeight * 0.75);
     halo.addColorStop(0, glow);
-    halo.addColorStop(1, "rgba(0,0,0,0)");
+    // Fade to the glow's own colour so the edge never greys out.
+    halo.addColorStop(1, glow.replace(/[\d.]+\s*\)$/, "0)"));
     context.fillStyle = halo;
     context.fillRect(0, waveTop, width, waveHeight);
 
@@ -119,9 +147,8 @@ export function Waveform({
     context.fillRect(0, mid - 0.5, width, 1);
 
     if (peaks && duration > 0) {
-      const playedFill = context.createLinearGradient(0, mid - waveHeight / 2, 0, mid + waveHeight / 2);
-      playedFill.addColorStop(0, gradA);
-      playedFill.addColorStop(1, gradB);
+      // The sweep drifts slower than the bars scroll, so it glistens as it plays.
+      const playedFill = pearlGradient(context, pearl, 0, width, time * 40);
       const step = BAR_STEP / PIXELS_PER_SECOND;
       const usable = waveHeight - 28;
       for (let x = cx % BAR_STEP; x < width; x += BAR_STEP) {
@@ -138,6 +165,12 @@ export function Waveform({
         context.beginPath();
         context.roundRect(x - BAR_WIDTH / 2, mid - h / 2, BAR_WIDTH, h, BAR_WIDTH / 2);
         context.fill();
+        if (played) {
+          context.fillStyle = sheen;
+          context.beginPath();
+          context.roundRect(x - BAR_WIDTH / 2 + 0.4, mid - h * 0.36, 0.7, h * 0.72, 0.35);
+          context.fill();
+        }
       }
       context.globalAlpha = 1;
     }
@@ -175,7 +208,7 @@ export function Waveform({
     }
 
     // Playhead: hairline with a dot above and below.
-    context.fillStyle = accent;
+    context.fillStyle = playhead;
     context.fillRect(cx - 0.75, waveTop + 2, 1.5, waveHeight - 4);
     context.beginPath();
     context.arc(cx, waveTop + 4, 3.2, 0, Math.PI * 2);
@@ -268,10 +301,9 @@ export function Overview({
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
     context.clearRect(0, 0, width, height);
 
-    const wave = cssVar(canvas, "--vm-wave", "#1d1d1f");
-    const accent = cssVar(canvas, "--vm-accent", "#0a84ff");
-    const gradA = cssVar(canvas, "--vm-grad-a", "#0a84ff");
-    const gradB = cssVar(canvas, "--vm-grad-b", "#bf5af2");
+    const wave = cssVar(canvas, "--vm-wave", "#cbb68c");
+    const playhead = cssVar(canvas, "--vm-playhead", "#b8945a");
+    const pearl = pearlStops(canvas);
     const loopColor = cssVar(canvas, "--vm-loop", "#ffcc00");
     const loopFill = cssVar(canvas, "--vm-loop-fill", "rgba(255,204,0,0.16)");
     const track = cssVar(canvas, "--vm-fill", "rgba(120,120,128,0.12)");
@@ -287,9 +319,7 @@ export function Overview({
     const step = 2.5;
     const progressX = duration > 0 ? pad + (time / duration) * inner : pad;
     if (peaks && duration > 0) {
-      const playedFill = context.createLinearGradient(pad, 0, progressX, 0);
-      playedFill.addColorStop(0, gradA);
-      playedFill.addColorStop(1, gradB);
+      const playedFill = pearlGradient(context, pearl, pad, width - pad);
       for (let x = pad; x < width - pad; x += step) {
         const from = ((x - pad) / inner) * duration;
         const to = ((x - pad + step) / inner) * duration;
@@ -326,7 +356,7 @@ export function Overview({
       }
     }
 
-    context.fillStyle = accent;
+    context.fillStyle = playhead;
     context.beginPath();
     context.roundRect(progressX - 1.5, -1, 3, height + 2, 1.5);
     context.fill();
