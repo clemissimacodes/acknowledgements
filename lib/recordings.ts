@@ -86,7 +86,7 @@ function ensureTables() {
           id TEXT PRIMARY KEY,
           slug TEXT NOT NULL UNIQUE,
           title TEXT NOT NULL DEFAULT '',
-          folder TEXT NOT NULL CHECK (folder IN ('notes', 'singing')),
+          folder TEXT NOT NULL,
           recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           duration_ms INTEGER NOT NULL CHECK (duration_ms > 0),
           blob_url TEXT NOT NULL,
@@ -97,6 +97,7 @@ function ensureTables() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
+      await sql`ALTER TABLE recordings DROP CONSTRAINT IF EXISTS recordings_folder_check`;
       await sql`
         CREATE TABLE IF NOT EXISTS recording_hearts (
           recording_id TEXT NOT NULL REFERENCES recordings (id) ON DELETE CASCADE,

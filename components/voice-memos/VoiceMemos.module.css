@@ -1042,6 +1042,110 @@
   }
 }
 
+/* ---- Compose bar (always on screen) ------------------------------- */
+
+.compose {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 10px;
+  width: min(100%, 680px);
+  margin: 14px auto 0;
+}
+
+.composeNote {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  padding: 4px 4px 4px 6px;
+  border-radius: 12px;
+  background: var(--vm-fill);
+}
+
+.composeNote input {
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--vm-surface);
+  color: var(--vm-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.composeNote input:focus-visible {
+  outline: 2px solid var(--vm-accent);
+  outline-offset: 0;
+}
+
+.composeName {
+  flex: 0 0 96px;
+}
+
+.composeBody {
+  flex: 1 1 auto;
+}
+
+.composePost {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--vm-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.composePost:disabled {
+  opacity: 0.45;
+}
+
+.compose .recorder {
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.compose .hold {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.compose .formError {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.composeCount {
+  grid-column: 1 / -1;
+  justify-self: center;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--vm-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: default;
+}
+
+.composeCount:hover {
+  color: var(--vm-accent);
+}
+
+.panelEmpty {
+  margin: 4px 0 0;
+  color: var(--vm-secondary);
+  font-size: 13px;
+}
+
 .blank {
   display: grid;
   flex: 1;
@@ -1185,6 +1289,20 @@
 
   .readout {
     font-size: 30px;
+  }
+
+  .compose {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .composeName {
+    flex-basis: 72px;
+  }
+
+  .compose .hold {
+    width: 100%;
   }
 
   .shortcuts {

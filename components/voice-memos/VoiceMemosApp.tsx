@@ -139,6 +139,8 @@ export function VoiceMemosApp({
       favorites: recordings.filter((item) => item.favorite).length,
       notes: recordings.filter((item) => item.folder === "notes").length,
       singing: recordings.filter((item) => item.folder === "singing").length,
+      stories: recordings.filter((item) => item.folder === "stories").length,
+      dreams: recordings.filter((item) => item.folder === "dreams").length,
     }),
     [recordings],
   );
@@ -631,7 +633,7 @@ export function VoiceMemosApp({
 
         {pickingFolder ? (
           <ul className={styles.folderList}>
-            {(["all", "favorites", "notes", "singing"] as RecordingView[]).map(
+            {(["all", "favorites", "stories", "dreams", "notes", "singing"] as RecordingView[]).map(
               (item) => (
                 <li key={item}>
                   <button
@@ -908,6 +910,66 @@ export function VoiceMemosApp({
                   <Skip15Icon forward />
                 </button>
               </div>
+
+              <div className={styles.compose}>
+                <form className={styles.composeNote} onSubmit={(event) => void postNote(event)}>
+                  <input
+                    value={noteName}
+                    maxLength={60}
+                    autoComplete="nickname"
+                    placeholder="name"
+                    aria-label="Name, optional"
+                    className={styles.composeName}
+                    onChange={(event) => setNoteName(event.target.value)}
+                  />
+                  <input
+                    value={noteBody}
+                    maxLength={500}
+                    placeholder="leave a note…"
+                    aria-label="Leave a note"
+                    className={styles.composeBody}
+                    onChange={(event) => setNoteBody(event.target.value)}
+                  />
+                  <input
+                    ref={honeyRef}
+                    className={styles.honeypot}
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="submit"
+                    className={styles.composePost}
+                    disabled={noteBusy || noteBody.trim().length < 2}
+                  >
+                    {noteBusy ? "…" : "Post"}
+                  </button>
+                </form>
+                <ReplyRecorder
+                  recordingId={selected.id}
+                  name={noteName}
+                  onNameChange={setNoteName}
+                  onCreated={onReplyCreated}
+                  showName={false}
+                />
+                {noteError ? (
+                  <p className={styles.formError} role="status">
+                    {noteError}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  className={styles.composeCount}
+                  aria-expanded={panelOpen}
+                  onClick={() => setPanelOpen((value) => !value)}
+                >
+                  {selectedNotes.length + selectedReplies.length
+                    ? `${selectedNotes.length} note${selectedNotes.length === 1 ? "" : "s"} · ${selectedReplies.length} voice repl${selectedReplies.length === 1 ? "y" : "ies"}`
+                    : "no notes yet"}
+                  {panelOpen ? " — hide" : " — read"}
+                </button>
+              </div>
             </div>
 
             <aside
@@ -955,45 +1017,9 @@ export function VoiceMemosApp({
                     ))}
                   </ul>
                 ) : null}
-                <form className={styles.noteForm} onSubmit={(event) => void postNote(event)}>
-                  <textarea
-                    value={noteBody}
-                    maxLength={500}
-                    rows={2}
-                    placeholder="leave a note"
-                    aria-label="Leave a note"
-                    onChange={(event) => setNoteBody(event.target.value)}
-                  />
-                  <input
-                    ref={honeyRef}
-                    className={styles.honeypot}
-                    name="website"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    aria-hidden="true"
-                  />
-                  <div className={styles.noteFooter}>
-                    <input
-                      value={noteName}
-                      maxLength={60}
-                      autoComplete="nickname"
-                      placeholder="name"
-                      aria-label="Name, optional"
-                      onChange={(event) => setNoteName(event.target.value)}
-                    />
-                    <button
-                      type="submit"
-                      disabled={noteBusy || noteBody.trim().length < 2}
-                    >
-                      {noteBusy ? "…" : "Post"}
-                    </button>
-                  </div>
-                  {noteError ? (
-                    <p className={styles.formError} role="status">
-                      {noteError}
-                    </p>
-                  ) : null}
-                </form>
+                {!selectedNotes.length ? (
+                  <p className={styles.panelEmpty}>No notes yet — yours would be the first.</p>
+                ) : null}
               </section>
 
               <section className={styles.replies} aria-label="Voice replies">
@@ -1013,12 +1039,9 @@ export function VoiceMemosApp({
                     ))}
                   </ul>
                 ) : null}
-                <ReplyRecorder
-                  recordingId={selected.id}
-                  name={noteName}
-                  onNameChange={setNoteName}
-                  onCreated={onReplyCreated}
-                />
+                {!selectedReplies.length ? (
+                  <p className={styles.panelEmpty}>No voice replies yet.</p>
+                ) : null}
               </section>
               </div>
             </aside>

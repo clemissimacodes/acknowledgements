@@ -1,9 +1,11 @@
-export const RECORDING_FOLDERS = ["notes", "singing"] as const;
+export const RECORDING_FOLDERS = ["notes", "singing", "stories", "dreams"] as const;
 export type RecordingFolder = (typeof RECORDING_FOLDERS)[number];
 
 export const FOLDER_LABELS: Record<RecordingFolder, string> = {
   notes: "Need to Remember This Stuff",
-  singing: "Song Therapy",
+  singing: "Part Clem, Part Hummingbird",
+  stories: "I’m So Rich",
+  dreams: "My Dreams",
 };
 
 export type RecordingView = "all" | "favorites" | RecordingFolder;
@@ -13,6 +15,8 @@ export const VIEW_LABELS: Record<RecordingView, string> = {
   favorites: "Favorites",
   notes: FOLDER_LABELS.notes,
   singing: FOLDER_LABELS.singing,
+  stories: FOLDER_LABELS.stories,
+  dreams: FOLDER_LABELS.dreams,
 };
 
 export const RECORDING_MAX_MS = 2 * 60 * 60_000;

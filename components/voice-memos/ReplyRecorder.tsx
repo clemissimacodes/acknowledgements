@@ -10,9 +10,10 @@ type Props = {
   name: string;
   onNameChange: (name: string) => void;
   onCreated: (reply: RecordingReply) => void;
+  showName?: boolean;
 };
 
-export function ReplyRecorder({ recordingId, name, onNameChange, onCreated }: Props) {
+export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, showName = true }: Props) {
   const [busy, setBusy] = useState(false);
   const [holding, setHolding] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -163,15 +164,17 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated }: Pr
         <span className={styles.holdDot} aria-hidden="true" />
         {busy ? "Keeping…" : holding ? `Release · ${remaining}s` : "Hold to reply with your voice"}
       </button>
-      <input
-        className={styles.recorderName}
-        value={name}
-        maxLength={60}
-        autoComplete="nickname"
-        placeholder="name"
-        aria-label="Name, optional"
-        onChange={(event) => onNameChange(event.target.value)}
-      />
+      {showName ? (
+        <input
+          className={styles.recorderName}
+          value={name}
+          maxLength={60}
+          autoComplete="nickname"
+          placeholder="name"
+          aria-label="Name, optional"
+          onChange={(event) => onNameChange(event.target.value)}
+        />
+      ) : null}
       {error ? (
         <p className={styles.formError} role="status">
           {error}
