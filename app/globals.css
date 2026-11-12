@@ -3954,7 +3954,8 @@ html:has(.out-loud-page) .volume {
 
   .dandelion-field {
     display: grid;
-    grid-template-rows: minmax(0, 42%) minmax(0, 58%);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 56%) minmax(0, 44%);
     min-height: 0;
   }
 
