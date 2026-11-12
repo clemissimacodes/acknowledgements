@@ -93,7 +93,6 @@ const nextConfig: NextConfig = {
       ...[
         "radar",
         "sunday-posties",
-        "dont-try",
         "shop",
         "acknowledgements",
       ].flatMap((section) => [

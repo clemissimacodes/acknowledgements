@@ -39,8 +39,6 @@ function date(value: string) {
 }
 
 const vaultPages = [
-  { title: "Don’t Try", href: "/controlroom/dont-try" },
-  { title: "Don’t Try protocol", href: "/controlroom/dont-try/protocol" },
   { title: "Leave a Note replies", href: "/controlroom/ask" },
   { title: "Voice Memos", href: "/controlroom/voice-memos" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
