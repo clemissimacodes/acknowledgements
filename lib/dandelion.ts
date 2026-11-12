@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { postgresAddWish, postgresConfigured, postgresListWishes } from "@/lib/dandelion-db";
-import type { Wish, WishExtras } from "@/lib/dandelion-types";
+import { DANDELION_WISH_MIN, type Wish, type WishExtras } from "@/lib/dandelion-types";
 
 export type { Wish, WishExtras } from "@/lib/dandelion-types";
 
@@ -76,7 +76,8 @@ function cleanLine(raw: string, max: number): string | undefined {
 }
 
 export function cleanWish(raw: string): string | null {
-  return cleanLine(raw, DANDELION_WISH_MAX) ?? null;
+  const body = cleanLine(raw, DANDELION_WISH_MAX);
+  return body && body.length >= DANDELION_WISH_MIN ? body : null;
 }
 
 export function cleanExtras(raw: {
