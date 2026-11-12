@@ -10,31 +10,68 @@ function cssVar(element: HTMLElement, name: string, fallback: string) {
   return getComputedStyle(element).getPropertyValue(name).trim() || fallback;
 }
 
-function pearlStops(element: HTMLElement) {
-  return cssVar(element, "--vm-pearl", "#e8d3a6, #efc4cb, #cfc1ea, #b9ddd3")
-    .split(",")
-    .map((color) => color.trim())
-    .filter(Boolean);
+const NACRE_TILE = 180;
+const nacreTiles = new Map<string, HTMLCanvasElement>();
+
+/* A mother-of-pearl tile: a cream body crossed by wavy diagonal streaks of
+   soft rainbow colour and glossy ridges. Every wave uses whole-number
+   frequencies over the tile, so it repeats without seams. */
+function nacreTile(base: number[], iris: number, gloss: number) {
+  const key = `${base.join()}/${iris}/${gloss}`;
+  const cached = nacreTiles.get(key);
+  if (cached) return cached;
+  const size = NACRE_TILE;
+  const tile = document.createElement("canvas");
+  tile.width = size;
+  tile.height = size;
+  const context = tile.getContext("2d");
+  if (!context) return tile;
+  const image = context.createImageData(size, size);
+  const tau = Math.PI * 2;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const u = x / size;
+      const v = y / size;
+      const warp =
+        0.9 * Math.sin(tau * (u + 2 * v)) +
+        0.5 * Math.sin(tau * (3 * u - v) + 1.3) +
+        0.25 * Math.sin(tau * (5 * u + 4 * v) + 0.7);
+      const phase = u + 2 * v + 0.3 * warp;
+      // Colour gathers in patches; between them the shell stays milky.
+      const patch = Math.pow(0.5 + 0.5 * Math.sin(tau * (u - 2 * v) + warp), 2);
+      const ridge = Math.pow(0.5 + 0.5 * Math.sin(tau * (2 * u + 5 * v) + 2 * warp), 8);
+      const fleck = 0.5 + 0.5 * Math.sin(tau * (7 * u - 4 * v) + 3 * warp);
+      const index = (y * size + x) * 4;
+      for (let c = 0; c < 3; c += 1) {
+        const rainbow = Math.cos(tau * (phase + c / 3));
+        const value =
+          base[c] +
+          iris * 255 * rainbow * patch +
+          gloss * 255 * ridge -
+          6 * (1 - fleck);
+        image.data[index + c] = Math.max(0, Math.min(255, value));
+      }
+      image.data[index + 3] = 255;
+    }
+  }
+  context.putImageData(image, 0, 0);
+  nacreTiles.set(key, tile);
+  return tile;
 }
 
-/* A horizontal pearl sweep over from→to, laid down three times so `shift`
-   can slide it along without the edges ever showing. */
-function pearlGradient(
+function nacreFill(
   context: CanvasRenderingContext2D,
-  stops: string[],
-  from: number,
-  to: number,
+  element: HTMLElement,
   shift = 0,
 ) {
-  const span = Math.max(1, to - from);
-  const start = from - span + (((shift % span) + span) % span);
-  const gradient = context.createLinearGradient(start, 0, start + span * 3, 0);
-  const count = stops.length * 3;
-  for (let i = 0; i < count; i += 1) {
-    gradient.addColorStop(i / count, stops[i % stops.length]);
-  }
-  gradient.addColorStop(1, stops[0]);
-  return gradient;
+  const base = cssVar(element, "--vm-nacre", "226 214 192")
+    .split(/[\s,]+/)
+    .map(Number);
+  const iris = Number(cssVar(element, "--vm-nacre-iris", "0.12")) || 0;
+  const gloss = Number(cssVar(element, "--vm-nacre-gloss", "0.16")) || 0;
+  const pattern = context.createPattern(nacreTile(base, iris, gloss), "repeat");
+  pattern?.setTransform(new DOMMatrix().translateSelf(shift, shift * 0.4));
+  return pattern ?? `rgb(${base.join(",")})`;
 }
 
 function peakAt(peaks: number[], duration: number, from: number, to: number) {
@@ -123,7 +160,6 @@ export function Waveform({
     const wave = cssVar(canvas, "--vm-wave", "#cbb68c");
     const rule = cssVar(canvas, "--vm-rule", "rgba(60,60,67,0.18)");
     const playhead = cssVar(canvas, "--vm-playhead", "#b8945a");
-    const pearl = pearlStops(canvas);
     const sheen = cssVar(canvas, "--vm-sheen", "rgba(255,255,255,0.72)");
     const glow = cssVar(canvas, "--vm-glow", "rgba(232,208,160,0.3)");
     const tickText = cssVar(canvas, "--vm-secondary", "#8e8e93");
@@ -147,8 +183,8 @@ export function Waveform({
     context.fillRect(0, mid - 0.5, width, 1);
 
     if (peaks && duration > 0) {
-      // The sweep drifts slower than the bars scroll, so it glistens as it plays.
-      const playedFill = pearlGradient(context, pearl, 0, width, time * 40);
+      // The nacre drifts slower than the bars scroll, so it glistens as it plays.
+      const playedFill = nacreFill(context, canvas, time * 24);
       const step = BAR_STEP / PIXELS_PER_SECOND;
       const usable = waveHeight - 28;
       for (let x = cx % BAR_STEP; x < width; x += BAR_STEP) {
@@ -303,7 +339,6 @@ export function Overview({
 
     const wave = cssVar(canvas, "--vm-wave", "#cbb68c");
     const playhead = cssVar(canvas, "--vm-playhead", "#b8945a");
-    const pearl = pearlStops(canvas);
     const loopColor = cssVar(canvas, "--vm-loop", "#ffcc00");
     const loopFill = cssVar(canvas, "--vm-loop-fill", "rgba(255,204,0,0.16)");
     const track = cssVar(canvas, "--vm-fill", "rgba(120,120,128,0.12)");
@@ -319,7 +354,7 @@ export function Overview({
     const step = 2.5;
     const progressX = duration > 0 ? pad + (time / duration) * inner : pad;
     if (peaks && duration > 0) {
-      const playedFill = pearlGradient(context, pearl, pad, width - pad);
+      const playedFill = nacreFill(context, canvas);
       for (let x = pad; x < width - pad; x += step) {
         const from = ((x - pad) / inner) * duration;
         const to = ((x - pad + step) / inner) * duration;
