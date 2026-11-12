@@ -152,6 +152,8 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, show
         className={`${styles.hold}${holding ? ` ${styles.holding}` : ""}`}
         disabled={busy}
         aria-pressed={holding}
+        aria-label={busy ? "Keeping reply" : holding ? "Release to send" : "Hold to reply with your voice"}
+        title="Hold to reply with your voice"
         onPointerDown={(event) => {
           event.preventDefault();
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -162,7 +164,7 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, show
         onContextMenu={(event) => event.preventDefault()}
       >
         <span className={styles.holdDot} aria-hidden="true" />
-        {busy ? "Keeping…" : holding ? `Release · ${remaining}s` : "Hold to reply with your voice"}
+        {busy ? "keeping…" : holding ? `release · ${remaining}s` : "hold to speak"}
       </button>
       {showName ? (
         <input

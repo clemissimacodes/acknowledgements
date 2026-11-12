@@ -925,7 +925,7 @@ export function VoiceMemosApp({
                   <input
                     value={noteBody}
                     maxLength={500}
-                    placeholder="leave a note…"
+                    placeholder="leave a note"
                     aria-label="Leave a note"
                     className={styles.composeBody}
                     onChange={(event) => setNoteBody(event.target.value)}
@@ -943,7 +943,7 @@ export function VoiceMemosApp({
                     className={styles.composePost}
                     disabled={noteBusy || noteBody.trim().length < 2}
                   >
-                    {noteBusy ? "…" : "Post"}
+                    {noteBusy ? "…" : "post"}
                   </button>
                 </form>
                 <ReplyRecorder
@@ -958,17 +958,18 @@ export function VoiceMemosApp({
                     {noteError}
                   </p>
                 ) : null}
-                <button
-                  type="button"
-                  className={styles.composeCount}
-                  aria-expanded={panelOpen}
-                  onClick={() => setPanelOpen((value) => !value)}
-                >
-                  {selectedNotes.length + selectedReplies.length
-                    ? `${selectedNotes.length} note${selectedNotes.length === 1 ? "" : "s"} · ${selectedReplies.length} voice repl${selectedReplies.length === 1 ? "y" : "ies"}`
-                    : "no notes yet"}
-                  {panelOpen ? " — hide" : " — read"}
-                </button>
+                {selectedNotes.length + selectedReplies.length ? (
+                  <button
+                    type="button"
+                    className={styles.composeCount}
+                    aria-expanded={panelOpen}
+                    onClick={() => setPanelOpen((value) => !value)}
+                  >
+                    {panelOpen ? "hide replies" : "see replies"}
+                  </button>
+                ) : (
+                  <p className={styles.composeFirst}>be the first to reply!</p>
+                )}
               </div>
             </div>
 

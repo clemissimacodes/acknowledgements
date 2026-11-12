@@ -1055,96 +1055,109 @@
   display: grid;
   flex: 0 0 auto;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 10px;
-  width: min(100%, 680px);
+  align-items: center;
+  gap: 6px 14px;
+  width: min(100%, 560px);
   margin: 14px auto 0;
 }
-
 .composeNote {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   align-items: center;
   min-width: 0;
-  padding: 4px 4px 4px 6px;
-  border-radius: 12px;
-  background: var(--vm-fill);
+  border-bottom: 1px solid var(--vm-rule);
 }
-
+.composeNote:focus-within {
+  border-bottom-color: var(--vm-secondary);
+}
 .composeNote input {
   min-width: 0;
   height: 32px;
-  padding: 0 10px;
+  padding: 0 2px;
   border: 0;
-  border-radius: 8px;
-  background: var(--vm-surface);
+  border-radius: 0;
+  background: none;
   color: var(--vm-text);
   font: inherit;
   font-size: 14px;
+  outline: 0;
 }
-
-.composeNote input:focus-visible {
-  outline: 2px solid var(--vm-accent);
-  outline-offset: 0;
+.composeNote input::placeholder {
+  color: var(--vm-secondary);
+  opacity: 0.8;
 }
-
-.composeName {
-  flex: 0 0 96px;
+.composeNote .composeName {
+  flex: 0 0 72px;
+  border-right: 1px solid var(--vm-rule);
 }
-
-.composeBody {
+.composeNote .composeBody {
   flex: 1 1 auto;
+  padding-left: 8px;
 }
-
 .composePost {
   flex: 0 0 auto;
-  height: 32px;
-  padding: 0 14px;
+  padding: 0 2px;
   border: 0;
-  border-radius: 8px;
-  background: var(--vm-accent);
-  color: #fff;
+  background: none;
+  color: var(--vm-accent);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  cursor: default;
+  cursor: pointer;
+  transition: opacity 160ms ease;
 }
-
 .composePost:disabled {
-  opacity: 0.45;
+  opacity: 0;
+  pointer-events: none;
 }
-
 .compose .recorder {
-  padding: 4px;
-  border-radius: 12px;
+  display: flex;
+  padding: 0;
+  border-radius: 0;
+  background: none;
 }
-
 .compose .hold {
   height: 32px;
-  padding: 0 14px;
-  border-radius: 8px;
+  gap: 7px;
+  padding: 0 2px;
+  border-radius: 0;
+  background: none;
+  color: var(--vm-secondary);
   font-size: 13px;
+  font-weight: 400;
 }
-
+.compose .hold .holdDot {
+  width: 8px;
+  height: 8px;
+  box-shadow: none;
+}
+.compose .holding {
+  color: #ff3b30;
+}
+.compose .holding .holdDot {
+  background: #ff3b30;
+}
 .compose .formError {
   grid-column: 1 / -1;
   margin: 0;
 }
-
-.composeCount {
+.composeCount,
+.composeFirst {
   grid-column: 1 / -1;
   justify-self: center;
+  margin: 0;
   padding: 2px 6px;
   border: 0;
-  border-radius: 6px;
   background: none;
   color: var(--vm-secondary);
   font: inherit;
   font-size: 12px;
-  cursor: default;
 }
-
+.composeCount {
+  cursor: pointer;
+}
 .composeCount:hover {
-  color: var(--vm-accent);
+  color: var(--vm-text);
 }
 
 .panelEmpty {
@@ -1299,17 +1312,12 @@
   }
 
   .compose {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    gap: 6px 10px;
     margin-top: 10px;
   }
 
-  .composeName {
-    flex-basis: 72px;
-  }
-
-  .compose .hold {
-    width: 100%;
+  .composeNote .composeName {
+    flex-basis: 64px;
   }
 
   .shortcuts {
