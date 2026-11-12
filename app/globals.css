@@ -5930,6 +5930,23 @@ html:has(.store-page) .site-anchor {
 
 /* Leave a Note ---------------------------------------------------- */
 
+.photo-header.photo-section {
+  display: block;
+  margin-top: 0.4rem;
+  margin-bottom: calc(var(--photo-row) * 0.75);
+}
+
+.photo-section a {
+  font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+}
+
+.photo-section a:hover,
+.photo-section a:focus-visible {
+  text-decoration: none;
+}
+
 /* Four section links need more than the "P." column; let them run to
    the right edge of the grid. */
 .photo-header .photo-col-note {
