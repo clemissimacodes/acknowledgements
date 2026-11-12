@@ -176,7 +176,7 @@ export function VoiceRecorder({
         value={name}
         maxLength={60}
         autoComplete="nickname"
-        placeholder="your earthly name or alter ego"
+        placeholder="name"
         aria-label="Name, optional"
         onChange={(event) => setName(event.target.value)}
       />

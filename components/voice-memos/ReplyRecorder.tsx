@@ -168,7 +168,7 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated }: Pr
         value={name}
         maxLength={60}
         autoComplete="nickname"
-        placeholder="your earthly name or alter ego"
+        placeholder="name"
         aria-label="Name, optional"
         onChange={(event) => onNameChange(event.target.value)}
       />

@@ -322,7 +322,7 @@ export function PoetryAnnotations({
         <input
           value={editName}
           maxLength={60}
-          placeholder="your earthly name or alter ego"
+          placeholder="name"
           aria-label="Author name"
           onChange={(event) => setEditName(event.target.value)}
         />
@@ -428,7 +428,7 @@ export function PoetryAnnotations({
                   value={name}
                   maxLength={60}
                   autoComplete="nickname"
-                  placeholder="your earthly name or alter ego"
+                  placeholder="name"
                   aria-label="Name, optional"
                   onChange={(event) => setName(event.target.value)}
                 />
@@ -663,7 +663,7 @@ export function PoetryAnnotations({
                   value={name}
                   maxLength={60}
                   autoComplete="nickname"
-                  placeholder="your earthly name or alter ego"
+                  placeholder="name"
                   aria-label="Name, optional"
                   onChange={(event) => setName(event.target.value)}
                 />
