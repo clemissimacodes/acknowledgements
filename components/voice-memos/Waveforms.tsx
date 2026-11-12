@@ -82,8 +82,12 @@ export function Waveform({
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
+    // A hidden canvas (the mobile list view) has no box, and drawing into it
+    // would produce negative sizes that throw.
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
     const { peaks, duration, time, loop } = stateRef.current;
-    const ratio = canvas.width / Math.max(1, canvas.getBoundingClientRect().width);
+    const ratio = canvas.width / rect.width;
     const width = canvas.width / ratio;
     const height = canvas.height / ratio;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -99,7 +103,7 @@ export function Waveform({
 
     const rulerHeight = 26;
     const waveTop = 0;
-    const waveHeight = height - rulerHeight;
+    const waveHeight = Math.max(0, height - rulerHeight);
     const mid = waveTop + waveHeight / 2;
     const cx = width / 2;
 
@@ -255,8 +259,10 @@ export function Overview({
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return;
     const { peaks, duration, time, loop } = stateRef.current;
-    const ratio = canvas.width / Math.max(1, canvas.getBoundingClientRect().width);
+    const ratio = canvas.width / rect.width;
     const width = canvas.width / ratio;
     const height = canvas.height / ratio;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
