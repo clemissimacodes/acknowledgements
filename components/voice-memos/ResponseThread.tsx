@@ -94,7 +94,7 @@ function ResponseItem({
           <span className={styles.clemTag}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/clemi/mini.png" alt="" width={18} height={18} />
-            <strong>clem</strong>
+            <strong>clemi</strong>
           </span>
         ) : (
           <strong>{item.data.name ?? "someone"}</strong>
@@ -130,7 +130,7 @@ function ResponseItem({
           {item.data.hearts ? <span>{item.data.hearts}</span> : null}
         </button>
         {item.data.ownerHearted && !isOwner ? (
-          <span className={styles.clemHeart} title="clem loved this">
+          <span className={styles.clemHeart} title="clemi loved this">
             <HeartIcon size={12} filled />
           </span>
         ) : null}
@@ -148,7 +148,7 @@ function ResponseItem({
         <InlineReply
           {...props}
           parent={{ kind: item.kind, id: item.data.id }}
-          to={item.data.byOwner ? "clem" : item.data.name ?? "someone"}
+          to={item.data.byOwner ? "clemi" : item.data.name ?? "someone"}
           onDone={() => setReplying(false)}
         />
       ) : null}

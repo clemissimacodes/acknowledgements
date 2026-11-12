@@ -3,7 +3,7 @@ export type RecordingFolder = (typeof RECORDING_FOLDERS)[number];
 
 export const FOLDER_LABELS: Record<RecordingFolder, string> = {
   notes: "Need to Remember This Stuff",
-  singing: "Part Clem, Part Hummingbird",
+  singing: "Part Clemi, Part Hummingbird",
   stories: "I’m So Rich",
   dreams: "My Dreams",
 };
