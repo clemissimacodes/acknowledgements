@@ -24,10 +24,10 @@ function paragraphs(text: string) {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { id } = await params;
   const question = await getAskQuestion(id).catch(() => null);
-  if (!question) return { title: "Ask Me Anything" };
+  if (!question) return { title: "Leave a Note" };
   const short = question.body.length > 70 ? `${question.body.slice(0, 70).trimEnd()}…` : question.body;
   return {
-    title: `${short} · Ask Me Anything`,
+    title: `${short} · Leave a Note`,
     description: question.answer ?? "not yet answered",
     robots: { index: false, follow: true },
   };

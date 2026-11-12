@@ -18,7 +18,7 @@ type Section = "poetry" | "ask";
 
 const SECTIONS: Array<{ id: Section; href: string; label: string }> = [
   { id: "poetry", href: "/poetry", label: "Poetry" },
-  { id: "ask", href: "/ask", label: "Ask Me Anything" },
+  { id: "ask", href: "/ask", label: "Leave a Note" },
 ];
 
 // Section links, laid on the same four columns as the index so they sit

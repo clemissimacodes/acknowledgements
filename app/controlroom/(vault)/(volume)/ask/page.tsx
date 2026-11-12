@@ -6,7 +6,7 @@ import { ASK_ANSWER_MAX_LENGTH, listAskQuestions } from "@/lib/ask";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Ask Me Anything · Control room",
+  title: "Leave a Note · Control room",
   robots: { index: false, follow: false },
 };
 
@@ -27,7 +27,7 @@ export default async function AskControlPage() {
           <p className="admin-eyebrow">
             <Link href="/controlroom">Control room</Link> · ask
           </p>
-          <h1>Ask Me Anything</h1>
+          <h1>Leave a Note</h1>
           <p className="admin-private">
             Anonymous questions, thoughts and well wishes. Every one is already
             public on its own page the moment it is sent; your reply appears
