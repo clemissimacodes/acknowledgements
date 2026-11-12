@@ -3,15 +3,12 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
-import { OutLoudPublisher } from "@/components/admin/OutLoudPublisher";
 import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
 import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
-import { formatVoiceDuration } from "@/lib/format";
 import { getSecretsAttemptReport } from "@/lib/secrets-attempts";
 import { getTrackerAdminData } from "@/lib/tracker";
 import { getPendingAskCount } from "@/lib/ask";
-import { listAdminMemos } from "@/lib/voice-memos";
 import {
   changePlaceStatus,
   clearSecretsAttemptLog,
@@ -22,8 +19,6 @@ import {
   removePlace,
   removeRadar,
   removeRecord,
-  removeVoiceMemo,
-  removeVoiceReply,
   revokeShortcutToken,
   saveCiaRecord,
   savePlace,
@@ -46,7 +41,6 @@ function date(value: string) {
 const vaultPages = [
   { title: "Don’t Try", href: "/controlroom/dont-try" },
   { title: "Don’t Try protocol", href: "/controlroom/dont-try/protocol" },
-  { title: "Out Loud", href: "/controlroom/out-loud" },
   { title: "Ask Me Anything replies", href: "/controlroom/ask" },
   { title: "Voice Memos", href: "/controlroom/voice-memos" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
@@ -103,7 +97,6 @@ export default async function AdminPage({
     data,
     tracker,
     ciaEntries,
-    voiceMemos,
     breakIns,
     pendingAsks,
   ] =
@@ -111,7 +104,6 @@ export default async function AdminPage({
       getAdminData(),
       getTrackerAdminData(),
       getCiaAdminEntries(),
-      listAdminMemos().catch(() => []),
       getSecretsAttemptReport(),
       getPendingAskCount().catch(() => 0),
     ]);
@@ -722,9 +714,6 @@ export default async function AdminPage({
       </section>
 
       <nav className="admin-counts" aria-label="Database counts">
-        <a href="#out-loud">
-          <strong>{voiceMemos.length}</strong> Out Loud
-        </a>
         <a href="#posties"><strong>{data.posties.length}</strong> Posties</a>
         <a href="#wishes"><strong>{data.wishes.length}</strong> wishes</a>
         <a href="#secrets-attempts">
@@ -734,78 +723,6 @@ export default async function AdminPage({
           <strong>{data.visits.length}</strong> visits / {uniqueVisitors} visitors
         </a>
       </nav>
-
-      <section className="admin-section" id="out-loud">
-        <div className="admin-section-heading">
-          <div>
-            <h2>Out Loud</h2>
-            <p className="admin-private">
-              Record or upload a memo. Visitor voice replies go live immediately.
-            </p>
-          </div>
-          <Link href="/controlroom/out-loud">View the archive →</Link>
-        </div>
-        <OutLoudPublisher />
-        <div className="admin-cards">
-          {voiceMemos.map((memo) => (
-            <article className="admin-card" key={memo.id}>
-              <div className="admin-card-head">
-                <h3>
-                  {memo.kind === "person" && memo.title
-                    ? `for ${memo.title}`
-                    : memo.title || "untitled thought"}
-                </h3>
-                <span
-                  className={`admin-place-status is-${
-                    memo.published ? "published" : "draft"
-                  }`}
-                >
-                  {memo.published ? "published" : "draft"}
-                </span>
-              </div>
-              <p className="admin-record-status">
-                {memo.kind} · {date(memo.recordedAt)} ·{" "}
-                {formatVoiceDuration(memo.durationMs)} · {memo.replyCount}{" "}
-                {memo.replyCount === 1 ? "reply" : "replies"}
-              </p>
-              <p>
-                <Link href={`/controlroom/out-loud/${memo.slug}`}>{memo.slug}</Link>
-              </p>
-              {memo.replies.length ? (
-                <ol className="admin-out-loud-replies">
-                  {memo.replies.map((reply) => (
-                    <li key={reply.id}>
-                      <span>
-                        {reply.name || "internet human"} ·{" "}
-                        {formatVoiceDuration(reply.durationMs)}
-                      </span>
-                      <form action={removeVoiceReply}>
-                        <input type="hidden" name="id" value={reply.id} />
-                        <ConfirmButton
-                          className="admin-danger"
-                          message="Permanently delete this voice reply?"
-                        >
-                          Delete reply
-                        </ConfirmButton>
-                      </form>
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
-              <form action={removeVoiceMemo}>
-                <input type="hidden" name="id" value={memo.id} />
-                <ConfirmButton
-                  className="admin-danger"
-                  message="Permanently delete this memo and every reply?"
-                >
-                  Delete memo
-                </ConfirmButton>
-              </form>
-            </article>
-          ))}
-          {voiceMemos.length === 0 ? <p>No memos yet.</p> : null}
-        </div>
-      </section>
 
       <section className="admin-section" id="posties">
         <h2>Sunday Posties</h2>
