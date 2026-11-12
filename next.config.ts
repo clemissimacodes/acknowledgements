@@ -110,8 +110,6 @@ const nextConfig: NextConfig = {
       // Anything under /secrets collapses to the challenge itself.
       { source: "/secrets/:path+", destination: "/secrets", permanent: false },
       { source: "/unlock", destination: "/secrets", permanent: false },
-      { source: "/cia", destination: "/secrets", permanent: true },
-      { source: "/cia/:path*", destination: "/secrets", permanent: true },
       {
         source: "/admin/:path*",
         destination: "/controlroom/:path*",
