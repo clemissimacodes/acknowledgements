@@ -146,15 +146,18 @@ export function Skip15Icon({
       aria-hidden="true"
       style={forward ? { transform: "scaleX(-1)" } : undefined}
     >
+      {/* Open ring (centre 12,12.5 r7.5): tail at ~10 o'clock, travels
+          counter-clockwise down the left, round the bottom and over the
+          top to an arrowhead just left of 12 o'clock pointing left. */}
       <path
-        d="M12 4.2a7.8 7.8 0 1 1-7.4 5.3"
+        d="M5.5 8.75 A7.5 7.5 0 1 0 10.06 5.26"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"
       />
       <path
-        d="M4.9 3.6v4.3h4.3"
+        d="M13.74 7.38 L10.06 5.26 L12.18 1.58"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.7"
@@ -163,7 +166,7 @@ export function Skip15Icon({
       />
       <text
         x="12"
-        y="14.6"
+        y="15.1"
         textAnchor="middle"
         fontSize="7.2"
         fontWeight="600"

@@ -3,7 +3,7 @@ export type RecordingFolder = (typeof RECORDING_FOLDERS)[number];
 
 export const FOLDER_LABELS: Record<RecordingFolder, string> = {
   notes: "Journal",
-  singing: "Singing Practice",
+  singing: "Song Therapy",
 };
 
 export type RecordingView = "all" | "favorites" | RecordingFolder;

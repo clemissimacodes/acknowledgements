@@ -34,10 +34,6 @@ export async function VoiceMemosPage({ slug }: { slug: string | null }) {
           isOwner={isAdminUser(user)}
         />
       </MacWindow>
-      <p className={styles.shortcuts}>
-        <kbd>space</kbd> play · <kbd>←</kbd> <kbd>→</kbd> 15s · <kbd>↑</kbd>{" "}
-        <kbd>↓</kbd> recordings · <kbd>F</kbd> heart · <kbd>L</kbd> loop
-      </p>
     </main>
   );
 }

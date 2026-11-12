@@ -108,6 +108,7 @@ export function VoiceMemosApp({
   const [loop, setLoop] = useState<LoopRegion | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [peaksById, setPeaksById] = useState<Record<string, number[]>>({});
   const [silencesById, setSilencesById] = useState<Record<string, Silence[]>>({});
@@ -502,6 +503,10 @@ export function VoiceMemosApp({
           toggleLoop();
           break;
         case "Escape":
+          if (panelOpen) {
+            setPanelOpen(false);
+            break;
+          }
           setOptionsOpen(false);
           setShareOpen(false);
           setMobileDetail(false);
@@ -817,10 +822,28 @@ export function VoiceMemosApp({
                 >
                   <LoopIcon />
                 </button>
+                <button
+                  type="button"
+                  className={`${styles.tool}${panelOpen ? ` ${styles.toolActive}` : ""}`}
+                  aria-label="Notes and voice replies"
+                  aria-expanded={panelOpen}
+                  onClick={() => {
+                    setPanelOpen((value) => !value);
+                    setOptionsOpen(false);
+                    setShareOpen(false);
+                  }}
+                >
+                  <NoteBadgeIcon size={17} />
+                  {selectedNotes.length + selectedReplies.length ? (
+                    <span className={styles.toolCount}>
+                      {selectedNotes.length + selectedReplies.length}
+                    </span>
+                  ) : null}
+                </button>
               </div>
             </div>
 
-            <div className={styles.scroller}>
+            <div className={styles.stage}>
               <header className={styles.heading}>
                 <h2>{selected.title}</h2>
                 <p>
@@ -885,7 +908,25 @@ export function VoiceMemosApp({
                   <Skip15Icon forward />
                 </button>
               </div>
+            </div>
 
+            <aside
+              className={`${styles.panel}${panelOpen ? ` ${styles.panelOpen}` : ""}`}
+              aria-label="Notes and voice replies"
+              aria-hidden={!panelOpen}
+            >
+              <header className={styles.panelHeader}>
+                <h3>Notes & Replies</h3>
+                <button
+                  type="button"
+                  className={styles.panelClose}
+                  aria-label="Close"
+                  onClick={() => setPanelOpen(false)}
+                >
+                  <CloseIcon size={12} />
+                </button>
+              </header>
+              <div className={styles.panelBody}>
               <section className={styles.notes} aria-label="Notes">
                 <h3>
                   Notes
@@ -979,7 +1020,8 @@ export function VoiceMemosApp({
                   onCreated={onReplyCreated}
                 />
               </section>
-            </div>
+              </div>
+            </aside>
           </>
         ) : (
           <div className={styles.blank}>

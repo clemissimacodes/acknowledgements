@@ -66,6 +66,10 @@ export function MacWindow({ children }: { children: React.ReactNode }) {
           <p className={styles.titlebarTitle} aria-hidden="true">
             Voice Memos
           </p>
+          <p className={styles.shortcuts}>
+            <kbd>space</kbd> play · <kbd>←</kbd><kbd>→</kbd> 15s · <kbd>↑</kbd>
+            <kbd>↓</kbd> memos · <kbd>F</kbd> heart · <kbd>L</kbd> loop
+          </p>
         </div>
         {children}
       </div>

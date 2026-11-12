@@ -16,12 +16,16 @@
   --vm-wave-dim: rgba(29, 29, 31, 0.3);
   --vm-loop: #ffcc00;
   --vm-loop-fill: rgba(255, 204, 0, 0.14);
+  --vm-grad-a: #0a84ff;
+  --vm-grad-b: #bf5af2;
+  --vm-glow: rgba(10, 132, 255, 0.14);
   --vm-shadow: 0 24px 60px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
   --vm-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
     Inter, system-ui, "Helvetica Neue", Arial, sans-serif;
   color-scheme: light;
-  min-height: 100dvh;
-  padding: var(--site-content-top) var(--site-gutter) 3rem;
+  height: 100dvh;
+  overflow: hidden;
+  padding: var(--site-content-top) var(--site-gutter) 1.25rem;
   background: var(--paper, #f6f1e8);
   font-family: var(--vm-font);
   color: var(--vm-text);
@@ -40,6 +44,9 @@
     --vm-accent: #0a84ff;
     --vm-wave: #f2f2f2;
     --vm-wave-dim: rgba(242, 242, 242, 0.32);
+    --vm-grad-a: #4da3ff;
+    --vm-grad-b: #d58bff;
+    --vm-glow: rgba(77, 163, 255, 0.2);
     --vm-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
     color-scheme: dark;
     background: #111;
@@ -50,8 +57,8 @@
   display: flex;
   flex-direction: column;
   width: min(100%, 1180px);
-  height: calc(100dvh - var(--site-content-top) - 3rem);
-  min-height: 560px;
+  height: calc(100dvh - var(--site-content-top) - 1.25rem);
+  min-height: 0;
   margin: 0 auto;
   overflow: hidden;
   border-radius: 12px;
@@ -409,15 +416,19 @@
 /* ---- Detail -------------------------------------------------------- */
 
 .detail {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   background: var(--vm-surface);
 }
 
 .toolbar {
   display: flex;
+  grid-column: 1 / -1;
   flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
@@ -593,10 +604,70 @@
   transform: translateX(16px);
 }
 
-.scroller {
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 22px 16px;
+}
+
+/* Notes and replies live in a side column that pushes the player over,
+   so nothing on the page ever has to scroll. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid transparent;
+  background: var(--vm-sidebar);
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  visibility: hidden;
+}
+
+.panelOpen {
+  width: 340px;
+  border-left-color: var(--vm-rule);
+  visibility: visible;
+}
+
+.panel > * {
+  width: 340px;
+}
+
+.panelHeader {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+
+.panelHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.panelClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--vm-fill);
+  color: var(--vm-text);
+  cursor: default;
+}
+
+.panelBody {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 18px 22px 28px;
+  padding: 0 16px 20px;
   overflow-y: auto;
 }
 
@@ -629,15 +700,17 @@
 
 .waveform {
   display: block;
+  flex: 1 1 auto;
   width: 100%;
-  height: clamp(220px, 38vh, 380px);
-  margin-top: 26px;
+  min-height: 110px;
+  margin-top: 10px;
   cursor: ew-resize;
   touch-action: none;
 }
 
 .overviewWrap {
-  margin-top: 32px;
+  flex: 0 0 auto;
+  margin-top: 14px;
 }
 
 .overview {
@@ -658,8 +731,9 @@
 }
 
 .readout {
-  margin: 22px 0 6px;
-  font-size: 34px;
+  flex: 0 0 auto;
+  margin: 12px 0 4px;
+  font-size: 32px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
@@ -668,6 +742,7 @@
 
 .transport {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -710,8 +785,11 @@
 
 .notes,
 .replies {
-  max-width: 560px;
-  margin: 36px auto 0;
+  margin: 10px 0 0;
+}
+
+.replies {
+  margin-top: 22px;
 }
 
 .notes h3,
@@ -998,19 +1076,23 @@
 }
 
 .shortcuts {
-  max-width: 1180px;
-  margin: 14px auto 0;
+  position: absolute;
+  right: 12px;
+  margin: 0;
   color: var(--vm-secondary);
-  font-size: 12px;
-  text-align: center;
+  font-size: 11px;
 }
 
 .shortcuts kbd {
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
   background: var(--vm-fill);
   font: inherit;
-  font-size: 11px;
+  font-size: 10px;
+}
+
+.shortcuts kbd + kbd {
+  margin-left: 2px;
 }
 
 /* ---- Phone: list first, detail slides over like iOS ---------------- */
@@ -1085,7 +1167,7 @@
   }
 
   .showDetail .detail {
-    display: flex;
+    display: grid;
   }
 
   .back {
@@ -1097,13 +1179,8 @@
     padding: 6px 10px;
   }
 
-  .scroller {
-    padding: 14px 14px 32px;
-  }
-
-  .waveform {
-    height: clamp(180px, 32vh, 280px);
-    margin-top: 16px;
+  .stage {
+    padding: 10px 14px 14px;
   }
 
   .readout {
@@ -1113,9 +1190,33 @@
   .shortcuts {
     display: none;
   }
+
+  /* On phones the panel is a bottom sheet over the player. */
+  .panel {
+    position: absolute;
+    z-index: 4;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 78%;
+    border-left: 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.16), 0 -1px 0 var(--vm-rule);
+    transform: translateY(104%);
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .panel > * {
+    width: auto;
+  }
+
+  .panelOpen {
+    transform: none;
+  }
 }
 
-@media (hover: none) {
+@media (hover: none), (max-width: 1080px) {
   .shortcuts {
     display: none;
   }

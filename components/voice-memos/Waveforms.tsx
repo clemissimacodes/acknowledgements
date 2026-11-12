@@ -51,8 +51,8 @@ function useCanvasSize(
 /* ------------------------------------------------------------------ */
 
 const PIXELS_PER_SECOND = 108;
-const BAR_STEP = 3;
-const BAR_WIDTH = 1.6;
+const BAR_STEP = 4;
+const BAR_WIDTH = 2.2;
 
 type WaveformProps = {
   peaks: number[] | null;
@@ -90,9 +90,11 @@ export function Waveform({
     context.clearRect(0, 0, width, height);
 
     const wave = cssVar(canvas, "--vm-wave", "#1d1d1f");
-    const dim = cssVar(canvas, "--vm-wave-dim", "rgba(29,29,31,0.3)");
     const rule = cssVar(canvas, "--vm-rule", "rgba(60,60,67,0.18)");
     const accent = cssVar(canvas, "--vm-accent", "#0a84ff");
+    const gradA = cssVar(canvas, "--vm-grad-a", "#0a84ff");
+    const gradB = cssVar(canvas, "--vm-grad-b", "#bf5af2");
+    const glow = cssVar(canvas, "--vm-glow", "rgba(10,132,255,0.18)");
     const tickText = cssVar(canvas, "--vm-secondary", "#8e8e93");
 
     const rulerHeight = 26;
@@ -101,25 +103,42 @@ export function Waveform({
     const mid = waveTop + waveHeight / 2;
     const cx = width / 2;
 
-    // Baseline hairlines top and bottom of the wave area.
+    // A soft halo behind the playhead so the "now" reads at a glance.
+    const halo = context.createRadialGradient(cx, mid, 0, cx, mid, waveHeight * 0.75);
+    halo.addColorStop(0, glow);
+    halo.addColorStop(1, "rgba(0,0,0,0)");
+    context.fillStyle = halo;
+    context.fillRect(0, waveTop, width, waveHeight);
+
+    // Centre baseline.
     context.fillStyle = rule;
-    context.fillRect(0, waveTop, width, 1);
-    context.fillRect(0, waveTop + waveHeight - 1, width, 1);
+    context.fillRect(0, mid - 0.5, width, 1);
 
     if (peaks && duration > 0) {
-      for (let x = (cx % BAR_STEP); x < width; x += BAR_STEP) {
+      const playedFill = context.createLinearGradient(0, mid - waveHeight / 2, 0, mid + waveHeight / 2);
+      playedFill.addColorStop(0, gradA);
+      playedFill.addColorStop(1, gradB);
+      const step = BAR_STEP / PIXELS_PER_SECOND;
+      const usable = waveHeight - 28;
+      for (let x = cx % BAR_STEP; x < width; x += BAR_STEP) {
         const t = time + (x - cx) / PIXELS_PER_SECOND;
         if (t < 0 || t > duration) continue;
-        const step = BAR_STEP / PIXELS_PER_SECOND;
-        const amp = peakAt(peaks, duration, t, t + step);
-        const h = Math.max(1.5, amp * (waveHeight - 24));
+        const amp = Math.sqrt(peakAt(peaks, duration, t, t + step));
+        const h = Math.max(2.5, amp * usable);
         const inLoop = !loop || (t >= loop.a && t <= loop.b);
-        context.fillStyle = inLoop ? wave : dim;
-        context.fillRect(x - BAR_WIDTH / 2, mid - h / 2, BAR_WIDTH, h);
+        // Bars fade toward the strip's left and right edges.
+        const edge = Math.min(1, Math.min(x, width - x) / (width * 0.18));
+        const played = x <= cx;
+        context.globalAlpha = (inLoop ? 1 : 0.28) * (0.25 + 0.75 * edge);
+        context.fillStyle = played ? playedFill : wave;
+        context.beginPath();
+        context.roundRect(x - BAR_WIDTH / 2, mid - h / 2, BAR_WIDTH, h, BAR_WIDTH / 2);
+        context.fill();
       }
+      context.globalAlpha = 1;
     }
 
-    // Loop region tint.
+    // Loop region.
     if (loop && duration > 0) {
       const ax = cx + (loop.a - time) * PIXELS_PER_SECOND;
       const bx = cx + (loop.b - time) * PIXELS_PER_SECOND;
@@ -151,12 +170,12 @@ export function Waveform({
       }
     }
 
-    // Playhead: blue hairline with a dot above and below.
+    // Playhead: hairline with a dot above and below.
     context.fillStyle = accent;
-    context.fillRect(cx - 0.75, waveTop - 6, 1.5, waveHeight + 12);
+    context.fillRect(cx - 0.75, waveTop + 2, 1.5, waveHeight - 4);
     context.beginPath();
-    context.arc(cx, waveTop - 4, 3.2, 0, Math.PI * 2);
-    context.arc(cx, waveTop + waveHeight + 4, 3.2, 0, Math.PI * 2);
+    context.arc(cx, waveTop + 4, 3.2, 0, Math.PI * 2);
+    context.arc(cx, waveTop + waveHeight - 4, 3.2, 0, Math.PI * 2);
     context.fill();
   }, []);
 
@@ -244,8 +263,9 @@ export function Overview({
     context.clearRect(0, 0, width, height);
 
     const wave = cssVar(canvas, "--vm-wave", "#1d1d1f");
-    const played = cssVar(canvas, "--vm-wave-dim", "rgba(29,29,31,0.3)");
     const accent = cssVar(canvas, "--vm-accent", "#0a84ff");
+    const gradA = cssVar(canvas, "--vm-grad-a", "#0a84ff");
+    const gradB = cssVar(canvas, "--vm-grad-b", "#bf5af2");
     const loopColor = cssVar(canvas, "--vm-loop", "#ffcc00");
     const loopFill = cssVar(canvas, "--vm-loop-fill", "rgba(255,204,0,0.16)");
     const track = cssVar(canvas, "--vm-fill", "rgba(120,120,128,0.12)");
@@ -254,21 +274,29 @@ export function Overview({
 
     context.fillStyle = track;
     context.beginPath();
-    context.roundRect(0, 0, width, height, 6);
+    context.roundRect(0, 0, width, height, 8);
     context.fill();
 
     const mid = height / 2;
-    const step = 2;
+    const step = 2.5;
     const progressX = duration > 0 ? pad + (time / duration) * inner : pad;
     if (peaks && duration > 0) {
+      const playedFill = context.createLinearGradient(pad, 0, progressX, 0);
+      playedFill.addColorStop(0, gradA);
+      playedFill.addColorStop(1, gradB);
       for (let x = pad; x < width - pad; x += step) {
         const from = ((x - pad) / inner) * duration;
         const to = ((x - pad + step) / inner) * duration;
-        const amp = peakAt(peaks, duration, from, to);
-        const h = Math.max(1.5, amp * (height - 12));
-        context.fillStyle = x < progressX ? played : wave;
-        context.fillRect(x, mid - h / 2, 1.1, h);
+        const amp = Math.sqrt(peakAt(peaks, duration, from, to));
+        const h = Math.max(2, amp * (height - 12));
+        const played = x < progressX;
+        context.globalAlpha = played ? 1 : 0.55;
+        context.fillStyle = played ? playedFill : wave;
+        context.beginPath();
+        context.roundRect(x, mid - h / 2, 1.4, h, 0.7);
+        context.fill();
       }
+      context.globalAlpha = 1;
     }
 
     if (loop && duration > 0) {
