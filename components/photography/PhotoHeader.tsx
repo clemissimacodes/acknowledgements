@@ -21,19 +21,15 @@ const SECTIONS: Array<{ id: Section; href: string; label: string }> = [
   { id: "ask", href: "/ask", label: "Leave a Note" },
 ];
 
-// The section's own name, laid on the same four columns as the index so it
-// sits above the "P." column. The site anchor (top left) carries the name.
+// The section's name as the page's title, flush with the lede and index
+// below it. On a poem or note it leads back to the section.
 export function PhotoHeader({ current }: { current: Section }) {
   const section = SECTIONS.find((item) => item.id === current) ?? SECTIONS[0];
   return (
-    <nav className="photo-header" aria-label="Section">
-      <span className="photo-col-no" aria-hidden="true" />
-      <span className="photo-col-title" aria-hidden="true" />
-      <span className="photo-col-note">
-        <Link href={section.href} className="is-current" aria-current="page">
-          {section.label}
-        </Link>
-      </span>
+    <nav className="photo-header photo-section" aria-label="Section">
+      <Link href={section.href} className="is-current">
+        {section.label}
+      </Link>
     </nav>
   );
 }
