@@ -3,7 +3,7 @@ export type RecordingFolder = (typeof RECORDING_FOLDERS)[number];
 
 export const FOLDER_LABELS: Record<RecordingFolder, string> = {
   notes: "Need to Remember This Stuff",
-  singing: "Part Clemi, Part Hummingbird",
+  singing: "i’m half human half hummingbird",
   stories: "I’m So Rich",
   dreams: "My Dreams",
   poems: "poems to memorize before i die so i can take them with me to my next life",
@@ -39,6 +39,8 @@ export type Recording = {
   peaks: number[] | null;
   favorite: boolean;
   hearts: number;
+  /** Listens that reached at least half the recording. */
+  plays: number;
   noteCount: number;
   replyCount: number;
   deletedAt: string | null;
