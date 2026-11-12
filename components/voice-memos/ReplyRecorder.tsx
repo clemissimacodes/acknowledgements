@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { REPLY_MAX_MS, type RecordingReply } from "@/lib/recording-types";
+import { REPLY_MAX_MS, type RecordingReply, type ResponseKind } from "@/lib/recording-types";
 import { fileFromRecording, pickRecorderMime, uploadRecordingFile } from "./audio";
 import styles from "./VoiceMemos.module.css";
 
@@ -11,9 +11,17 @@ type Props = {
   onNameChange: (name: string) => void;
   onCreated: (reply: RecordingReply) => void;
   showName?: boolean;
+  parent?: { kind: ResponseKind; id: string };
 };
 
-export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, showName = true }: Props) {
+export function ReplyRecorder({
+  recordingId,
+  name,
+  onNameChange,
+  onCreated,
+  showName = true,
+  parent,
+}: Props) {
   const [busy, setBusy] = useState(false);
   const [holding, setHolding] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -55,6 +63,8 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, show
             url: uploaded.url,
             pathname: uploaded.pathname,
             website: honeyRef.current?.value ?? "",
+            parentKind: parent?.kind,
+            parentId: parent?.id,
           }),
         });
         const data = (await response.json()) as {
@@ -75,7 +85,7 @@ export function ReplyRecorder({ recordingId, name, onNameChange, onCreated, show
         setBusy(false);
       }
     },
-    [recordingId, name, onCreated],
+    [recordingId, name, onCreated, parent],
   );
 
   const stopRecording = useCallback(() => {

@@ -9,10 +9,12 @@ import {
   RECORDING_MAX_MS,
   REPLY_MAX_MS,
   isRecordingFolder,
+  isResponseKind,
   type Recording,
   type RecordingFolder,
   type RecordingNote,
   type RecordingReply,
+  type ResponseKind,
 } from "@/lib/recording-types";
 
 export { AUDIO_CONTENT_TYPES } from "@/lib/voice-memos";
@@ -159,6 +161,23 @@ function ensureTables() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
+      for (const table of ["recording_notes", "recording_replies"]) {
+        await sql.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS parent_kind TEXT`);
+        await sql.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS parent_id TEXT`);
+        await sql.query(
+          `ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS by_owner BOOLEAN NOT NULL DEFAULT FALSE`,
+        );
+      }
+      // The owner's heart is stored under OWNER_HEART so it can be told apart.
+      await sql`
+        CREATE TABLE IF NOT EXISTS response_hearts (
+          kind TEXT NOT NULL,
+          response_id TEXT NOT NULL,
+          visitor_hash TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          PRIMARY KEY (kind, response_id, visitor_hash)
+        )
+      `;
       await sql`
         CREATE INDEX IF NOT EXISTS recordings_recorded_idx
         ON recordings (deleted_at, recorded_at DESC)
@@ -202,6 +221,7 @@ function mapNote(row: Record<string, unknown>): RecordingNote {
     name: row.author_name ? String(row.author_name) : null,
     body: String(row.body),
     createdAt: iso(row.created_at),
+    ...responseFields(row),
   };
 }
 
@@ -213,8 +233,36 @@ function mapReply(row: Record<string, unknown>): RecordingReply {
     durationMs: Number(row.duration_ms),
     url: String(row.blob_url),
     createdAt: iso(row.created_at),
+    ...responseFields(row),
   };
 }
+
+function responseFields(row: Record<string, unknown>) {
+  return {
+    parentKind: isResponseKind(row.parent_kind) ? row.parent_kind : null,
+    parentId: row.parent_id ? String(row.parent_id) : null,
+    byOwner: Boolean(row.by_owner),
+    hearts: Number(row.hearts ?? 0),
+    ownerHearted: Boolean(row.owner_hearted),
+  };
+}
+
+const OWNER_HEART = "owner";
+const OWNER_NAME = "clem";
+
+function responseColumns(kind: ResponseKind, alias: string) {
+  return `
+    ${alias}.parent_kind, ${alias}.parent_id, ${alias}.by_owner,
+    (SELECT COUNT(*)::int FROM response_hearts rh
+      WHERE rh.kind = '${kind}' AND rh.response_id = ${alias}.id) AS hearts,
+    EXISTS (SELECT 1 FROM response_hearts rh
+      WHERE rh.kind = '${kind}' AND rh.response_id = ${alias}.id
+        AND rh.visitor_hash = '${OWNER_HEART}') AS owner_hearted
+  `;
+}
+
+const NOTE_COLUMNS = `n.id, n.recording_id, n.author_name, n.body, n.created_at, ${responseColumns("note", "n")}`;
+const REPLY_COLUMNS = `p.id, p.recording_id, p.author_name, p.duration_ms, p.blob_url, p.created_at, ${responseColumns("reply", "p")}`;
 
 const RECORDING_COLUMNS = `
   r.id, r.slug, r.title, r.folder, r.recorded_at, r.duration_ms,
@@ -274,41 +322,37 @@ export async function getRecordingById(idValue: unknown) {
 
 export async function listNotes(recordingId: string) {
   await ensureTables();
-  const rows = await db()`
-    SELECT id, recording_id, author_name, body, created_at
-    FROM recording_notes WHERE recording_id = ${recordingId}
-    ORDER BY created_at ASC
-  `;
+  const rows = (await db().query(
+    `SELECT ${NOTE_COLUMNS} FROM recording_notes n WHERE n.recording_id = $1 ORDER BY n.created_at ASC`,
+    [recordingId],
+  )) as Record<string, unknown>[];
   return rows.map((row) => mapNote(row as Record<string, unknown>));
 }
 
 export async function listReplies(recordingId: string) {
   await ensureTables();
-  const rows = await db()`
-    SELECT id, recording_id, author_name, duration_ms, blob_url, created_at
-    FROM recording_replies WHERE recording_id = ${recordingId}
-    ORDER BY created_at ASC
-  `;
+  const rows = (await db().query(
+    `SELECT ${REPLY_COLUMNS} FROM recording_replies p WHERE p.recording_id = $1 ORDER BY p.created_at ASC`,
+    [recordingId],
+  )) as Record<string, unknown>[];
   return rows.map((row) => mapReply(row as Record<string, unknown>));
 }
 
 export async function listAllNotes() {
   if (!databaseUrl()) return [] as RecordingNote[];
   await ensureTables();
-  const rows = await db()`
-    SELECT id, recording_id, author_name, body, created_at
-    FROM recording_notes ORDER BY created_at DESC LIMIT 500
-  `;
+  const rows = (await db().query(
+    `SELECT ${NOTE_COLUMNS} FROM recording_notes n ORDER BY n.created_at DESC LIMIT 1000`,
+  )) as Record<string, unknown>[];
   return rows.map((row) => mapNote(row as Record<string, unknown>));
 }
 
 export async function listAllReplies() {
   if (!databaseUrl()) return [] as RecordingReply[];
   await ensureTables();
-  const rows = await db()`
-    SELECT id, recording_id, author_name, duration_ms, blob_url, created_at
-    FROM recording_replies ORDER BY created_at DESC LIMIT 500
-  `;
+  const rows = (await db().query(
+    `SELECT ${REPLY_COLUMNS} FROM recording_replies p ORDER BY p.created_at DESC LIMIT 1000`,
+  )) as Record<string, unknown>[];
   return rows.map((row) => mapReply(row as Record<string, unknown>));
 }
 
@@ -319,6 +363,15 @@ export async function heartedByVisitor(visitorHash: string | null) {
     SELECT recording_id FROM recording_hearts WHERE visitor_hash = ${visitorHash}
   `;
   return rows.map((row) => String(row.recording_id));
+}
+
+export async function heartedResponsesByVisitor(visitorHash: string | null) {
+  if (!visitorHash || !databaseUrl()) return [] as string[];
+  await ensureTables();
+  const rows = await db()`
+    SELECT kind, response_id FROM response_hearts WHERE visitor_hash = ${visitorHash}
+  `;
+  return rows.map((row) => `${row.kind}:${row.response_id}`);
 }
 
 function slugify(title: string) {
@@ -540,30 +593,55 @@ async function assertNotFlooding(table: "recording_notes" | "recording_replies",
   }
 }
 
+type ResponseAuthor = { visitorHash: string | null; byOwner: boolean };
+
+/** The parent must be a response on the same recording. */
+async function cleanParent(recordingId: string, kind: unknown, idValue: unknown) {
+  if (kind == null || kind === "" || idValue == null || idValue === "") return null;
+  if (!isResponseKind(kind)) throw new Error("Unknown reply.");
+  const id = cleanId(idValue);
+  const rows =
+    kind === "note"
+      ? await db()`SELECT id FROM recording_notes WHERE id = ${id} AND recording_id = ${recordingId}`
+      : await db()`SELECT id FROM recording_replies WHERE id = ${id} AND recording_id = ${recordingId}`;
+  if (!rows.length) throw new Error("That reply is gone.");
+  return { kind, id };
+}
+
 export async function addNote(input: {
   recordingId: unknown;
   name: unknown;
   body: unknown;
   website: unknown;
-  visitorHash: string | null;
-}) {
+  parentKind?: unknown;
+  parentId?: unknown;
+} & ResponseAuthor) {
   if (cleanText(input.website, 100)) return null;
   await ensureTables();
   const id = cleanId(input.recordingId);
   const body = cleanText(input.body, NOTE_MAX_LENGTH);
   if (body.length < 2) throw new Error("Say a little more.");
-  const name = cleanName(input.name);
+  const name = input.byOwner ? OWNER_NAME : cleanName(input.name);
   const live = await db()`
     SELECT id FROM recordings WHERE id = ${id} AND deleted_at IS NULL
   `;
   if (!live.length) throw new Error("Unknown recording.");
-  await assertNotFlooding("recording_notes", input.visitorHash, 12);
-  const rows = await db()`
-    INSERT INTO recording_notes (id, recording_id, author_name, body, visitor_hash)
-    VALUES (${randomUUID()}, ${id}, ${name}, ${body}, ${input.visitorHash})
-    RETURNING id, recording_id, author_name, body, created_at
+  const parent = await cleanParent(id, input.parentKind, input.parentId);
+  if (!input.byOwner) await assertNotFlooding("recording_notes", input.visitorHash, 12);
+  const noteId = randomUUID();
+  await db()`
+    INSERT INTO recording_notes (
+      id, recording_id, author_name, body, visitor_hash, parent_kind, parent_id, by_owner
+    ) VALUES (
+      ${noteId}, ${id}, ${name}, ${body}, ${input.visitorHash},
+      ${parent?.kind ?? null}, ${parent?.id ?? null}, ${input.byOwner}
+    )
   `;
-  return mapNote(rows[0] as Record<string, unknown>);
+  const rows = (await db().query(
+    `SELECT ${NOTE_COLUMNS} FROM recording_notes n WHERE n.id = $1`,
+    [noteId],
+  )) as Record<string, unknown>[];
+  return mapNote(rows[0]);
 }
 
 export async function addReply(input: {
@@ -573,8 +651,9 @@ export async function addReply(input: {
   url: unknown;
   pathname: unknown;
   website: unknown;
-  visitorHash: string | null;
-}) {
+  parentKind?: unknown;
+  parentId?: unknown;
+} & ResponseAuthor) {
   if (cleanText(input.website, 100)) return null;
   await ensureTables();
   const id = cleanId(input.recordingId);
@@ -589,34 +668,110 @@ export async function addReply(input: {
   ) {
     throw new Error("That reply is the wrong length.");
   }
-  const name = cleanName(input.name);
+  const name = input.byOwner ? OWNER_NAME : cleanName(input.name);
   const live = await db()`
     SELECT id FROM recordings WHERE id = ${id} AND deleted_at IS NULL
   `;
   if (!live.length) throw new Error("Unknown recording.");
-  await assertNotFlooding("recording_replies", input.visitorHash, 8);
-  const rows = await db()`
+  const parent = await cleanParent(id, input.parentKind, input.parentId);
+  if (!input.byOwner) await assertNotFlooding("recording_replies", input.visitorHash, 8);
+  const replyId = randomUUID();
+  await db()`
     INSERT INTO recording_replies (
-      id, recording_id, author_name, duration_ms, blob_url, blob_pathname, visitor_hash
+      id, recording_id, author_name, duration_ms, blob_url, blob_pathname, visitor_hash,
+      parent_kind, parent_id, by_owner
     ) VALUES (
-      ${randomUUID()}, ${id}, ${name}, ${durationMs}, ${url}, ${pathname}, ${input.visitorHash}
+      ${replyId}, ${id}, ${name}, ${durationMs}, ${url}, ${pathname}, ${input.visitorHash},
+      ${parent?.kind ?? null}, ${parent?.id ?? null}, ${input.byOwner}
     )
-    RETURNING id, recording_id, author_name, duration_ms, blob_url, created_at
   `;
-  return mapReply(rows[0] as Record<string, unknown>);
+  const rows = (await db().query(
+    `SELECT ${REPLY_COLUMNS} FROM recording_replies p WHERE p.id = $1`,
+    [replyId],
+  )) as Record<string, unknown>[];
+  return mapReply(rows[0]);
+}
+
+/** Deletes a response together with every reply nested under it. */
+async function deleteResponseTree(kind: ResponseKind, id: string) {
+  const queue: { kind: ResponseKind; id: string }[] = [{ kind, id }];
+  const blobs: string[] = [];
+  while (queue.length) {
+    const item = queue.shift()!;
+    const children = await db()`
+      SELECT 'note' AS kind, id FROM recording_notes
+        WHERE parent_kind = ${item.kind} AND parent_id = ${item.id}
+      UNION ALL
+      SELECT 'reply' AS kind, id FROM recording_replies
+        WHERE parent_kind = ${item.kind} AND parent_id = ${item.id}
+    `;
+    for (const child of children) {
+      if (isResponseKind(child.kind)) queue.push({ kind: child.kind, id: String(child.id) });
+    }
+    if (item.kind === "note") {
+      await db()`DELETE FROM recording_notes WHERE id = ${item.id}`;
+    } else {
+      const rows = await db()`
+        DELETE FROM recording_replies WHERE id = ${item.id} RETURNING blob_url
+      `;
+      if (rows[0]) blobs.push(String(rows[0].blob_url));
+    }
+    await db()`
+      DELETE FROM response_hearts WHERE kind = ${item.kind} AND response_id = ${item.id}
+    `;
+  }
+  await deleteBlobs(blobs);
 }
 
 export async function deleteNote(idValue: unknown) {
   await ensureTables();
-  const id = cleanId(idValue);
-  await db()`DELETE FROM recording_notes WHERE id = ${id}`;
+  await deleteResponseTree("note", cleanId(idValue));
 }
 
 export async function deleteReply(idValue: unknown) {
   await ensureTables();
+  await deleteResponseTree("reply", cleanId(idValue));
+}
+
+/** Visitors heart under their own hash; the owner's heart is kept apart so it
+    can be shown in orange. */
+export async function toggleResponseHeart(
+  kindValue: unknown,
+  idValue: unknown,
+  author: ResponseAuthor,
+) {
+  await ensureTables();
+  if (!isResponseKind(kindValue)) throw new Error("Unknown reply.");
+  const kind = kindValue;
   const id = cleanId(idValue);
-  const rows = await db()`
-    DELETE FROM recording_replies WHERE id = ${id} RETURNING blob_url
+  const hash = author.byOwner ? OWNER_HEART : author.visitorHash;
+  if (!hash) throw new Error("Hearts are unavailable.");
+  const exists =
+    kind === "note"
+      ? await db()`SELECT id FROM recording_notes WHERE id = ${id}`
+      : await db()`SELECT id FROM recording_replies WHERE id = ${id}`;
+  if (!exists.length) throw new Error("That reply is gone.");
+  const removed = await db()`
+    DELETE FROM response_hearts
+    WHERE kind = ${kind} AND response_id = ${id} AND visitor_hash = ${hash}
+    RETURNING response_id
   `;
-  if (rows[0]) await deleteBlobs([String(rows[0].blob_url)]);
+  if (!removed.length) {
+    await db()`
+      INSERT INTO response_hearts (kind, response_id, visitor_hash)
+      VALUES (${kind}, ${id}, ${hash})
+      ON CONFLICT DO NOTHING
+    `;
+  }
+  const counts = await db()`
+    SELECT
+      COUNT(*)::int AS hearts,
+      BOOL_OR(visitor_hash = ${OWNER_HEART}) AS owner_hearted
+    FROM response_hearts WHERE kind = ${kind} AND response_id = ${id}
+  `;
+  return {
+    hearted: !removed.length,
+    hearts: Number(counts[0]?.hearts ?? 0),
+    ownerHearted: Boolean(counts[0]?.owner_hearted),
+  };
 }

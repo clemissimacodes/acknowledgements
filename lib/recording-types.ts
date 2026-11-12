@@ -42,21 +42,37 @@ export type Recording = {
   deletedAt: string | null;
 };
 
-export type RecordingNote = {
+/** Notes are typed responses, replies are voice responses. Either can answer
+    the recording itself or another response. */
+export type ResponseKind = "note" | "reply";
+
+export function isResponseKind(value: unknown): value is ResponseKind {
+  return value === "note" || value === "reply";
+}
+
+export function responseKey(kind: ResponseKind, id: string) {
+  return `${kind}:${id}`;
+}
+
+type ResponseFields = {
   id: string;
   recordingId: string;
   name: string | null;
-  body: string;
   createdAt: string;
+  parentKind: ResponseKind | null;
+  parentId: string | null;
+  byOwner: boolean;
+  hearts: number;
+  ownerHearted: boolean;
 };
 
-export type RecordingReply = {
-  id: string;
-  recordingId: string;
-  name: string | null;
+export type RecordingNote = ResponseFields & {
+  body: string;
+};
+
+export type RecordingReply = ResponseFields & {
   durationMs: number;
   url: string;
-  createdAt: string;
 };
 
 export function isRecordingFolder(value: unknown): value is RecordingFolder {

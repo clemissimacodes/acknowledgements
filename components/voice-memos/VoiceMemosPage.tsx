@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { isAdminUser } from "@/lib/admin";
 import {
   heartedByVisitor,
+  heartedResponsesByVisitor,
   listAllNotes,
   listAllReplies,
   listRecordings,
@@ -19,7 +20,10 @@ export async function VoiceMemosPage({ slug }: { slug: string | null }) {
     currentUser().catch(() => null),
     visitorHash(),
   ]);
-  const hearted = await heartedByVisitor(hash).catch(() => []);
+  const [hearted, heartedResponses] = await Promise.all([
+    heartedByVisitor(hash).catch(() => []),
+    heartedResponsesByVisitor(hash).catch(() => []),
+  ]);
 
   return (
     <main className={`${styles.page} voice-memos-page`}>
@@ -30,6 +34,7 @@ export async function VoiceMemosPage({ slug }: { slug: string | null }) {
           notes={notes}
           replies={replies}
           hearted={hearted}
+          heartedResponses={heartedResponses}
           initialSlug={slug}
           isOwner={isAdminUser(user)}
         />
