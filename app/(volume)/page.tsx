@@ -160,6 +160,7 @@ export default function HomePage() {
             />
           </svg>
         </a>
+        <span className="index-email">clemshao[at]gmail[dot]com</span>
       </nav>
     </main>
   );

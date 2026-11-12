@@ -1173,7 +1173,7 @@ html:has(.about-page) .site-anchor,
 
 .poem-heading-button {
   display: block;
-  width: fit-content;
+  width: max-content;
   max-width: 100%;
   padding: 0;
   color: inherit;
@@ -3584,6 +3584,14 @@ html[data-theme="dark"] .appearance button.is-active {
   line-height: 18px;
   text-decoration: underline;
   text-underline-offset: 0.18em;
+}
+
+.elsewhere .index-email {
+  margin-left: 0.35rem;
+  color: var(--mute);
+  font-size: 0.72rem;
+  line-height: 18px;
+  user-select: all;
 }
 
 .radar-page {
