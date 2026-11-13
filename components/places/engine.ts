@@ -880,7 +880,7 @@ export class Atlas {
 
   private tick = (now: number) => {
     this.frame = requestAnimationFrame(this.tick);
-    const dt = clamp(now - (this.last || now), 0, 48);
+    const dt = clamp(now - (this.last || now), 0, 100);
     this.last = now;
     this.clock += dt;
     if (!this.width) return;

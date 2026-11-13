@@ -58,6 +58,18 @@
   outline: none;
 }
 
+/* The map dissolves into the footer's paper instead of stopping at a line. */
+.stage::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3.5rem;
+  background: linear-gradient(to bottom, transparent, var(--places-ground));
+  content: "";
+  pointer-events: none;
+}
+
 .stage canvas {
   position: absolute;
   inset: 0;

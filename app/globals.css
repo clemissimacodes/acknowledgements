@@ -6441,6 +6441,11 @@ html:has(.places-page) .volume {
   min-height: 0;
 }
 
+/* A drag that starts on the title or the card should not tug the page. */
+html:has(.places-page) {
+  overscroll-behavior: none;
+}
+
 html:has(.places-page) .site-anchor {
   background: none;
 }
