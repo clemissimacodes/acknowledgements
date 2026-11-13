@@ -109,6 +109,7 @@ export function PlacesMap({
   const [dark, setDark] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [pin, setPin] = useState<Spot | null>(null);
+  const [placing, setPlacing] = useState(false);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<PlaceMatch[] | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -116,6 +117,7 @@ export function PlacesMap({
   const [pending, startTransition] = useTransition();
   const [searching, startSearch] = useTransition();
   const andNext = useRef(false);
+  const guess = useRef("");
 
   const home = useMemo(
     () => places.find((place) => place.kind === "hometown") ?? null,
@@ -189,10 +191,13 @@ export function PlacesMap({
         },
         onPin(spot) {
           setPin(spot);
-          setDraft((current) => ({
-            ...current,
-            country: atlas.countryName(spot) || current.country,
-          }));
+          setPlacing(true);
+          const found = atlas.countryName(spot);
+          const guessed = guess.current;
+          guess.current = found;
+          setDraft((current) =>
+            current.country && current.country !== guessed ? current : { ...current, country: found },
+          );
           atlas.setPin(spot, false);
         },
       },
@@ -296,6 +301,7 @@ export function PlacesMap({
   const beginAdd = () => {
     open(null);
     setDraft(EMPTY_DRAFT);
+    guess.current = "";
     setPin(null);
     setMatches(null);
     setQuery("");
@@ -384,7 +390,9 @@ export function PlacesMap({
   const choose = (match: PlaceMatch) => {
     const spot = { lat: match.lat, lng: match.lng };
     setPin(spot);
+    setPlacing(false);
     setMatches(null);
+    guess.current = match.country;
     setDraft((current) => ({ ...current, name: match.name, country: match.country }));
     atlasRef.current?.setPin(spot, true);
   };
@@ -416,6 +424,7 @@ export function PlacesMap({
             {...field("year")}
             inputMode="numeric"
             pattern="[0-9]{4}"
+            title="Four digits, like 2019"
             maxLength={4}
             placeholder="—"
             autoComplete="off"
@@ -494,10 +503,25 @@ export function PlacesMap({
             <p className={styles.hint}>Nothing by that name. Tap the map to drop the pin.</p>
           )
         ) : null}
-        {pin ? (
+        {pin && placing ? (
+          <div className={styles.form}>
+            <p className={styles.coordinates}>
+              <span>Pin at {formatCoordinates(pin.lat, pin.lng)}</span>
+              <span>Tap the map to move it</span>
+            </p>
+            <div className={styles.actions}>
+              <button type="button" className={styles.action} data-strong="" onClick={() => setPlacing(false)}>
+                Use this spot
+              </button>
+            </div>
+          </div>
+        ) : pin ? (
           <form className={styles.form} onSubmit={onAdd}>
             <p className={styles.coordinates}>
-              Pin at {formatCoordinates(pin.lat, pin.lng)}. Tap the map to move it.
+              <span>Pin at {formatCoordinates(pin.lat, pin.lng)}</span>
+              <button type="button" onClick={() => setPlacing(true)}>
+                Move the pin
+              </button>
             </p>
             {nameFields}
             {detailFields}

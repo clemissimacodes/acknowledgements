@@ -197,6 +197,11 @@
   transition: opacity 0.25s ease;
 }
 
+.root:has(.card[data-form]) .zoom {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .zoom button {
   display: grid;
   place-items: center;
@@ -347,6 +352,23 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.coordinates button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pl-soft);
+  letter-spacing: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--pl-line);
+  text-transform: inherit;
+  text-underline-offset: 0.3em;
+}
+
+.coordinates button:hover {
+  color: var(--pl-ink);
 }
 
 .cardFoot {
@@ -627,9 +649,13 @@
 
   /* A form sits at the top instead, clear of the keyboard. */
   .card[data-form] {
-    top: calc(var(--site-anchor-top) + 2.5rem);
+    top: calc(var(--site-anchor-top) + 2.3rem);
     bottom: auto;
-    max-height: calc(100% - var(--site-anchor-top) - 3.2rem);
+    max-height: calc(100% - var(--site-anchor-top) - 2.7rem);
+  }
+
+  .card[data-form] .form {
+    gap: 0.45rem;
   }
 
   .root[data-open] .key,
