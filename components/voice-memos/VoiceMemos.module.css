@@ -27,7 +27,7 @@
   --vm-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
     Inter, system-ui, "Helvetica Neue", Arial, sans-serif;
   color-scheme: light;
-  height: 100dvh;
+  height: calc(100dvh - var(--site-footer-height));
   overflow: hidden;
   padding: var(--site-content-top) var(--site-gutter) 1.25rem;
   background: var(--paper, #f6f1e8);
@@ -64,7 +64,7 @@
   display: flex;
   flex-direction: column;
   width: min(100%, 1180px);
-  height: calc(100dvh - var(--site-content-top) - 1.25rem);
+  height: calc(100dvh - var(--site-footer-height) - var(--site-content-top) - 1.25rem);
   min-height: 0;
   margin: 0 auto;
   overflow: hidden;
@@ -1341,7 +1341,7 @@
 
   .window {
     width: 100%;
-    height: calc(100dvh - var(--site-content-top));
+    height: calc(100dvh - var(--site-footer-height) - var(--site-content-top));
     min-height: 0;
     border-radius: 18px 18px 0 0;
     box-shadow: 0 -2px 0 var(--vm-rule);
