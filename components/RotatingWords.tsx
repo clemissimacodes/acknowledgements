@@ -7,7 +7,15 @@ function readingTime(phrase: string) {
   return 220 + phrase.length * 38;
 }
 
-export function RotatingWords({ words }: { words: readonly string[] }) {
+export function RotatingWords({
+  words,
+  prefix = "",
+  suffix = "",
+}: {
+  words: readonly string[];
+  prefix?: string;
+  suffix?: string;
+}) {
   const [index, setIndex] = useState(0);
   const [still, setStill] = useState(false);
 
@@ -28,11 +36,19 @@ export function RotatingWords({ words }: { words: readonly string[] }) {
     return () => window.clearTimeout(timer);
   }, [index, still, words]);
 
+  // Every phrase sits in the same grid cell, so the slot is always as tall as
+  // the longest one and the text around it never reflows.
   return (
     <>
-      <span className="visually-hidden">{words.join(", ")}</span>
+      <span className="visually-hidden">
+        {prefix} {words.join(", ")} {suffix}
+      </span>
       <span className="rotating-words" aria-hidden="true">
-        {words[index]}
+        {words.map((word, wordIndex) => (
+          <span key={word} className={wordIndex === index ? "is-current" : undefined}>
+            {prefix} <em>{word}</em> {suffix}
+          </span>
+        ))}
       </span>
     </>
   );

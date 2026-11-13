@@ -246,7 +246,16 @@ input {
 }
 
 .rotating-words {
-  font-style: italic;
+  display: grid;
+}
+
+.rotating-words > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.rotating-words > span.is-current {
+  visibility: visible;
 }
 
 .index-bio a:hover,

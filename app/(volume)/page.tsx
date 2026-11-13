@@ -66,8 +66,8 @@ export default function HomePage() {
         <a href="https://x.com/clemissima" target="_blank" rel="noreferrer">
           @clemissima
         </a>{" "}
-        - I’m always open to new friends to <RotatingWords words={friendThings} />{" "}
-        with.
+        - I’m always open to new friends
+        <RotatingWords words={friendThings} prefix="to" suffix="with." />
       </p>
       <nav className="toc" aria-label="Contents">
         <h2>Contents</h2>
