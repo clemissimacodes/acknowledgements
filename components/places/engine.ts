@@ -1435,8 +1435,8 @@ export class Atlas {
     const { first, last } = this.copies(jet.x - 40, jet.x + 40);
     for (let copy = first; copy <= last; copy += 1) {
       const x = originX + (jet.x + copy * WORLD_WIDTH) * k + jet.facing * 15 * size;
-      const y = originY + jet.y * k - 21 * size;
-      boxes.push([x - half, y - 22, x + half, y + 12]);
+      const y = originY + jet.y * k;
+      boxes.push([x - half, y - 21 * size - 22, x + half, y - 9]);
     }
     return boxes;
   }
