@@ -245,6 +245,10 @@ input {
   transition: text-decoration-color 0.2s ease;
 }
 
+.index-bio:has(+ .index-bio) {
+  margin-bottom: 0.9em;
+}
+
 .rotating-words {
   display: grid;
 }

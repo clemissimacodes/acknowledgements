@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PhotoHeader } from "@/components/photography/PhotoHeader";
+import { PoemReads } from "@/components/poetry/PoemReads";
 import { PoetryAnnotations } from "@/components/poetry/PoetryAnnotations";
 import { TurnipChase } from "@/components/poetry/TurnipChase";
 import { rollNumber } from "@/lib/photography-format";
@@ -44,6 +45,7 @@ export default async function PoemPage({
           <span>{rollNumber(index)}</span>
           <span>{poem.year}</span>
           <span>{poemLines(poem).filter(Boolean).length} lines</span>
+          <PoemReads slug={poem.slug} />
         </p>
         <PoetryAnnotations
           slug={poem.slug}
