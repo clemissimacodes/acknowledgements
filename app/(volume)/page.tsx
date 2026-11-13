@@ -62,7 +62,10 @@ export default function HomePage() {
         Francisco. I maintain my cardiovascular homeostasis from my eternal
         pursuit of <Link href="/poetry">poetry</Link>,{" "}
         <Link href="/teeny-tiny-things">play</Link>, and{" "}
-        <Link href="/ask">friendship with the world</Link>. Message me on X{" "}
+        <Link href="/ask">friendship with the world</Link>.
+      </p>
+      <p className="index-bio">
+        Message me on X{" "}
         <a href="https://x.com/clemissima" target="_blank" rel="noreferrer">
           @clemissima
         </a>{" "}
