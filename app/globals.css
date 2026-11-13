@@ -6018,6 +6018,10 @@ html:has(.store-page) .site-anchor {
   white-space: nowrap;
 }
 
+.poetry-index-page > .photo-lede {
+  max-width: 34em;
+}
+
 .photo-lede {
   margin: 0 0 var(--photo-row);
   font-size: inherit;
