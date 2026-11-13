@@ -245,6 +245,10 @@ input {
   transition: text-decoration-color 0.2s ease;
 }
 
+.rotating-words {
+  font-style: italic;
+}
+
 .index-bio a:hover,
 .index-bio a:focus-visible {
   text-decoration-color: currentColor;
@@ -446,14 +450,14 @@ html:has(.about-page) .site-anchor,
 }
 
 .about-page {
-  height: 100dvh;
+  height: calc(100dvh - var(--site-footer-height));
   overflow: hidden;
 }
 
 .about-orbit {
   position: relative;
   width: 100%;
-  height: 100dvh;
+  height: calc(100dvh - var(--site-footer-height));
   overflow: hidden;
 }
 
@@ -728,7 +732,7 @@ html:has(.about-page) .site-anchor,
 }
 
 .unlock-page {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 16vh;
   max-width: 36rem;
 }
@@ -1050,7 +1054,7 @@ html:has(.about-page) .site-anchor,
 
 .poetry-page {
   position: relative;
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 16vh;
   background: var(--paper);
   overflow-x: hidden;
@@ -2066,7 +2070,7 @@ html:has(.about-page) .site-anchor,
   }
 
   .about-orbit {
-    height: 100dvh;
+    height: calc(100dvh - var(--site-footer-height));
   }
 
   .about-orbit-heading {
@@ -2644,8 +2648,8 @@ html:has(.dandelion-page) .volume {
 
 .shell {
   display: flex;
-  height: 100dvh;
-  height: 100svh;
+  height: calc(100dvh - var(--site-footer-height));
+  height: calc(100svh - var(--site-footer-height));
   padding-top: var(--site-content-top);
   background: var(--shell-wash);
   color: var(--label);
@@ -3670,7 +3674,7 @@ html[data-theme="dark"] .appearance button.is-active {
   grid-template-columns: minmax(16rem, 0.8fr) minmax(20rem, 1.2fr);
   align-items: center;
   gap: clamp(2.5rem, 8vw, 8rem);
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 8vh;
   color: #183c2b;
   background:
@@ -3846,7 +3850,7 @@ html:has(.radar-page) .site-anchor {
 
 .privacy-page {
   max-width: 42rem;
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 16vh;
 }
 
@@ -3874,7 +3878,7 @@ html:has(.radar-page) .site-anchor {
 }
 
 .admin-page {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 14vh;
   color: #1c231e;
   font-family: var(--font-book), "Palatino Linotype", Palatino, serif;
@@ -4340,7 +4344,7 @@ html:has(.admin-page) .site-anchor {
 .clemi-map-shell {
   display: grid;
   grid-template-columns: minmax(19rem, 24rem) minmax(0, 1fr);
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding-top: var(--site-content-top);
   color: #1d1d1f;
   background: #e7e8e5;
@@ -4359,7 +4363,7 @@ html:has(.clemi-map-shell) .site-anchor {
 .clemi-map {
   grid-column: 2;
   grid-row: 1;
-  min-height: calc(100dvh - var(--site-content-top));
+  min-height: calc(100dvh - var(--site-footer-height) - var(--site-content-top));
   filter: saturate(0.82) contrast(0.94);
 }
 
@@ -4370,7 +4374,7 @@ html:has(.clemi-map-shell) .site-anchor {
   grid-row: 1;
   flex-direction: column;
   gap: 1.15rem;
-  max-height: calc(100dvh - var(--site-content-top));
+  max-height: calc(100dvh - var(--site-footer-height) - var(--site-content-top));
   padding: 1.2rem 0.8rem 1.5rem;
   overflow-y: auto;
   background: rgba(244, 244, 246, 0.94);
@@ -4664,7 +4668,7 @@ html:has(.store-page) .site-anchor {
 }
 
 .store-page {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 4rem;
   color: #151515;
   background: #f7f5ef;
@@ -4824,13 +4828,13 @@ html:has(.store-page) .site-anchor {
 }
 
 .store-product-page {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
 }
 
 .store-product {
   display: grid;
   grid-template-columns: minmax(10rem, 0.7fr) minmax(18rem, 1.6fr) minmax(18rem, 0.8fr);
-  min-height: calc(100dvh - var(--site-content-top) - 5rem);
+  min-height: calc(100dvh - var(--site-footer-height) - var(--site-content-top) - 5rem);
   border-bottom: 1px solid #151515;
 }
 
@@ -5313,7 +5317,7 @@ html:has(.store-page) .site-anchor {
   --photo-cols: 3.6rem minmax(0, 17rem) minmax(0, 17rem) 5.5rem;
   --photo-gap: clamp(1rem, 2.5vw, 2.5rem);
   position: relative;
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--site-footer-height));
   padding: var(--site-content-top) var(--site-gutter) 14vh;
   background: var(--paper);
   font-size: 1.02rem;
