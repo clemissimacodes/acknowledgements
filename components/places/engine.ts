@@ -161,6 +161,7 @@ type Dot = {
 };
 
 type Mark = { dot: Dot; x: number; y: number };
+type Box = [number, number, number, number];
 
 type Camera = { x: number; y: number; k: number };
 
@@ -1170,7 +1171,7 @@ export class Atlas {
     const ordered = [...marks].sort((a, b) => rank(a) - rank(b));
     const size = clamp(0.9 + Math.log2(k / 3) * 0.1, 0.82, 1.35);
     for (const mark of ordered) this.drawToken(ctx, mark, size, time);
-    this.drawLabels(ctx, ordered.reverse(), size, dt);
+    this.drawLabels(ctx, ordered.reverse(), size, dt, this.jetBoxes(originX, originY, size));
     this.drawPin(ctx, originX, originY, time);
     this.drawJetLayer(ctx, originX, originY, size);
   }
@@ -1424,7 +1425,33 @@ export class Atlas {
     ctx.globalAlpha = 1;
   }
 
-  private drawLabels(ctx: CanvasRenderingContext2D, marks: Mark[], size: number, dt: number) {
+  /** Where the parked jet sits, so that no name is written underneath it. */
+  private jetBoxes(originX: number, originY: number, size: number): Box[] {
+    const jet = this.jet;
+    if (!jet.shown || jet.park < 0.5) return [];
+    const k = this.cam.k;
+    const half = 48 * this.jetScale(size);
+    const boxes: Box[] = [];
+    const { first, last } = this.copies(jet.x - 40, jet.x + 40);
+    for (let copy = first; copy <= last; copy += 1) {
+      const x = originX + (jet.x + copy * WORLD_WIDTH) * k + jet.facing * 15 * size;
+      const y = originY + jet.y * k - 21 * size;
+      boxes.push([x - half, y - 22, x + half, y + 12]);
+    }
+    return boxes;
+  }
+
+  private jetScale(size: number) {
+    return (this.width < 720 ? 0.62 : 0.74) * clamp(size, 0.9, 1.15);
+  }
+
+  private drawLabels(
+    ctx: CanvasRenderingContext2D,
+    marks: Mark[],
+    size: number,
+    dt: number,
+    blocked: Box[],
+  ) {
     const { tones, width, height } = this;
     const k = this.cam.k;
     const narrow = width < 720;
@@ -1433,8 +1460,8 @@ export class Atlas {
     ctx.textBaseline = "middle";
     ctx.lineJoin = "round";
 
-    type Box = [number, number, number, number];
     const taken: Box[] = marks.map((mark) => [mark.x - 6, mark.y - 6, mark.x + 6, mark.y + 6]);
+    taken.push(...blocked);
     const free = (box: Box, own: number) =>
       taken.every(
         (other, index) =>
@@ -1530,7 +1557,7 @@ export class Atlas {
     while (this.sparks.length && now - this.sparks[0].at > 800) this.sparks.shift();
     if (jet.route && now < jet.route.start) return;
 
-    const scale = (this.width < 720 ? 0.62 : 0.74) * clamp(size, 0.9, 1.15);
+    const scale = this.jetScale(size);
     const { first, last } = this.copies(jet.x - 40, jet.x + 40);
     for (let copy = first; copy <= last; copy += 1) {
       const shift = originX + copy * WORLD_WIDTH * k;
