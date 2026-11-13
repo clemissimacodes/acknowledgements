@@ -142,17 +142,19 @@ export function PlacesMap({
     const narrow = host.width < 720;
     const head = headRef.current?.getBoundingClientRect();
     const key = keyRef.current?.getBoundingClientRect();
-    const card = cardRef.current?.getBoundingClientRect();
+    const card = cardRef.current;
     const insets = {
       top: narrow && head ? head.bottom - host.top + 6 : 28,
       right: 0,
       bottom: narrow && key ? host.bottom - key.top + 6 : 28,
       left: 0,
     };
-    if (!card) return insets;
-    if (!narrow) insets.right = host.right - card.left + 10;
-    else if (card.top - host.top < host.height * 0.3) insets.top = card.bottom - host.top + 8;
-    else insets.bottom = host.bottom - card.top + 8;
+    // The list of places is a pause, not a destination: the map stays put.
+    if (!card || card.dataset.index !== undefined) return insets;
+    const box = card.getBoundingClientRect();
+    if (!narrow) insets.right = host.right - box.left + 10;
+    else if (box.top - host.top < host.height * 0.3) insets.top = box.bottom - host.top + 8;
+    else insets.bottom = host.bottom - box.top + 8;
     return insets;
   }, []);
 
@@ -621,7 +623,7 @@ export function PlacesMap({
             {when ? <p className={styles.when}>{when}</p> : null}
             {selected.reason ? <p className={styles.reason}>{selected.reason}</p> : null}
             <p className={styles.coordinates}>
-              {formatCoordinates(selected.lat, selected.lng)}
+              <span>{formatCoordinates(selected.lat, selected.lng)}</span>
               {away ? <span>{away}</span> : null}
             </p>
           </>

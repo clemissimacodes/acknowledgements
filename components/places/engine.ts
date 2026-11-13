@@ -679,7 +679,11 @@ export class Atlas {
 
     on("pointerdown", (event) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      host.setPointerCapture?.(event.pointerId);
+      try {
+        host.setPointerCapture(event.pointerId);
+      } catch {
+        // A pointer that is already gone cannot be captured; the drag still works.
+      }
       const point = local(event);
       this.pointers.set(event.pointerId, point);
       this.stopMoving();
