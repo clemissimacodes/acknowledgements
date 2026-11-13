@@ -13,6 +13,14 @@ const friendThings = [
   "philosophize about love",
   "be terrible and sad",
   "hoop at the panhandle",
+  "scuttle around golden gate park",
+  "lift tiny weights at equinox",
+  "play pranks",
+  "watch san francisco’s clouds shapeshift",
+  "doodle strangers",
+  "ride the bart with no end destination in mind",
+  "study poetry",
+  "force myself to do yoga",
 ] as const;
 
 const works = [
