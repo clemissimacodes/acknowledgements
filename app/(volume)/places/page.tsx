@@ -15,6 +15,6 @@ export const viewport: Viewport = {
 };
 
 export default async function PlacesPage() {
-  const [{ places, live }, owner] = await Promise.all([loadPlaces(), viewerIsOwner()]);
-  return <PlacesMap initialPlaces={places} canEdit={owner && live} />;
+  const [{ places, regions, live }, owner] = await Promise.all([loadPlaces(), viewerIsOwner()]);
+  return <PlacesMap initialPlaces={places} initialRegions={regions} canEdit={owner && live} />;
 }

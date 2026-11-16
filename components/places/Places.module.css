@@ -10,6 +10,7 @@
   --pl-mute: rgba(22, 20, 18, 0.46);
   --pl-line: rgba(22, 20, 18, 0.13);
   --pl-card: rgba(253, 253, 252, 0.95);
+  --pl-card-solid: #fdfdfc;
   --pl-field: rgba(255, 255, 255, 0.9);
   --pl-warn: #a8321f;
   --pl-sheen: #f7b9d6, #b4ebf3, #c9c1f7, #fbeab8, #b3efd4, #f7b9d6;
@@ -23,6 +24,7 @@
   --pl-mute: rgba(241, 243, 245, 0.5);
   --pl-line: rgba(241, 243, 245, 0.18);
   --pl-card: rgba(18, 23, 36, 0.94);
+  --pl-card-solid: #121724;
   --pl-field: rgba(255, 255, 255, 0.07);
   --pl-warn: #ff9d8c;
 }
@@ -100,6 +102,17 @@
   gap: 1.15rem;
   margin: 0;
   white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* The count waits for the map's shapes, so it is right the first time it shows. */
+.head p[data-shown] {
+  opacity: 1;
+}
+
+.head p + p {
+  margin-top: -0.45rem;
 }
 
 .link {
@@ -212,6 +225,22 @@
 .root:has(.card[data-form]) .zoom {
   opacity: 0;
   pointer-events: none;
+}
+
+/* The checklist stops short of the zoom buttons. */
+.card[data-list] {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - var(--site-content-top) - 7.4rem);
+  overflow: hidden;
+}
+
+.card[data-list] > * {
+  flex: none;
+}
+
+.card[data-list][data-form] {
+  max-height: calc(100% - var(--site-content-top) - 1rem);
 }
 
 .zoom button {
@@ -495,7 +524,9 @@
 .field input,
 .field select,
 .field textarea,
-.search input {
+.search input,
+.rowHead input,
+.choice {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
@@ -519,7 +550,9 @@
 .field input:focus,
 .field select:focus,
 .field textarea:focus,
-.search input:focus {
+.search input:focus,
+.rowHead input:focus,
+.choice:focus {
   outline: none;
   border-color: var(--pl-ink);
 }
@@ -529,6 +562,10 @@
   align-items: center;
   gap: 0.5rem;
   min-height: 2.2rem;
+}
+
+.actions [data-end] {
+  margin-left: auto;
 }
 
 .ask {
@@ -634,6 +671,269 @@
   margin: 0;
 }
 
+/* —— Checking off —— */
+
+.status {
+  margin: 0.45rem 0 0.55rem;
+  overflow: hidden;
+  color: var(--pl-soft);
+  font-size: 0.98rem;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card[data-top] .search {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.card[data-list] .checklist,
+.card[data-list] .rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0.5rem -0.4rem 0 0;
+  padding-right: 0.4rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.checklist h3 {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  margin: 0;
+  padding: 0.6rem 0 0.4rem;
+  background: var(--pl-card-solid);
+  color: var(--pl-mute);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.checklist ul,
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tick {
+  display: grid;
+  grid-template-columns: 1.3rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.15rem;
+  border: 0;
+  border-top: 1px solid var(--pl-line);
+  background: none;
+  text-align: left;
+}
+
+.tick strong {
+  overflow: hidden;
+  font-size: 1.05rem;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tick span:last-child {
+  color: var(--pl-mute);
+  font-size: 0.92rem;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 1.3rem;
+  height: 1.3rem;
+  border: 1px solid var(--pl-mute);
+  border-radius: 0.38rem;
+}
+
+.box svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  stroke: #12303c;
+  stroke-width: 1.7;
+  opacity: 0;
+}
+
+.tick[aria-checked="true"] .box {
+  border-color: #4eaecf;
+  background: radial-gradient(circle at 34% 30%, #fff, #c4ebf6);
+  box-shadow: 0 0 0 3px rgba(104, 198, 228, 0.22);
+}
+
+.tick[aria-checked="true"] .box svg {
+  opacity: 1;
+}
+
+.tick[data-held] .box {
+  opacity: 0.6;
+}
+
+/* —— Adding many —— */
+
+.card[data-form] .field textarea[rows="5"] {
+  min-height: 7.4rem;
+}
+
+/* The names scroll; the button that adds them all stays put beneath. */
+.card[data-list] > .form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  margin-top: 0.3rem;
+}
+
+.card[data-list] .rows {
+  margin-top: 0;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.4rem 0 0.5rem;
+  border-bottom: 1px solid var(--pl-line);
+}
+
+.rowHead {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+}
+
+.row[data-lost] .rowHead {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.rowHead strong {
+  overflow: hidden;
+  font-size: 1.08rem;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowHead span {
+  overflow: hidden;
+  color: var(--pl-mute);
+  font-size: 0.95rem;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row[data-waiting] strong,
+.row[data-known] strong {
+  color: var(--pl-mute);
+}
+
+.row[data-waiting] span {
+  text-align: right;
+}
+
+.drop {
+  display: grid;
+  grid-column: 3;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: -0.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--pl-mute);
+}
+
+.drop:hover {
+  color: var(--pl-ink);
+}
+
+.drop svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.more {
+  justify-self: start;
+  max-width: 100%;
+  min-height: 2.25rem;
+  padding: 0.15rem 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: var(--pl-soft);
+  font-size: 0.95rem;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--pl-line);
+  text-overflow: ellipsis;
+  text-underline-offset: 0.2em;
+  white-space: nowrap;
+}
+
+.more:hover {
+  color: var(--pl-ink);
+}
+
+.rowMore {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.1rem 0 0.25rem;
+}
+
+.rowNote {
+  margin: 0;
+  overflow: hidden;
+  color: var(--pl-mute);
+  font-size: 0.95rem;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowsFoot {
+  display: grid;
+  flex: none;
+  gap: 0.4rem;
+  padding: 0.6rem 0 0.2rem;
+  border-top: 1px solid var(--pl-line);
+}
+
+.meter {
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--pl-line);
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  background: var(--pl-ink);
+  transition: width 0.4s ease;
+}
+
 /* —— Phone —— */
 
 @media (max-width: 719px) {
@@ -660,7 +960,8 @@
   }
 
   /* A form sits at the top instead, clear of the keyboard. */
-  .card[data-form] {
+  .card[data-form],
+  .card[data-top] {
     top: calc(var(--site-anchor-top) + 2.3rem);
     bottom: auto;
     max-height: calc(100% - var(--site-anchor-top) - 2.7rem);
@@ -674,5 +975,11 @@
   .root[data-open] .zoom {
     opacity: 0;
     pointer-events: none;
+  }
+
+  /* Checking off on the map wants the zoom buttons within reach. */
+  .root:has(.card[data-top]:not([data-list])) .zoom {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

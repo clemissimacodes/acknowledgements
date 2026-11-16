@@ -12,31 +12,62 @@ import {
 } from "react";
 import {
   addPlace,
+  addPlaces,
   findPlaces,
+  markRegion,
   removePlace,
   savePlace,
   type PlacesResult,
 } from "@/app/(volume)/places/actions";
 import {
+  FEDERAL_DISTRICT,
   KIND_LABELS,
   MONTHS,
+  PLACE_BATCH_MAX,
   PLACE_COUNTRY_MAX,
   PLACE_KINDS,
   PLACE_NAME_MAX,
   PLACE_REASON_MAX,
+  PLACE_YEAR_MAX,
+  PLACE_YEAR_MIN,
+  STATE_COUNT,
+  UNITED_STATES,
   formatCoordinates,
   formatPlaceDate,
+  isStateId,
   placeHasDetails,
   splitPlaceName,
+  splitPlaceNames,
   type Place,
   type PlaceKind,
   type PlaceMatch,
 } from "@/lib/place-types";
 import { milesBetween, wrapLongitude, type RawStates, type RawWorld } from "./atlas";
-import { Atlas, type Insets, type Spot } from "./engine";
+import { Atlas, type Insets, type Region, type Spot } from "./engine";
 import styles from "./Places.module.css";
 
-type Mode = "view" | "index" | "edit" | "add";
+type Mode = "view" | "index" | "edit" | "add" | "many" | "regions";
+
+/** One name from a pasted list, and what the search made of it. */
+type Row = {
+  key: number;
+  query: string;
+  status: "waiting" | "looking" | "found" | "none" | "failed";
+  matches: PlaceMatch[];
+  pick: number;
+  month: string;
+  year: string;
+  reason: string;
+  open: boolean;
+};
+
+type Stage = "write" | "rows" | "done";
+
+/** It can be checked off with the states, but it is not one of the fifty. */
+const DISTRICT_NAME = "Washington, D.C.";
+
+/** Two spots this close are the same place. */
+const SAME_PLACE_MILES = 2;
 
 type Draft = {
   name: string;
@@ -75,6 +106,15 @@ function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
 }
 
+const byName = (a: Region, b: Region) => a.name.localeCompare(b.name, "en");
+
+/** What tells this match from the others of the same name. */
+function matchLabel(match: PlaceMatch, typed: string) {
+  const where = match.short || match.context || match.country;
+  if (!where) return match.name;
+  return match.name.toLowerCase() === typed.toLowerCase() ? where : `${match.name}, ${where}`;
+}
+
 function Swatch({ kind }: { kind: PlaceKind | "thread" }) {
   if (kind === "thread") {
     return (
@@ -90,9 +130,11 @@ function Swatch({ kind }: { kind: PlaceKind | "thread" }) {
 
 export function PlacesMap({
   initialPlaces,
+  initialRegions,
   canEdit,
 }: {
   initialPlaces: Place[];
+  initialRegions: string[];
   canEdit: boolean;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -119,6 +161,24 @@ export function PlacesMap({
   const andNext = useRef(false);
   const guess = useRef("");
 
+  // States and countries checked off by hand.
+  const [regions, setRegions] = useState(initialRegions);
+  // 0 until the country and state shapes arrive; -1 if they never do.
+  const [shapes, setShapes] = useState(0);
+  const [listOpen, setListOpen] = useState(false);
+  const [filter, setFilter] = useState("");
+  const [note, setNote] = useState("");
+
+  // Adding many at once.
+  const [stage, setStage] = useState<Stage>("write");
+  const [listText, setListText] = useState("");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [looking, setLooking] = useState(false);
+  const [held, setHeld] = useState<string[]>([]);
+  const [added, setAdded] = useState<string[]>([]);
+  const lookup = useRef(0);
+  const rowKey = useRef(0);
+
   const home = useMemo(
     () => places.find((place) => place.kind === "hometown") ?? null,
     [places],
@@ -133,10 +193,53 @@ export function PlacesMap({
   }, [places, home]);
 
   const selected = places.find((place) => place.id === selectedId) ?? null;
-  const countries = new Set(places.map((place) => place.country).filter(Boolean)).size;
 
-  const state = useRef({ mode, places });
-  state.current = { mode, places };
+  // Which states and countries count as visited: the ones with a place in
+  // them, and the ones checked off. The map's own shapes decide what is where.
+  const tally = useMemo(() => {
+    const atlas = atlasRef.current;
+    if (!atlas || shapes <= 0) return null;
+    const catalog = atlas.regions();
+    const dots = new Map<string, number>();
+    for (const place of places) {
+      const { country, state: inState } = atlas.locate(place);
+      if (country) dots.set(country.id, (dots.get(country.id) ?? 0) + 1);
+      if (inState) dots.set(inState.id, (dots.get(inState.id) ?? 0) + 1);
+    }
+    const checked = new Set(regions);
+    const byStates = catalog.states.length > 0;
+    const visitedStates = catalog.states.filter((entry) => checked.has(entry.id) || dots.has(entry.id));
+    const visited = (id: string) =>
+      id === UNITED_STATES && byStates
+        ? visitedStates.length > 0 || dots.has(id)
+        : checked.has(id) || dots.has(id);
+    const named = (entry: Region) =>
+      entry.id === FEDERAL_DISTRICT ? { ...entry, name: DISTRICT_NAME } : entry;
+    return {
+      states: catalog.states.map(named).sort(byName),
+      countries: [...catalog.countries].sort(byName),
+      dots,
+      byStates,
+      visited,
+      stateCount: visitedStates.filter((entry) => entry.id !== FEDERAL_DISTRICT).length,
+      countryCount: catalog.countries.filter((entry) => visited(entry.id)).length,
+    };
+  }, [places, regions, shapes]);
+
+  // Until the shapes arrive the line is not shown, so it never changes its mind.
+  const countLine = [
+    plural(places.length, "place", "places"),
+    tally
+      ? plural(tally.countryCount, "country", "countries")
+      : plural(new Set(places.map((place) => place.country).filter(Boolean)).size, "country", "countries"),
+    tally?.stateCount ? plural(tally.stateCount, "state", "states") : "",
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const state = useRef({ mode, places, regions, tally });
+  state.current = { mode, places, regions, tally };
+  const onRegionRef = useRef<(region: Region) => void>(() => {});
 
   const measure = useCallback((): Insets => {
     const host = hostRef.current?.getBoundingClientRect();
@@ -153,6 +256,7 @@ export function PlacesMap({
     };
     // The list of places is a pause, not a destination: the map stays put.
     if (!card || card.dataset.index !== undefined) return insets;
+    if (narrow && card.dataset.list !== undefined) return insets;
     const box = card.getBoundingClientRect();
     if (!narrow) insets.right = host.right - box.left + 10;
     else if (box.top - host.top < host.height * 0.3) insets.top = box.bottom - host.top + 8;
@@ -200,14 +304,19 @@ export function PlacesMap({
           );
           atlas.setPin(spot, false);
         },
-        onRegion() {},
-        onShapes() {},
+        onRegion(region) {
+          onRegionRef.current(region);
+        },
+        onShapes() {
+          setShapes((count) => Math.max(count, 0) + 1);
+        },
       },
       ground,
     );
     atlasRef.current = atlas;
     setDark(atlas.dark);
     atlas.setInsets(measure());
+    atlas.setChecked(state.current.regions);
     atlas.setPlaces(state.current.places);
 
     let cancelled = false;
@@ -221,8 +330,12 @@ export function PlacesMap({
       load<RawWorld>("/places/world.json"),
       load<RawStates>("/places/us-states.json"),
     ]).then(([world, states]) => {
-      if (cancelled || world.status !== "fulfilled") return;
-      atlas.setShapes(world.value, states.status === "fulfilled" ? states.value : null);
+      if (cancelled) return;
+      if (world.status === "fulfilled") {
+        atlas.setShapes(world.value, states.status === "fulfilled" ? states.value : null);
+      } else {
+        setShapes(-1);
+      }
     });
 
     return () => {
@@ -236,17 +349,22 @@ export function PlacesMap({
     atlasRef.current?.setPlaces(places);
   }, [places]);
 
+  useEffect(() => {
+    atlasRef.current?.setChecked(regions);
+  }, [regions]);
+
   useLayoutEffect(() => {
     const atlas = atlasRef.current;
     if (!atlas) return;
     atlas.setInsets(measure());
     atlas.focus(selectedId);
-  }, [selectedId, mode, measure]);
+  }, [selectedId, mode, listOpen, stage, measure]);
 
   useEffect(() => {
     const atlas = atlasRef.current;
     if (!atlas) return;
     atlas.setPinMode(mode === "add");
+    atlas.setRegionMode(mode === "regions");
   }, [mode]);
 
   useEffect(() => {
@@ -256,6 +374,8 @@ export function PlacesMap({
   }, [measure]);
 
   const close = useCallback(() => {
+    lookup.current += 1;
+    setLooking(false);
     setMode("view");
     setPin(null);
     setMatches(null);
@@ -317,6 +437,218 @@ export function PlacesMap({
     setMode("add");
   };
 
+  // —— Checking off states and countries ——
+
+  const beginRegions = () => {
+    open(null);
+    setNote("");
+    setFilter("");
+    // On a phone the list would cover the map she is about to tap.
+    setListOpen((hostRef.current?.clientWidth ?? 0) >= 720);
+    setMode("regions");
+  };
+
+  // The map shows the tick at once; the server is told afterwards, and the
+  // tick is taken back if the server says no.
+  const toggleRegion = ({ id, name: given }: Region) => {
+    const region = { id, name: id === FEDERAL_DISTRICT ? DISTRICT_NAME : given };
+    const { regions: now, tally: known } = state.current;
+    atlasRef.current?.flashRegion(region.id);
+    if (region.id === UNITED_STATES && known?.byStates) {
+      setNote("The US goes state by state.");
+      return;
+    }
+    const here = known?.dots.get(region.id) ?? 0;
+    if (here) {
+      setNote(`${region.name} has ${plural(here, "place", "places")}, so it stays.`);
+      return;
+    }
+    const on = !now.includes(region.id);
+    const next = on ? [...now, region.id] : now.filter((id) => id !== region.id);
+    state.current.regions = next;
+    setRegions(next);
+    setNote(`${region.name} is ${on ? "checked" : "unchecked"}.`);
+    const undo = (message: string) => {
+      setRegions((current) =>
+        on
+          ? current.filter((id) => id !== region.id)
+          : current.includes(region.id)
+            ? current
+            : [...current, region.id],
+      );
+      setNote(message);
+    };
+    markRegion(region.id, on).then(
+      (result) => {
+        if ("error" in result) undo(`${region.name} did not save. ${result.error}`);
+      },
+      () => undo(`${region.name} did not save. Try again in a moment.`),
+    );
+  };
+  onRegionRef.current = toggleRegion;
+
+  // —— Adding many at once ——
+
+  const beginMany = () => {
+    open(null);
+    lookup.current += 1;
+    setLooking(false);
+    setStage("write");
+    setRows([]);
+    setHeld([]);
+    setAdded([]);
+    setError("");
+    setMode("many");
+  };
+
+  const onMap = (match: PlaceMatch) =>
+    places.some((place) => milesBetween(place, match) < SAME_PLACE_MILES);
+
+  const patchRow = (key: number, patch: Partial<Row>) =>
+    setRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row)));
+
+  // One name at a time: the search allows a request a second, and the server
+  // keeps to that however quickly it is asked.
+  const lookUp = async (list: Array<Pick<Row, "key" | "query">>) => {
+    const run = (lookup.current += 1);
+    setLooking(true);
+    for (const { key, query: name } of list) {
+      if (lookup.current !== run) return;
+      patchRow(key, { status: "looking" });
+      let result: Awaited<ReturnType<typeof findPlaces>> | null = null;
+      try {
+        result = await findPlaces(name);
+      } catch {
+        result = null;
+      }
+      if (lookup.current !== run) return;
+      if (!result || "error" in result) {
+        patchRow(key, { status: "failed", matches: [], pick: 0 });
+      } else if (!result.matches.length) {
+        patchRow(key, { status: "none", matches: [], pick: 0 });
+      } else {
+        // A name that is already on the map most likely means that place.
+        const known = result.matches.findIndex((match) =>
+          state.current.places.some((place) => milesBetween(place, match) < SAME_PLACE_MILES),
+        );
+        patchRow(key, { status: "found", matches: result.matches, pick: Math.max(known, 0) });
+      }
+    }
+    if (lookup.current === run) setLooking(false);
+  };
+
+  const onLookUp = (event: FormEvent) => {
+    event.preventDefault();
+    const names = splitPlaceNames(listText);
+    if (!names.length) return;
+    const list = names.slice(0, PLACE_BATCH_MAX).map(
+      (name): Row => ({
+        key: (rowKey.current += 1),
+        query: name,
+        status: "waiting",
+        matches: [],
+        pick: 0,
+        month: "",
+        year: "",
+        reason: "",
+        open: false,
+      }),
+    );
+    setError("");
+    setRows(list);
+    setHeld(names.slice(PLACE_BATCH_MAX));
+    setStage("rows");
+    void lookUp(list);
+  };
+
+  // Names not reached yet go back in the box for another time.
+  const stopLooking = () => {
+    lookup.current += 1;
+    setLooking(false);
+    const unasked = rows.filter((row) => row.status === "waiting" || row.status === "looking");
+    setHeld((current) => [...unasked.map((row) => row.query), ...current]);
+    setRows((current) => current.filter((row) => !unasked.includes(row)));
+  };
+
+  const retry = (row: Row, name: string) => {
+    const typed = name.replace(/\s+/g, " ").trim();
+    if (typed.length < 2 || looking) return;
+    patchRow(row.key, { query: typed, status: "waiting" });
+    void lookUp([{ key: row.key, query: typed }]);
+  };
+
+  const fresh = rows.filter((row) => row.status === "found" && !onMap(row.matches[row.pick]));
+  const leftover = [
+    ...rows.filter((row) => row.status === "none" || row.status === "failed").map((row) => row.query),
+    ...held,
+  ];
+
+  const onAddAll = (event: FormEvent) => {
+    event.preventDefault();
+    if (!fresh.length || looking) return;
+    const wrong = fresh.find((row) => {
+      const year = row.year.trim();
+      return year && !(/^\d{4}$/.test(year) && +year >= PLACE_YEAR_MIN && +year <= PLACE_YEAR_MAX);
+    });
+    if (wrong) {
+      patchRow(wrong.key, { open: true });
+      setError(`${wrong.matches[wrong.pick].name}: that year looks wrong.`);
+      return;
+    }
+    setError("");
+    startTransition(async () => {
+      try {
+        const result = await addPlaces(
+          fresh.map((row) => {
+            const match = row.matches[row.pick];
+            return {
+              name: match.name,
+              country: match.country,
+              lat: match.lat,
+              lng: match.lng,
+              month: row.month ? Number(row.month) : null,
+              year: row.year.trim() ? Number(row.year) : null,
+              reason: row.reason,
+            };
+          }),
+        );
+        if ("error" in result) {
+          setError(result.error);
+          return;
+        }
+        setPlaces(result.places);
+        setAdded(result.ids ?? []);
+        setListText("");
+        setStage("done");
+        atlasRef.current?.resetView();
+      } catch {
+        setError("That did not save. Try again in a moment.");
+      }
+    });
+  };
+
+  // The places just added that still have no month, year or reason.
+  const bare = places.filter((place) => added.includes(place.id) && !placeHasDetails(place));
+
+  const fillIn = () => {
+    const first = tour.find((place) => bare.includes(place));
+    if (!first) return;
+    setDraft(draftOf(first));
+    setMode("edit");
+    open(first.id);
+  };
+
+  // Back from the rows keeps every name; after adding, only the ones still to find.
+  const nextRound = (names: string[]) => {
+    lookup.current += 1;
+    setLooking(false);
+    setListText(names.join("\n"));
+    setRows([]);
+    setHeld([]);
+    setError("");
+    setStage("write");
+  };
+
   const onSave = (event: FormEvent) => {
     event.preventDefault();
     if (!selected) return;
@@ -335,9 +667,11 @@ export function PlacesMap({
           (a, b) => wrapLongitude(a.lng - origin) - wrapLongitude(b.lng - origin) || a.lat - b.lat,
         );
         const from = order.findIndex((place) => place.id === id);
-        const waiting = [...order.slice(from + 1), ...order.slice(0, from)].find(
+        const blank = [...order.slice(from + 1), ...order.slice(0, from)].filter(
           (place) => !placeHasDetails(place),
         );
+        // What she has just added in one go comes first, then anything else still blank.
+        const waiting = blank.find((place) => added.includes(place.id)) ?? blank[0];
         if (!waiting) {
           setMode("view");
           return;
@@ -474,7 +808,408 @@ export function PlacesMap({
 
   let card: React.ReactNode = null;
 
-  if (mode === "add" && canEdit) {
+  if (mode === "regions" && canEdit) {
+    const needle = filter.trim().toLowerCase();
+    const wanted = (region: Region) =>
+      !needle ||
+      region.name.toLowerCase().includes(needle) ||
+      (isStateId(region.id) && region.id.slice(3).toLowerCase() === needle);
+    const tick = (region: Region) => {
+      const here = tally?.dots.get(region.id) ?? 0;
+      const byStates = region.id === UNITED_STATES && tally?.byStates;
+      const on = tally?.visited(region.id) ?? regions.includes(region.id);
+      return (
+        <li key={region.id}>
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={on}
+            className={styles.tick}
+            data-held={here || byStates ? "" : undefined}
+            onClick={() => toggleRegion(region)}
+          >
+            <span className={styles.box} aria-hidden="true">
+              <svg viewBox="0 0 16 16">
+                <path d="M3.5 8.5l3 3 6-7" />
+              </svg>
+            </span>
+            <strong>{region.name}</strong>
+            {byStates ? <span>by its states</span> : here ? <span>{plural(here, "place", "places")}</span> : null}
+          </button>
+        </li>
+      );
+    };
+    const stateTicks = tally?.states.filter(wanted) ?? [];
+    const countryTicks = tally?.countries.filter(wanted) ?? [];
+    card = (
+      <section
+        ref={cardRef}
+        className={styles.card}
+        data-top=""
+        data-list={listOpen ? "" : undefined}
+        aria-label="Check off where you have been"
+      >
+        <header className={styles.cardHead}>
+          <p className={styles.kind}>Check off</p>
+          <button type="button" className={styles.close} onClick={close} aria-label="Close">
+            <CloseGlyph />
+          </button>
+        </header>
+        <h2 className={styles.name}>
+          {tally?.byStates
+            ? `${tally.stateCount} of ${STATE_COUNT} states`
+            : plural(tally?.countryCount ?? 0, "country", "countries")}
+        </h2>
+        {tally?.byStates ? (
+          <p className={styles.where}>{plural(tally.countryCount, "country", "countries")}</p>
+        ) : null}
+        <p className={styles.status} role="status">
+          {note || (listOpen ? "Tick a state or a country." : "Tap a state or a country on the map.")}
+        </p>
+        <div className={styles.actions}>
+          {tally?.byStates ? (
+            <button
+              type="button"
+              className={styles.action}
+              onClick={() => {
+                // On a phone the list steps aside, so the map is clear for tapping.
+                if ((hostRef.current?.clientWidth ?? 0) < 720) setListOpen(false);
+                requestAnimationFrame(() => {
+                  const host = hostRef.current?.getBoundingClientRect();
+                  const head = headRef.current?.getBoundingClientRect();
+                  atlasRef.current?.setInsets(measure());
+                  // On a wide screen the title sits on the map: the states start below it.
+                  atlasRef.current?.showUnitedStates(host && head ? head.bottom - host.top + 10 : 0);
+                });
+              }}
+            >
+              Show the US
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className={styles.action}
+            aria-expanded={listOpen}
+            onClick={() => setListOpen((shown) => !shown)}
+          >
+            {listOpen ? "Hide the list" : "List"}
+          </button>
+          <button type="button" className={styles.action} data-strong="" data-end="" onClick={close}>
+            Done
+          </button>
+        </div>
+        {listOpen ? (
+          <>
+            <div className={styles.search}>
+              <input
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+                placeholder="Find a state or a country"
+                aria-label="Find a state or a country"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="search"
+              />
+            </div>
+            <div className={styles.checklist}>
+              {stateTicks.length ? (
+                <>
+                  <h3>States</h3>
+                  <ul>{stateTicks.map(tick)}</ul>
+                </>
+              ) : null}
+              {countryTicks.length ? (
+                <>
+                  <h3>Countries</h3>
+                  <ul>{countryTicks.map(tick)}</ul>
+                </>
+              ) : null}
+              {!stateTicks.length && !countryTicks.length ? (
+                <p className={styles.hint}>
+                  {tally ? "Nothing by that name." : "The map is still arriving."}
+                </p>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </section>
+    );
+  } else if (mode === "many" && canEdit) {
+    const typed = splitPlaceNames(listText);
+    const done = rows.filter((row) => row.status !== "waiting" && row.status !== "looking").length;
+    card = (
+      <section
+        ref={cardRef}
+        className={styles.card}
+        data-form=""
+        data-list={stage === "rows" ? "" : undefined}
+        aria-label="Add many places"
+      >
+        <header className={styles.cardHead}>
+          <p className={styles.kind}>Add many</p>
+          <button type="button" className={styles.close} onClick={close} aria-label="Close">
+            <CloseGlyph />
+          </button>
+        </header>
+        {stage === "write" ? (
+          <form className={styles.form} onSubmit={onLookUp}>
+            <label className={styles.field}>
+              <span>Places</span>
+              <textarea
+                value={listText}
+                onChange={(event) => setListText(event.target.value)}
+                rows={5}
+                placeholder={"Waterloo, Banff, Vancouver\nOaxaca"}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck={false}
+              />
+            </label>
+            <p className={styles.hint}>
+              {typed.length > PLACE_BATCH_MAX
+                ? `${typed.length} names. The first ${PLACE_BATCH_MAX} go now, the rest wait here.`
+                : typed.length
+                  ? `${plural(typed.length, "name", "names")}, about ${plural(Math.max(1, Math.round(typed.length * 1.2)), "second", "seconds")} to look up.`
+                  : "One to a line, or with commas between."}
+            </p>
+            <div className={styles.actions}>
+              <button type="submit" className={styles.action} data-strong="" disabled={!typed.length}>
+                Look them up
+              </button>
+            </div>
+          </form>
+        ) : stage === "rows" ? (
+          <form className={styles.form} onSubmit={onAddAll}>
+            <ul className={styles.rows}>
+              {rows.map((row) => {
+                const match = row.matches[row.pick];
+                const drop = (
+                  <button
+                    type="button"
+                    className={styles.drop}
+                    onClick={() => setRows((current) => current.filter((entry) => entry !== row))}
+                    aria-label={`Leave out ${match?.name ?? row.query}`}
+                  >
+                    <CloseGlyph />
+                  </button>
+                );
+                if (row.status === "none" || row.status === "failed") {
+                  return (
+                    <li key={row.key} className={styles.row} data-lost="">
+                      <div className={styles.rowHead}>
+                        <input
+                          defaultValue={row.query}
+                          aria-label="Try another spelling"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          enterKeyHint="search"
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter") return;
+                            event.preventDefault();
+                            retry(row, event.currentTarget.value);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.action}
+                          disabled={looking}
+                          onClick={(event) => {
+                            const input = event.currentTarget.previousElementSibling as HTMLInputElement;
+                            retry(row, input.value);
+                          }}
+                        >
+                          Find
+                        </button>
+                        {drop}
+                      </div>
+                      <p className={styles.rowNote}>
+                        {row.status === "none"
+                          ? "Nothing by that name. The rest can still go."
+                          : "The search did not answer. Try it again."}
+                      </p>
+                    </li>
+                  );
+                }
+                if (!match) {
+                  return (
+                    <li key={row.key} className={styles.row} data-waiting="">
+                      <div className={styles.rowHead}>
+                        <strong>{row.query}</strong>
+                        <span>{row.status === "looking" ? "looking" : "waiting"}</span>
+                      </div>
+                    </li>
+                  );
+                }
+                const known = onMap(match);
+                const when = formatPlaceDate({
+                  month: row.month ? Number(row.month) : null,
+                  year: row.year.trim() ? Number(row.year) : null,
+                });
+                return (
+                  <li key={row.key} className={styles.row} data-known={known ? "" : undefined}>
+                    <div className={styles.rowHead}>
+                      <strong>{match.name}</strong>
+                      <span>
+                        {known
+                          ? "already on the map"
+                          : row.matches.length > 1
+                            ? ""
+                            : matchLabel(match, match.name)}
+                      </span>
+                      {drop}
+                    </div>
+                    {row.matches.length > 1 ? (
+                      <select
+                        className={styles.choice}
+                        value={row.pick}
+                        onChange={(event) => patchRow(row.key, { pick: Number(event.target.value) })}
+                        aria-label={`Which ${row.query}`}
+                      >
+                        {row.matches.map((option, at) => (
+                          <option key={`${option.lat},${option.lng}`} value={at}>
+                            {matchLabel(option, row.query)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : null}
+                    {known ? null : (
+                      <button
+                        type="button"
+                        className={styles.more}
+                        aria-expanded={row.open}
+                        onClick={() =>
+                          setRows((current) =>
+                            current.map((entry) => ({ ...entry, open: entry === row && !row.open })),
+                          )
+                        }
+                      >
+                        {[when, row.reason.trim()].filter(Boolean).join(", ") || "When and why"}
+                      </button>
+                    )}
+                    {row.open && !known ? (
+                      <div className={styles.rowMore}>
+                        <div className={styles.pair}>
+                          <label className={styles.field}>
+                            <span>Month</span>
+                            <select
+                              value={row.month}
+                              onChange={(event) => patchRow(row.key, { month: event.target.value })}
+                            >
+                              <option value="">—</option>
+                              {MONTHS.map((month, index) => (
+                                <option key={month} value={index + 1}>
+                                  {month}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label className={styles.field}>
+                            <span>Year</span>
+                            <input
+                              value={row.year}
+                              onChange={(event) => patchRow(row.key, { year: event.target.value })}
+                              inputMode="numeric"
+                              maxLength={4}
+                              placeholder="—"
+                              autoComplete="off"
+                            />
+                          </label>
+                        </div>
+                        <label className={styles.field}>
+                          <span>Reason</span>
+                          <textarea
+                            value={row.reason}
+                            onChange={(event) => patchRow(row.key, { reason: event.target.value })}
+                            rows={2}
+                            maxLength={PLACE_REASON_MAX}
+                          />
+                        </label>
+                      </div>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className={styles.rowsFoot}>
+              {held.length ? (
+                <p className={styles.rowNote}>
+                  {plural(held.length, "more name waits", "more names wait")} for the next round.
+                </p>
+              ) : null}
+              {error ? <p className={styles.error}>{error}</p> : null}
+              {looking ? (
+                <div className={styles.actions}>
+                  <span className={styles.ask} role="status">
+                    Looking up {Math.min(done + 1, rows.length)} of {rows.length}
+                  </span>
+                  <button type="button" className={styles.action} onClick={stopLooking}>
+                    Stop
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.actions}>
+                  <button
+                    type="submit"
+                    className={styles.action}
+                    data-strong=""
+                    disabled={pending || !fresh.length}
+                  >
+                    {pending ? "Adding" : fresh.length ? `Add all ${fresh.length}` : "Nothing to add"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.action}
+                    data-end=""
+                    onClick={() => nextRound([...rows.map((row) => row.query), ...held])}
+                  >
+                    Back
+                  </button>
+                </div>
+              )}
+              {looking ? (
+                <span className={styles.meter} aria-hidden="true">
+                  <span style={{ width: `${(done / Math.max(1, rows.length)) * 100}%` }} />
+                </span>
+              ) : null}
+            </div>
+          </form>
+        ) : (
+          <>
+            <h2 className={styles.name}>{plural(added.length, "place", "places")} added</h2>
+            <p className={styles.status}>
+              {leftover.length
+                ? `${plural(leftover.length, "name is", "names are")} still to find.`
+                : "They are on the map."}
+            </p>
+            <div className={styles.actions}>
+              {bare.length ? (
+                <button type="button" className={styles.action} data-strong="" onClick={fillIn}>
+                  Add when and why
+                </button>
+              ) : null}
+              {leftover.length ? (
+                <button type="button" className={styles.action} onClick={() => nextRound(leftover)}>
+                  The next {leftover.length}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className={styles.action}
+                data-strong={bare.length ? undefined : ""}
+                data-end=""
+                onClick={close}
+              >
+                Done
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+    );
+  } else if (mode === "add" && canEdit) {
     card = (
       <section ref={cardRef} className={styles.card} data-form="" aria-label="Add a place">
         <header className={styles.cardHead}>
@@ -706,21 +1441,29 @@ export function PlacesMap({
 
       <header ref={headRef} className={styles.head}>
         <h1>Places</h1>
-        <p>
+        <p data-shown={shapes ? "" : undefined}>
           <button
             type="button"
             className={styles.link}
             onClick={() => (mode === "index" ? close() : (open(null), setMode("index")))}
             aria-expanded={mode === "index"}
           >
-            {plural(places.length, "place", "places")}, {plural(countries, "country", "countries")}
+            {countLine}
           </button>
-          {canEdit ? (
+        </p>
+        {canEdit ? (
+          <p data-shown="">
             <button type="button" className={styles.link} onClick={beginAdd}>
               Add a place
             </button>
-          ) : null}
-        </p>
+            <button type="button" className={styles.link} onClick={beginMany}>
+              Add many
+            </button>
+            <button type="button" className={styles.link} onClick={beginRegions}>
+              Check off
+            </button>
+          </p>
+        ) : null}
       </header>
 
       <ul ref={keyRef} className={styles.key} aria-label="What the colors mean">
