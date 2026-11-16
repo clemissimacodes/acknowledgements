@@ -4,7 +4,15 @@
 // World space is flat: x is longitude in degrees (it repeats every 360), y is
 // the Miller cylindrical latitude in the same units, growing downward like the
 // screen. Country shapes come from /places/world.json, Natural Earth 1:50m
-// (public domain) by way of the world-atlas package (ISC), simplified.
+// (public domain) by way of the world-atlas package (ISC), simplified. Each
+// country carries Natural Earth's three-letter code as its id.
+//
+// The US states and the Great Lakes come from /places/us-states.json, also
+// Natural Earth 1:50m (public domain): "Admin 1 – States, Provinces" for the
+// lines between states, "Lakes" for the five lakes. A state's coast and its
+// stretch of the Canadian or Mexican border are not from that file: they are
+// the country outline in world.json, vertex for vertex, so the two never
+// disagree.
 
 const RAD = Math.PI / 180;
 
@@ -29,21 +37,44 @@ export function wrapLongitude(lng: number) {
 export const WORLD_TOP = worldY(LAT_LIMIT);
 export const WORLD_BOTTOM = worldY(-58);
 
-type RawWorld = {
-  transform: { scale: [number, number]; translate: [number, number] };
-  arcs: number[][][];
-  countries: Array<{
-    type: "Polygon" | "MultiPolygon";
-    name: string;
-    arcs: number[][] | number[][][];
-  }>;
+type RawShape = {
+  id: string;
+  name: string;
+  type: "Polygon" | "MultiPolygon";
+  arcs: number[][] | number[][][];
+  /** Where a label sits, as [lng, lat]. */
+  at?: [number, number];
 };
 
-export type Country = {
+type RawAtlas = {
+  transform: { scale: [number, number]; translate: [number, number] };
+  arcs: number[][][];
+};
+
+export type RawWorld = RawAtlas & { countries: RawShape[] };
+export type RawStates = RawAtlas & { shapes: RawShape[]; lakes: number[][] };
+
+export type Shape = {
+  id: string;
   name: string;
   rings: Float32Array[];
   bounds: [number, number, number, number];
   path: Path2D;
+  /** Where a label sits, in world space. */
+  at: Point | null;
+};
+
+export type Country = Shape;
+
+type Layer = {
+  shapes: Shape[];
+  /** Every shape, as one path. */
+  land: Path2D;
+  /** Lines that belong to one shape only. */
+  coast: Path2D;
+  /** Lines shared by two shapes. */
+  borders: Path2D;
+  ringOf(indexes: number[]): Float32Array;
 };
 
 export type World = {
@@ -53,7 +84,15 @@ export type World = {
   borders: Path2D;
 };
 
-export function buildWorld(raw: RawWorld): World {
+export type States = {
+  states: Shape[];
+  /** The lines between states. Their outer edges are the country's own. */
+  borders: Path2D;
+  lakes: Path2D;
+  lakeBounds: [number, number, number, number];
+};
+
+function buildLayer(raw: RawAtlas, list: RawShape[]): Layer {
   const [scaleX, scaleY] = raw.transform.scale;
   const [offsetX, offsetY] = raw.transform.translate;
   // Shapes that cross the antimeridian (Russia, Fiji) jump from +180 to -180
@@ -78,7 +117,7 @@ export function buildWorld(raw: RawWorld): World {
   });
 
   const uses = new Uint8Array(arcs.length);
-  const ringOf = (indexes: number[]) => {
+  const join = (indexes: number[], count: boolean) => {
     let length = 0;
     for (const index of indexes) length += arcs[index < 0 ? ~index : index].length - 2;
     const ring = new Float32Array(length + 2);
@@ -86,13 +125,13 @@ export function buildWorld(raw: RawWorld): World {
     let shift = 0;
     indexes.forEach((index) => {
       const arc = arcs[index < 0 ? ~index : index];
-      uses[index < 0 ? ~index : index] += 1;
-      const count = arc.length / 2;
-      const first = (index < 0 ? count - 1 : 0) * 2;
+      if (count) uses[index < 0 ? ~index : index] += 1;
+      const size = arc.length / 2;
+      const first = (index < 0 ? size - 1 : 0) * 2;
       if (at) shift = 360 * Math.round((ring[at - 2] - arc[first]) / 360);
       // Consecutive arcs share an endpoint; keep it once.
-      for (let step = 0; step < count - 1; step += 1) {
-        const from = (index < 0 ? count - 1 - step : step) * 2;
+      for (let step = 0; step < size - 1; step += 1) {
+        const from = (index < 0 ? size - 1 - step : step) * 2;
         ring[at++] = arc[from] + shift;
         ring[at++] = arc[from + 1];
       }
@@ -103,13 +142,11 @@ export function buildWorld(raw: RawWorld): World {
   };
 
   const land = new Path2D();
-  const countries = raw.countries.map((country) => {
+  const shapes = list.map((entry): Shape => {
     const polygons =
-      country.type === "Polygon"
-        ? [country.arcs as number[][]]
-        : (country.arcs as number[][][]);
-    const rings = polygons.flatMap((polygon) => polygon.map(ringOf));
-    const bounds: Country["bounds"] = [Infinity, Infinity, -Infinity, -Infinity];
+      entry.type === "Polygon" ? [entry.arcs as number[][]] : (entry.arcs as number[][][]);
+    const rings = polygons.flatMap((polygon) => polygon.map((ring) => join(ring, true)));
+    const bounds: Shape["bounds"] = [Infinity, Infinity, -Infinity, -Infinity];
     const path = new Path2D();
     for (const ring of rings) {
       path.moveTo(ring[0], ring[1]);
@@ -125,10 +162,17 @@ export function buildWorld(raw: RawWorld): World {
       path.closePath();
     }
     land.addPath(path);
-    return { name: country.name, rings, bounds, path };
+    return {
+      id: entry.id,
+      name: entry.name,
+      rings,
+      bounds,
+      path,
+      at: entry.at ? [entry.at[0], worldY(entry.at[1])] : null,
+    };
   });
 
-  // An arc used by two countries is a border, by one a coast.
+  // An arc used by two shapes is a border, by one a coast.
   const coast = new Path2D();
   const borders = new Path2D();
   arcs.forEach((arc, index) => {
@@ -138,7 +182,33 @@ export function buildWorld(raw: RawWorld): World {
     for (let at = 2; at < arc.length; at += 2) target.lineTo(arc[at], arc[at + 1]);
   });
 
-  return { countries, land, coast, borders };
+  return { shapes, land, coast, borders, ringOf: (indexes) => join(indexes, false) };
+}
+
+export function buildWorld(raw: RawWorld): World {
+  const { shapes, land, coast, borders } = buildLayer(raw, raw.countries);
+  return { countries: shapes, land, coast, borders };
+}
+
+export function buildStates(raw: RawStates): States {
+  const layer = buildLayer(raw, raw.shapes);
+  const lakes = new Path2D();
+  const lakeBounds: States["lakeBounds"] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const indexes of raw.lakes ?? []) {
+    const ring = layer.ringOf(indexes);
+    lakes.moveTo(ring[0], ring[1]);
+    for (let index = 2; index < ring.length; index += 2) {
+      const x = ring[index];
+      const y = ring[index + 1];
+      lakes.lineTo(x, y);
+      if (x < lakeBounds[0]) lakeBounds[0] = x;
+      if (y < lakeBounds[1]) lakeBounds[1] = y;
+      if (x > lakeBounds[2]) lakeBounds[2] = x;
+      if (y > lakeBounds[3]) lakeBounds[3] = y;
+    }
+    lakes.closePath();
+  }
+  return { states: layer.shapes, borders: layer.borders, lakes, lakeBounds };
 }
 
 function ringContains(ring: Float32Array, x: number, y: number) {
@@ -169,33 +239,37 @@ function ringDistance(ring: Float32Array, x: number, y: number) {
 }
 
 /**
- * The country a spot belongs to. Coastlines are simplified, so a harbour city
- * can sit just off its own shore; the nearest coast within reach still counts.
+ * The shape a spot belongs to. Coastlines are simplified, so a harbour city
+ * can sit just off its own shore; the nearest coast within `reach` degrees
+ * still counts.
  */
-export function countryAt(world: World, lat: number, lng: number): Country | null {
+export function shapeAt(shapes: Shape[], lat: number, lng: number, reach = 1.2): Shape | null {
   const y = worldY(lat);
-  const reach = 1.2;
-  let nearest: Country | null = null;
+  let nearest: Shape | null = null;
   let nearestDistance = reach;
-  for (const country of world.countries) {
-    const [left, top, right, bottom] = country.bounds;
+  for (const shape of shapes) {
+    const [left, top, right, bottom] = shape.bounds;
     // A shape that runs past +180 holds its far-eastern points there.
     const x = wrapLongitude(lng) + (right > 180 && wrapLongitude(lng) < left - reach ? 360 : 0);
     if (x < left - reach || x > right + reach || y < top - reach || y > bottom + reach) continue;
     let inside = false;
-    for (const ring of country.rings) {
+    for (const ring of shape.rings) {
       if (ringContains(ring, x, y)) inside = !inside;
     }
-    if (inside) return country;
-    for (const ring of country.rings) {
+    if (inside) return shape;
+    for (const ring of shape.rings) {
       const distance = ringDistance(ring, x, y);
       if (distance < nearestDistance) {
         nearestDistance = distance;
-        nearest = country;
+        nearest = shape;
       }
     }
   }
   return nearest;
+}
+
+export function countryAt(world: World, lat: number, lng: number, reach?: number) {
+  return shapeAt(world.countries, lat, lng, reach);
 }
 
 type Spot = { lat: number; lng: number };

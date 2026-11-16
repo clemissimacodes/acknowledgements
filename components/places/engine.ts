@@ -1,16 +1,21 @@
-import { splitPlaceName, type Place } from "@/lib/place-types";
+import { UNITED_STATES, splitPlaceName, type Place } from "@/lib/place-types";
 import {
   WORLD_BOTTOM,
   WORLD_TOP,
   WORLD_WIDTH,
+  buildStates,
   buildWorld,
   countryAt,
   greatCircle,
   latitudeAt,
+  shapeAt,
   worldY,
   wrapLongitude,
-  type Country,
   type Point,
+  type RawStates,
+  type RawWorld,
+  type Shape,
+  type States,
   type World,
 } from "./atlas";
 import { PILOT, drawJet } from "./jet";
@@ -22,9 +27,16 @@ import { PILOT, drawJet } from "./jet";
 export type Insets = { top: number; right: number; bottom: number; left: number };
 export type Spot = { lat: number; lng: number };
 
+/** A state or a country, as the page knows it. */
+export type Region = { id: string; name: string };
+
 export type AtlasEvents = {
   onSelect(id: string | null): void;
   onPin(spot: Spot): void;
+  /** A state or a country was tapped while checking places off. */
+  onRegion(region: Region): void;
+  /** The shapes have arrived, so `locate` and `regions` have answers. */
+  onShapes(): void;
 };
 
 const TAU = Math.PI * 2;
@@ -33,6 +45,9 @@ const ROUTE_STEPS = 56;
 const MAX_ZOOM = 48;
 const SPECKLE_TILE = 220;
 const IRIDESCENT = ["#f7b9d6", "#b4ebf3", "#c9c1f7", "#fbeab8", "#b3efd4", "#f7b9d6"];
+const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace';
+/** The lower forty-eight, as west, south, east, north. */
+const MAINLAND_STATES = [-124.9, 24.4, -66.8, 49.5] as const;
 
 const ENVELOPE = Float32Array.from({ length: STEPS + 1 }, (_, index) =>
   Math.pow(Math.sin((Math.PI * index) / STEPS), 0.75),
@@ -61,6 +76,9 @@ function tonesFor(ground: string) {
         gridMark: "rgba(170, 190, 215, 0.3)",
         land: "rgba(150, 172, 200, 0.13)",
         border: "rgba(170, 190, 215, 0.16)",
+        stateLine: "170, 190, 215",
+        stateName: "rgba(226, 234, 244, 0.55)",
+        stateNameOn: "rgba(226, 244, 252, 0.95)",
         coast: "rgba(186, 204, 226, 0.5)",
         visited: "rgba(132, 208, 234, 0.3)",
         visitedEdge: "rgba(150, 220, 242, 0.85)",
@@ -87,6 +105,9 @@ function tonesFor(ground: string) {
         gridMark: "rgba(104, 124, 146, 0.36)",
         land: "#e6eaeb",
         border: "rgba(132, 148, 164, 0.3)",
+        stateLine: "116, 132, 150",
+        stateName: "rgba(84, 98, 114, 0.6)",
+        stateNameOn: "rgba(22, 92, 122, 0.9)",
         coast: "rgba(126, 142, 158, 0.62)",
         visited: "#cdeaf4",
         visitedEdge: "#7fc3db",
@@ -238,10 +259,19 @@ export class Atlas {
   private pristine = true;
 
   private world: World | null = null;
+  private states: States | null = null;
   private landAlpha = 0;
   private dots: Dot[] = [];
   private home: Dot | null = null;
-  private visited: Country[] = [];
+  /** Checked off by hand: state and country ids. */
+  private checked = new Set<string>();
+  /** Every shape that wears the tint: by a dot in it, or by a check. */
+  private visited: Shape[] = [];
+  private regionMode = false;
+  /** 0 to 1: how far the threads and names have stepped back for checking off. */
+  private hush = 0;
+  private hoverRegion: Shape | null = null;
+  private flash: { shape: Shape; at: number } | null = null;
   private marks: Mark[] = [];
   private selected: string | null = null;
   private hover: string | null = null;
@@ -324,15 +354,95 @@ export class Atlas {
 
   // —— What the page tells the map ——
 
-  setWorld(raw: Parameters<typeof buildWorld>[0]) {
-    this.world = buildWorld(raw);
+  /** The countries, and the US states when they loaded too. */
+  setShapes(world: RawWorld, states: RawStates | null) {
+    this.world = buildWorld(world);
+    try {
+      this.states = states ? buildStates(states) : null;
+    } catch {
+      // Without the states the country is tinted whole, as it used to be.
+      this.states = null;
+    }
     if (this.still) this.landAlpha = 1;
+    this.markVisited();
+    this.baseDirty = true;
+    this.events.onShapes();
+  }
+
+  countryName(spot: Spot) {
+    return this.locate(spot).country?.name ?? "";
+  }
+
+  /** The country a spot is in, and the state when that country is the US. */
+  locate(spot: Spot): { country: Shape | null; state: Shape | null } {
+    const world = this.world;
+    if (!world) return { country: null, state: null };
+    const country = countryAt(world, spot.lat, spot.lng);
+    const state =
+      country?.id === UNITED_STATES && this.states
+        ? shapeAt(this.states.states, spot.lat, spot.lng, 1.5)
+        : null;
+    return { country, state };
+  }
+
+  regions(): { countries: Region[]; states: Region[] } {
+    const list = (shapes: Shape[] | undefined) =>
+      (shapes ?? []).map(({ id, name }) => ({ id, name }));
+    return { countries: list(this.world?.countries), states: list(this.states?.states) };
+  }
+
+  setChecked(ids: string[]) {
+    this.checked = new Set(ids);
     this.markVisited();
     this.baseDirty = true;
   }
 
-  countryName(spot: Spot) {
-    return this.world ? (countryAt(this.world, spot.lat, spot.lng)?.name ?? "") : "";
+  /** While on, a tap picks the state or country under it instead of a place. */
+  setRegionMode(on: boolean) {
+    this.regionMode = on;
+    this.hoverRegion = null;
+    if (!this.pinMode) this.host.style.cursor = "grab";
+    this.baseDirty = true;
+    this.topDirty = true;
+  }
+
+  /** A quick ring of light around a state or country that was just ticked. */
+  flashRegion(id: string) {
+    const shape =
+      this.states?.states.find((entry) => entry.id === id) ??
+      this.world?.countries.find((entry) => entry.id === id);
+    if (!shape || this.still) return;
+    this.flash = { shape, at: this.clock };
+    this.topDirty = true;
+  }
+
+  /** Fits the forty-eight states below anything `clear` pixels down from the top. */
+  showUnitedStates(clear = 0) {
+    const [west, south, east, north] = MAINLAND_STATES;
+    if (!this.width) return;
+    const top = worldY(north);
+    const bottom = worldY(south);
+    const roof = Math.max(this.insets.top, clear);
+    const roomX = Math.max(80, this.width - this.insets.left - this.insets.right - 28);
+    const roomY = Math.max(80, this.height - roof - this.insets.bottom - 28);
+    const k = this.limitZoom(Math.min(roomX / (east - west), roomY / (bottom - top)));
+    const focus = this.focusPoint();
+    const middle = roof + Math.max(40, this.height - roof - this.insets.bottom) / 2;
+    const to = this.settle({
+      x: this.nearestCopy((west + east) / 2) - (focus.x - this.width / 2) / k,
+      y: (top + bottom) / 2 - (middle - this.height / 2) / k,
+      k,
+    });
+    this.pristine = false;
+    this.zoomGoal = null;
+    this.glide.vx = this.glide.vy = 0;
+    if (this.still) {
+      this.flight = null;
+      this.cam = to;
+    } else {
+      this.flight = { from: { ...this.cam }, to, dip: 0, start: this.clock, duration: 900 };
+    }
+    this.baseDirty = true;
   }
 
   setPlaces(places: Place[]) {
@@ -845,8 +955,32 @@ export class Atlas {
     return best;
   }
 
+  /** The state or country under a point on the screen. */
+  private regionUnder(x: number, y: number) {
+    const world = this.world;
+    if (!world) return null;
+    const cam = this.cam;
+    const lat = latitudeAt(cam.y + (y - this.height / 2) / cam.k);
+    const lng = wrapLongitude(cam.x + (x - this.width / 2) / cam.k);
+    // A finger's width of forgiveness at the shore, whatever the zoom.
+    const reach = Math.min(1.2, 12 / cam.k);
+    const country = countryAt(world, lat, lng, reach);
+    if (country?.id === UNITED_STATES && this.states) {
+      return shapeAt(this.states.states, lat, lng, reach + 0.3);
+    }
+    return country;
+  }
+
   private point(x: number, y: number) {
     if (this.pinMode) return;
+    if (this.regionMode) {
+      const shape = x < 0 ? null : this.regionUnder(x, y);
+      if (shape === this.hoverRegion) return;
+      this.hoverRegion = shape;
+      this.host.style.cursor = shape ? "pointer" : "grab";
+      this.topDirty = true;
+      return;
+    }
     const id = this.hit(x, y, 16)?.dot.place.id ?? null;
     if (id === this.hover) return;
     this.hover = id;
@@ -865,6 +999,12 @@ export class Atlas {
         lat: latitudeAt(cam.y + (y - this.height / 2) / cam.k),
         lng: wrapLongitude(cam.x + (x - this.width / 2) / cam.k),
       });
+      return;
+    }
+    if (this.regionMode) {
+      // Every tap is a tick here, so two quick ones are two ticks, not a zoom.
+      const shape = this.regionUnder(x, y);
+      if (shape) this.events.onRegion({ id: shape.id, name: shape.name });
       return;
     }
     const mark = this.hit(x, y, finger ? 26 : 16);
@@ -941,13 +1081,24 @@ export class Atlas {
     }
   };
 
+  // Inside the United States the state is what gets tinted, never the whole
+  // country; everywhere else it is the country.
   private markVisited() {
     const world = this.world;
     if (!world) return;
-    const found = new Set<Country>();
+    const states = this.states;
+    const whole = (country: Shape) => !(states && country.id === UNITED_STATES);
+    const found = new Set<Shape>();
     for (const dot of this.dots) {
-      const country = countryAt(world, dot.place.lat, dot.place.lng);
-      if (country) found.add(country);
+      const { country, state } = this.locate(dot.place);
+      if (state) found.add(state);
+      else if (country && whole(country)) found.add(country);
+    }
+    for (const country of world.countries) {
+      if (this.checked.has(country.id) && whole(country)) found.add(country);
+    }
+    for (const state of states?.states ?? []) {
+      if (this.checked.has(state.id)) found.add(state);
     }
     this.visited = [...found];
   }
@@ -1019,6 +1170,33 @@ export class Atlas {
 
     ctx.globalAlpha = this.landAlpha;
     ctx.lineJoin = "round";
+    const place = (path: Path2D, copy: number) => {
+      const placed = new Path2D();
+      placed.addPath(path, new DOMMatrix([k, 0, 0, k, originX + copy * WORLD_WIDTH * k, originY]));
+      return placed;
+    };
+
+    // The Great Lakes are cut out of everything drawn on land, so the paper,
+    // its speckle and its grid show through them as they do through the sea.
+    const states = this.states;
+    let shores: Path2D | null = null;
+    if (states) {
+      const range = this.copies(states.lakeBounds[0], states.lakeBounds[2]);
+      for (let copy = range.first; copy <= range.last; copy += 1) {
+        shores ??= new Path2D();
+        shores.addPath(place(states.lakes, copy));
+      }
+    }
+    ctx.save();
+    if (shores) {
+      const dry = new Path2D();
+      dry.rect(0, 0, width, height);
+      dry.addPath(shores);
+      ctx.clip(dry, "evenodd");
+    }
+
+    // State lines keep to a whisper until the map is close enough to read them.
+    const near = clamp((k - 1.4) / 6, 0, 1);
     const { first, last } = this.copies(-180, 200);
     for (let copy = first; copy <= last; copy += 1) {
       ctx.setTransform(
@@ -1031,8 +1209,14 @@ export class Atlas {
       );
       ctx.fillStyle = tones.land;
       ctx.fill(world.land, "evenodd");
+      if (states) {
+        ctx.lineWidth = lerp(0.5, 0.75, near) / k;
+        ctx.strokeStyle = `rgba(${tones.stateLine}, ${lerp(0.2, 0.45, near)})`;
+        ctx.stroke(states.borders);
+      }
       if (k > 2.2) {
-        ctx.lineWidth = 0.6 / k;
+        // Country lines firm up with the state lines, so they still outrank them.
+        ctx.lineWidth = lerp(0.6, 0.95, near) / k;
         ctx.strokeStyle = tones.border;
         ctx.stroke(world.borders);
       }
@@ -1041,41 +1225,99 @@ export class Atlas {
       ctx.stroke(world.coast);
     }
 
-    // Visited countries wear a stippled bloom that fades into the sea.
+    // Visited states and countries wear a stippled bloom that fades into the sea.
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     const bloom = clamp(4 + k * 1.1, 6, 19);
     const dense = anchor(this.haloDense, 4);
     const sparse = anchor(this.haloSparse, 6);
-    const outlines: Path2D[] = [];
-    for (const country of this.visited) {
-      const range = this.copies(country.bounds[0] - 4, country.bounds[2] + 4);
+    const outlines: Array<{ shape: Shape; path: Path2D }> = [];
+    for (const shape of this.visited) {
+      const range = this.copies(shape.bounds[0] - 4, shape.bounds[2] + 4);
       for (let copy = range.first; copy <= range.last; copy += 1) {
-        const outline = new Path2D();
-        outline.addPath(
-          country.path,
-          new DOMMatrix([k, 0, 0, k, originX + copy * WORLD_WIDTH * k, originY]),
-        );
-        outlines.push(outline);
+        outlines.push({ shape, path: place(shape.path, copy) });
       }
     }
     if (dense && sparse) {
-      for (const outline of outlines) {
+      for (const { path } of outlines) {
         ctx.strokeStyle = sparse;
         ctx.lineWidth = bloom * 2;
-        ctx.stroke(outline);
+        ctx.stroke(path);
         ctx.strokeStyle = dense;
         ctx.lineWidth = bloom;
-        ctx.stroke(outline);
+        ctx.stroke(path);
       }
     }
-    for (const outline of outlines) {
+    for (const { path } of outlines) {
       ctx.fillStyle = tones.visited;
-      ctx.fill(outline, "evenodd");
+      ctx.fill(path, "evenodd");
       ctx.strokeStyle = tones.visitedEdge;
       ctx.lineWidth = 0.9;
-      ctx.stroke(outline);
+      ctx.stroke(path);
     }
+    ctx.restore();
+
+    if (shores && states) {
+      // A visited shore blooms into its own share of the lake, and no further.
+      const [left, top, right, bottom] = states.lakeBounds;
+      const wet = outlines.filter(
+        ({ shape }) =>
+          shape.bounds[0] < right && shape.bounds[2] > left && shape.bounds[1] < bottom && shape.bounds[3] > top,
+      );
+      if (dense && sparse) {
+        for (const { path } of wet) {
+          ctx.save();
+          ctx.clip(path, "evenodd");
+          ctx.clip(shores, "evenodd");
+          ctx.strokeStyle = sparse;
+          ctx.lineWidth = bloom * 2;
+          ctx.stroke(shores);
+          ctx.strokeStyle = dense;
+          ctx.lineWidth = bloom;
+          ctx.stroke(shores);
+          ctx.restore();
+        }
+      }
+      ctx.lineWidth = 0.75;
+      ctx.strokeStyle = tones.coast;
+      ctx.stroke(shores);
+      for (const { path } of wet) {
+        ctx.save();
+        ctx.clip(path, "evenodd");
+        ctx.strokeStyle = tones.visitedEdge;
+        ctx.lineWidth = 0.9;
+        ctx.stroke(shores);
+        ctx.restore();
+      }
+    }
+
+    if (this.regionMode && states) this.drawStateNames(ctx, originX, originY);
     ctx.globalAlpha = 1;
+  }
+
+  /** Postal codes, only while she is checking states off and close enough to tap them. */
+  private drawStateNames(ctx: CanvasRenderingContext2D, originX: number, originY: number) {
+    const { tones, states, height } = this;
+    const k = this.cam.k;
+    if (!states || k < 4.2) return;
+    const visited = new Set(this.visited);
+    ctx.font = `500 ${k < 9 ? 10 : 11}px ${MONO}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const state of states.states) {
+      if (!state.at) continue;
+      const code = state.id.slice(3);
+      const room = ctx.measureText(code).width + 8;
+      // Alaska's islands run past the antimeridian, so its box is no guide.
+      const wide = code === "AK" ? 30 * k : (state.bounds[2] - state.bounds[0]) * k;
+      if (wide < room || (state.bounds[3] - state.bounds[1]) * k < 16) continue;
+      const { first, last } = this.copies(state.at[0] - 1, state.at[0] + 1);
+      for (let copy = first; copy <= last; copy += 1) {
+        const y = originY + state.at[1] * k;
+        if (y < -10 || y > height + 10) continue;
+        ctx.fillStyle = visited.has(state) ? tones.stateNameOn : tones.stateName;
+        ctx.fillText(code, originX + (state.at[0] + copy * WORLD_WIDTH) * k, y);
+      }
+    }
   }
 
   private drawGraticule(ctx: CanvasRenderingContext2D, originX: number, originY: number) {
@@ -1148,7 +1390,13 @@ export class Atlas {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    // While she checks states off, the threads thin out and the names and
+    // the jet step aside, so every state can be seen and tapped.
+    const quiet = this.regionMode ? 1 : 0;
+    this.hush = this.still ? quiet : clamp(this.hush + (quiet ? dt : -dt) / 240, 0, 1);
+
     this.drawThreads(ctx, originX, originY, time);
+    this.drawRegionRings(ctx, originX, originY, time);
 
     const marks: Mark[] = [];
     for (const dot of this.dots) {
@@ -1171,9 +1419,15 @@ export class Atlas {
     const ordered = [...marks].sort((a, b) => rank(a) - rank(b));
     const size = clamp(0.9 + Math.log2(k / 3) * 0.1, 0.82, 1.35);
     for (const mark of ordered) this.drawToken(ctx, mark, size, time);
-    this.drawLabels(ctx, ordered.reverse(), size, dt, this.jetBoxes(originX, originY, size));
+    this.drawLabels(
+      ctx,
+      this.regionMode ? [] : ordered.reverse(),
+      size,
+      dt,
+      this.jetBoxes(originX, originY, size),
+    );
     this.drawPin(ctx, originX, originY, time);
-    this.drawJetLayer(ctx, originX, originY, size);
+    if (this.hush < 0.5) this.drawJetLayer(ctx, originX, originY, size);
   }
 
   private drawThreads(
@@ -1258,7 +1512,7 @@ export class Atlas {
         ctx.strokeStyle = sheen;
         ctx.lineWidth = 1.5;
       } else {
-        ctx.globalAlpha = chosen ? 0.4 : 0.86;
+        ctx.globalAlpha = lerp(chosen ? 0.4 : 0.86, 0.2, this.hush);
         ctx.strokeStyle = tones.threads[tone];
         ctx.lineWidth = tone === 2 ? 0.95 : 0.7;
       }
@@ -1281,8 +1535,55 @@ export class Atlas {
       ctx.strokeStyle = edge;
       ctx.stroke();
     };
-    string(beads, 1.5, chosen ? 0.45 : 1, tones.beadEdge);
+    string(beads, 1.5, (chosen ? 0.45 : 1) * (1 - this.hush), tones.beadEdge);
     string(litBeads, 2.1, 1, IRIDESCENT[2]);
+    ctx.globalAlpha = 1;
+  }
+
+  /** The outline under the cursor while checking off, and the one just ticked. */
+  private drawRegionRings(
+    ctx: CanvasRenderingContext2D,
+    originX: number,
+    originY: number,
+    time: number,
+  ) {
+    const k = this.cam.k;
+    const trace = (shape: Shape, paint: (path: Path2D, x: number, y: number) => void) => {
+      const [left, top, right, bottom] = shape.bounds;
+      const range = this.copies(left, right);
+      for (let copy = range.first; copy <= range.last; copy += 1) {
+        const shift = originX + copy * WORLD_WIDTH * k;
+        const path = new Path2D();
+        path.addPath(shape.path, new DOMMatrix([k, 0, 0, k, shift, originY]));
+        paint(path, shift + ((left + right) / 2) * k, originY + ((top + bottom) / 2) * k);
+      }
+    };
+    const hover = this.regionMode ? this.hoverRegion : null;
+    if (hover && hover !== this.flash?.shape) {
+      trace(hover, (path) => {
+        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = this.tones.cobalt;
+        ctx.globalAlpha = 0.7;
+        ctx.stroke(path);
+      });
+    }
+    const flash = this.flash;
+    if (flash) {
+      const age = (this.clock - flash.at) / 900;
+      if (age >= 1) {
+        this.flash = null;
+      } else {
+        trace(flash.shape, (path, x, y) => {
+          ctx.globalAlpha = 1 - age * age;
+          ctx.lineWidth = 4.4;
+          ctx.strokeStyle = this.tones.dark ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.9)";
+          ctx.stroke(path);
+          ctx.lineWidth = 2.2;
+          ctx.strokeStyle = this.iridescence(ctx, x, y, time * 0.002);
+          ctx.stroke(path);
+        });
+      }
+    }
     ctx.globalAlpha = 1;
   }
 

@@ -32,7 +32,7 @@ import {
   type PlaceKind,
   type PlaceMatch,
 } from "@/lib/place-types";
-import { milesBetween, wrapLongitude } from "./atlas";
+import { milesBetween, wrapLongitude, type RawStates, type RawWorld } from "./atlas";
 import { Atlas, type Insets, type Spot } from "./engine";
 import styles from "./Places.module.css";
 
@@ -200,6 +200,8 @@ export function PlacesMap({
           );
           atlas.setPin(spot, false);
         },
+        onRegion() {},
+        onShapes() {},
       },
       ground,
     );
@@ -209,12 +211,19 @@ export function PlacesMap({
     atlas.setPlaces(state.current.places);
 
     let cancelled = false;
-    fetch("/places/world.json")
-      .then((response) => response.json())
-      .then((world) => {
-        if (!cancelled) atlas.setWorld(world);
-      })
-      .catch(() => {});
+    const load = <T,>(file: string) =>
+      fetch(file).then((response) => {
+        if (!response.ok) throw new Error(file);
+        return response.json() as Promise<T>;
+      });
+    // Both arrive before either is drawn, so the land fades in once, whole.
+    Promise.allSettled([
+      load<RawWorld>("/places/world.json"),
+      load<RawStates>("/places/us-states.json"),
+    ]).then(([world, states]) => {
+      if (cancelled || world.status !== "fulfilled") return;
+      atlas.setShapes(world.value, states.status === "fulfilled" ? states.value : null);
+    });
 
     return () => {
       cancelled = true;
