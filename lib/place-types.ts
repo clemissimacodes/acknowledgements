@@ -28,11 +28,34 @@ export type PlaceInput = {
 
 export type PlaceMatch = {
   name: string;
+  /** "Region of Waterloo, Ontario, Canada": enough to tell two Waterloos apart. */
   context: string;
+  /** "Ontario, Canada": the same, short enough for one line on a phone. */
+  short: string;
   country: string;
   lat: number;
   lng: number;
 };
+
+/** What "add many" sends for each place: a spot, a name, and whatever she filled in. */
+export type PlaceBatchInput = Omit<PlaceInput, "kind">;
+
+// A region she has been to without naming a town in it. A US state goes by
+// its ISO 3166-2 code ("US-CA"); a country by its code in /places/world.json
+// ("FRA", or "FRA-OS" for overseas France).
+export const REGION_ID = /^(?:US-[A-Z]{2}|[A-Z0-9]{3}(?:-[A-Z0-9]{2})?)$/;
+export const REGION_MAX = 400;
+export const UNITED_STATES = "USA";
+/** Washington, D.C. can be checked off, but it is not one of the fifty. */
+export const FEDERAL_DISTRICT = "US-DC";
+export const STATE_COUNT = 50;
+
+export function isStateId(id: string) {
+  return id.startsWith("US-");
+}
+
+/** How many names "add many" looks up in one go. */
+export const PLACE_BATCH_MAX = 30;
 
 export const PLACE_KINDS: PlaceKind[] = ["visited", "hometown", "current"];
 export const PLACE_NAME_MAX = 80;
@@ -98,7 +121,23 @@ export const SEED_PLACES: Place[] = [
   seed("porto", "Porto", "Portugal", 41.1579, -8.6291),
   seed("paris", "Paris", "France", 48.8566, 2.3522),
   seed("brittany", "Brittany", "France", 48.202, -2.9326),
+  seed("banff", "Banff, Alberta", "Canada", 51.1784, -115.5708),
+  seed("waterloo", "Waterloo, Ontario", "Canada", 43.4643, -80.5204),
 ];
+
+/** "Waterloo, Banff\nOaxaca" becomes three names, in order, each once. */
+export function splitPlaceNames(text: string) {
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const part of text.split(/[\n,;]+/)) {
+    const name = part.replace(/\s+/g, " ").trim().slice(0, PLACE_NAME_MAX);
+    const key = name.toLowerCase();
+    if (name.length < 2 || seen.has(key)) continue;
+    seen.add(key);
+    names.push(name);
+  }
+  return names;
+}
 
 /** "Chateau Oak, the Panhandle, San Francisco" reads as a title and a line under it. */
 export function splitPlaceName(name: string) {

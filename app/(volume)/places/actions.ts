@@ -3,15 +3,17 @@
 import { revalidatePath } from "next/cache";
 import {
   createPlace,
+  createPlaces,
   deletePlace,
   getPlaces,
   searchPlaceMatches,
+  setRegionVisited,
   updatePlace,
 } from "@/lib/places";
-import type { Place, PlaceInput, PlaceMatch } from "@/lib/place-types";
+import type { Place, PlaceBatchInput, PlaceInput, PlaceMatch } from "@/lib/place-types";
 import { viewerIsOwner } from "@/lib/recording-owner";
 
-export type PlacesResult = { places: Place[]; id?: string } | { error: string };
+export type PlacesResult = { places: Place[]; id?: string; ids?: string[] } | { error: string };
 
 async function requireOwner() {
   if (!(await viewerIsOwner())) throw new Error("Not authorized.");
@@ -42,6 +44,36 @@ export async function savePlace(id: string, input: Omit<PlaceInput, "lat" | "lng
 export async function removePlace(id: string) {
   await requireOwner();
   return settle(() => deletePlace(id));
+}
+
+/** Everything from "add many", in one write. */
+export async function addPlaces(inputs: PlaceBatchInput[]): Promise<PlacesResult> {
+  await requireOwner();
+  try {
+    const ids = await createPlaces(inputs);
+    revalidatePath("/places");
+    return { places: await getPlaces(), ids };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "That did not save." };
+  }
+}
+
+/**
+ * Checks one state or country off, or unchecks it. The map has already shown
+ * the change, so all that comes back is whether it held. /places is rendered
+ * fresh on every visit, so there is nothing to revalidate.
+ */
+export async function markRegion(
+  id: string,
+  visited: boolean,
+): Promise<{ ok: true } | { error: string }> {
+  await requireOwner();
+  try {
+    await setRegionVisited(id, visited);
+    return { ok: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "That did not save." };
+  }
 }
 
 export async function findPlaces(
