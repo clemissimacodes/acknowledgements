@@ -17,10 +17,17 @@ function cut() {
     farWing: new Path2D("M 4 -6 L -12 -15.5 C -9 -16.6 -5 -16.2 -2 -14.6 L 14 -6.4 Z"),
     wing: new Path2D("M 8 3.4 L -15 17.5 C -19 18.2 -23 17 -24.6 15 L -7 2.6 Z"),
     stripe: new Path2D("M -24 0.6 C -10 -2.6 10 -2.4 28 1.4"),
-    windshield: new Path2D("M 12 -8.8 C 15.4 -15 20 -15.6 22.6 -6.6"),
-    seat: new Path2D("M -9 -9.8 C -7 -13 14 -13 16 -8.6 C 8 -7.4 -2 -7.6 -9 -9.8 Z"),
+    // A low screen ahead of her: it ends below her chin.
+    windshield: new Path2D("M 18.4 -8.5 C 19.6 -13.4 23.6 -14.2 27.6 -5.6 C 24.6 -6.9 21.4 -7.9 18.4 -8.5 Z"),
+    // The rim of the open cockpit, on the near side of her.
+    coaming: new Path2D("M -9.5 -9.7 C -2 -10.9 10 -10.6 19.5 -8.3"),
   };
 }
+
+// Mini Clemi's picture looks to its own left, with the orange slice behind
+// her head. On the jet it is drawn mirrored, so her face is toward the nose
+// and the slice toward the tail; the jet's own flip then turns her with it.
+export const PILOT = { size: 33, middle: 2.4, base: -7.4 };
 
 let shapes: ReturnType<typeof cut> | null = null;
 
@@ -43,7 +50,7 @@ export function drawJet(
   mini: HTMLImageElement | null,
 ) {
   const { thrust, time } = pose;
-  const { fuselage, belly, nose, fin, farWing, wing, stripe, windshield, seat } = (shapes ??= cut());
+  const { fuselage, belly, nose, fin, farWing, wing, stripe, windshield, coaming } = (shapes ??= cut());
   ctx.save();
   ctx.globalAlpha = pose.alpha;
   ctx.translate(pose.x, pose.y);
@@ -79,8 +86,14 @@ export function drawJet(
   ctx.stroke(fin);
 
   if (mini?.complete && mini.naturalWidth) {
-    // She sits low enough that the fuselage, drawn next, tucks her in.
-    ctx.drawImage(mini, -9.5, -29.5, 27, 27);
+    // Her whole head stands clear of the jet; the fuselage, drawn next,
+    // covers only her collar.
+    ctx.save();
+    ctx.translate(PILOT.middle, PILOT.base);
+    ctx.scale(-1, 1);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(mini, -PILOT.size / 2, -PILOT.size, PILOT.size, PILOT.size);
+    ctx.restore();
   }
 
   const body = ctx.createLinearGradient(0, -10, 0, 10);
@@ -93,9 +106,10 @@ export function drawJet(
   ctx.fill(belly);
   ctx.fillStyle = "#fff6fa";
   ctx.fill(nose);
-  ctx.fillStyle = "rgba(196, 46, 110, 0.5)";
-  ctx.fill(seat);
   ctx.stroke(fuselage);
+  ctx.strokeStyle = "rgba(184, 52, 111, 0.55)";
+  ctx.lineWidth = 2.2;
+  ctx.stroke(coaming);
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
   ctx.lineWidth = 1.5;

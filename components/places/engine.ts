@@ -13,7 +13,7 @@ import {
   type Point,
   type World,
 } from "./atlas";
-import { drawJet } from "./jet";
+import { PILOT, drawJet } from "./jet";
 
 // The Places map, drawn by hand on two stacked canvases: the paper and land
 // underneath (redrawn only when the view moves), and the threads, tokens and
@@ -1436,7 +1436,9 @@ export class Atlas {
     for (let copy = first; copy <= last; copy += 1) {
       const x = originX + (jet.x + copy * WORLD_WIDTH) * k + jet.facing * 15 * size;
       const y = originY + jet.y * k;
-      boxes.push([x - half, y - 21 * size - 22, x + half, y - 9]);
+      const scale = this.jetScale(size);
+      // Up to the tips of her ears, which stand well clear of the fuselage.
+      boxes.push([x - half, y - 21 * size - (PILOT.size - PILOT.base + 2) * scale, x + half, y - 9]);
     }
     return boxes;
   }
