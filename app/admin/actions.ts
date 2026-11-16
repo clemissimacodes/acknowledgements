@@ -11,6 +11,7 @@ import {
   updatePostiesRecord,
   updateWishRecord,
 } from "@/lib/admin";
+import { markNotificationsSeen } from "@/lib/notifications";
 import { clearSecretsAttempts } from "@/lib/secrets-attempts";
 import {
   clearCurrentLocation,
@@ -31,6 +32,15 @@ async function requireOwner() {
 
 function refreshControlRoom() {
   revalidatePath("/controlroom");
+}
+
+export async function markNotificationsAsSeen(formData: FormData) {
+  await requireOwner();
+  await markNotificationsSeen(
+    formData.get("through"),
+    formData.get("counters"),
+  );
+  refreshControlRoom();
 }
 
 export async function savePostiesRecord(formData: FormData) {

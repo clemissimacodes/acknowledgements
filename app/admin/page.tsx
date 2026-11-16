@@ -3,8 +3,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { Notifications } from "@/components/admin/Notifications";
 import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
+import { getNotifications } from "@/lib/notifications";
+import { visitorHash } from "@/lib/recording-visitor";
 import { getSecretsAttemptReport } from "@/lib/secrets-attempts";
 import { getTrackerAdminData } from "@/lib/tracker";
 import { getPendingAskCount } from "@/lib/ask";
@@ -66,12 +69,20 @@ export default async function AdminPage() {
     tracker,
     breakIns,
     pendingAsks,
+    news,
   ] =
     await Promise.all([
       getAdminData(),
       getTrackerAdminData(),
       getSecretsAttemptReport(),
       getPendingAskCount().catch(() => 0),
+      // Her own hearts are left out of the feed by her visitor cookie.
+      visitorHash()
+        .then(getNotifications)
+        .catch((error) => {
+          console.error("Notifications could not be loaded.", error);
+          return null;
+        }),
     ]);
   const uniqueVisitors = new Set(
     data.visits.map((visit) => visit.ipHash).filter(Boolean),
@@ -86,6 +97,8 @@ export default async function AdminPage() {
         </div>
         <UserButton />
       </header>
+
+      <Notifications data={news} />
 
       <nav className="admin-vault" aria-label="Vault">
         <p className="admin-eyebrow">the vault · formerly secrets</p>
