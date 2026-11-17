@@ -267,48 +267,6 @@ input {
   text-decoration-color: currentColor;
 }
 
-.toc {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  padding: 0;
-}
-
-.toc h2 {
-  margin: 0 0 1.15rem;
-  font-size: 0.68rem;
-  font-weight: 400;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--mute);
-}
-
-.toc ol {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.toc li + li {
-  margin-top: 0.15rem;
-}
-
-.toc a {
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  text-decoration: none;
-  font-size: 1.12rem;
-  line-height: 1.55;
-}
-
-.toc a:hover,
-.toc a:focus-visible {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  text-decoration-thickness: 1px;
-}
-
 /* Mid-size windows (laptops, split screens): the portrait is pinned to the
    right gutter and shrunk to fit, and the orb moves left of it, so the two
    never overlap and Clemi is never cut off by the window edge. */
@@ -439,13 +397,6 @@ html:has(.index) .volume {
   .index-bio {
     margin-bottom: 1.35rem;
     font-size: 1.02rem;
-  }
-
-  .toc a {
-    display: flex;
-    align-items: center;
-    min-height: 2.75rem;
-    padding: 0.2rem 0;
   }
 
 }
