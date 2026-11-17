@@ -249,6 +249,11 @@ input {
   margin-bottom: 0.9em;
 }
 
+/* The line that leads into the rotating words never leaves a stub behind. */
+.index-keep {
+  white-space: nowrap;
+}
+
 .rotating-words {
   display: grid;
 }
