@@ -71,12 +71,11 @@ export default function HomePage() {
         <Link href="/secrets">here</Link>.
       </p>
       <p className="index-bio">
-        Never be shy to message me -{" "}
+        You can message me{" "}
         <a href="https://x.com/clemissima" target="_blank" rel="noreferrer">
           @clemissima
         </a>{" "}
-        everywhere -{" "}
-        <span className="index-keep">I’m always open to new friends</span>
+        everywhere - I’m always open to give advice or make new friends{" "}
         <RotatingWords words={friendThings} prefix="to" suffix="with." />
       </p>
     </main>
