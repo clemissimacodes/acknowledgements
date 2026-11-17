@@ -43,6 +43,13 @@ const TAU = Math.PI * 2;
 const STEPS = 72;
 const ROUTE_STEPS = 56;
 const MAX_ZOOM = 48;
+/** Three-times screens draw more than twice the pixels of two-times ones for no visible gain. */
+const MAX_RATIO = 2;
+/** While the view moves, the land is slid and scaled as a picture; it is drawn
+ *  afresh only when it has been stretched this far, or has left this much of the
+ *  screen bare, or the view has come to rest. */
+const STRETCH_LIMIT = 1.45;
+const BARE_LIMIT = 0.22;
 const SPECKLE_TILE = 220;
 const IRIDESCENT = ["#f7b9d6", "#b4ebf3", "#c9c1f7", "#fbeab8", "#b3efd4", "#f7b9d6"];
 const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace';
@@ -296,8 +303,13 @@ export class Atlas {
   private last = 0;
   private frame = 0;
   private drawn = 0;
+  /** Something on the land changed: shapes, checks, mode. The view moving is not this. */
   private baseDirty = true;
   private topDirty = true;
+  /** The view the land was last drawn for, and whether that drawing was the careful one. */
+  private baseCam: Camera | null = null;
+  private baseFull = false;
+  private baseShifted = false;
   private still: boolean;
   private font = "serif";
   private speckle: CanvasPattern | null = null;
@@ -305,6 +317,8 @@ export class Atlas {
   private haloSparse: CanvasPattern | null = null;
   private scratchX = new Float32Array(STEPS + 2);
   private scratchY = new Float32Array(STEPS + 2);
+  private widths = new Map<string, number>();
+  private gradients = new Map<string, CanvasGradient>();
 
   private pointers = new Map<number, { x: number; y: number }>();
   private press: { x: number; y: number; at: number; moved: boolean } | null = null;
@@ -328,6 +342,8 @@ export class Atlas {
     this.font = getComputedStyle(host).fontFamily || "serif";
     this.motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     this.still = this.motion.matches;
+    base.style.transformOrigin = "0 0";
+    base.style.willChange = "transform";
 
     const mini = new Image();
     mini.onload = () => (this.topDirty = true);
@@ -338,7 +354,12 @@ export class Atlas {
     this.observer.observe(host);
     this.resize();
     this.listen();
-    document.fonts?.ready.then(() => (this.topDirty = true)).catch(() => {});
+    document.fonts?.ready
+      .then(() => {
+        this.widths.clear();
+        this.topDirty = true;
+      })
+      .catch(() => {});
     this.frame = requestAnimationFrame(this.tick);
   }
 
@@ -442,7 +463,6 @@ export class Atlas {
     } else {
       this.flight = { from: { ...this.cam }, to, dip: 0, start: this.clock, duration: 900 };
     }
-    this.baseDirty = true;
   }
 
   setPlaces(places: Place[]) {
@@ -527,7 +547,7 @@ export class Atlas {
     const rect = this.host.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    const ratio = Math.min(window.devicePixelRatio || 1, 3);
+    const ratio = Math.min(window.devicePixelRatio || 1, MAX_RATIO);
     if (width === this.width && height === this.height && ratio === this.ratio) return;
     this.width = width;
     this.height = height;
@@ -537,6 +557,7 @@ export class Atlas {
       canvas.height = Math.round(height * ratio);
     }
     this.makePatterns();
+    this.gradients.clear();
     if (this.pristine) this.overview(false);
     else this.settle(this.cam);
     this.baseDirty = true;
@@ -620,7 +641,6 @@ export class Atlas {
       this.flight = null;
       this.cam = to;
     }
-    this.baseDirty = true;
     this.topDirty = true;
   }
 
@@ -663,7 +683,7 @@ export class Atlas {
       this.cam = to;
     }
     this.sendJet(spot, x, duration);
-    this.baseDirty = true;
+    this.topDirty = true;
   }
 
   // —— Jet ——
@@ -926,7 +946,7 @@ export class Atlas {
     this.cam.y -= dy / this.cam.k;
     this.settle(this.cam);
     this.pristine = false;
-    this.baseDirty = true;
+    this.topDirty = true;
   }
 
   private zoomAt(k: number, px: number, py: number) {
@@ -939,7 +959,7 @@ export class Atlas {
     cam.y = worldYAt - (py - this.height / 2) / next;
     this.settle(cam);
     this.pristine = false;
-    this.baseDirty = true;
+    this.topDirty = true;
   }
 
   private hit(x: number, y: number, reach: number) {
@@ -1058,18 +1078,15 @@ export class Atlas {
       moving = true;
     }
 
+    let fading = false;
     if (this.world && this.landAlpha < 1) {
       this.landAlpha = Math.min(1, this.landAlpha + dt / 700);
-      moving = true;
+      fading = true;
     }
-    if (this.moveJet(dt)) moving = true;
-    if (moving) this.baseDirty = true;
+    // The jet lives on the top sheet; her flying never asks for the land again.
+    if (this.moveJet(dt) || moving) this.topDirty = true;
 
-    if (this.baseDirty) {
-      this.drawBase();
-      this.baseDirty = false;
-      this.topDirty = true;
-    }
+    this.placeBase(moving || this.pointers.size > 0, fading);
 
     // Idle, the threads only sway: thirty frames a second is plenty.
     const breathing =
@@ -1080,6 +1097,61 @@ export class Atlas {
       this.topDirty = false;
     }
   };
+
+  /**
+   * Drawing the land is the slow part, so while the view is in motion the last
+   * drawing is slid and scaled into place instead, which costs nothing. It is
+   * drawn again, quickly, once it has been stretched or uncovered too far, and
+   * drawn with care when the view comes to rest.
+   */
+  private placeBase(inMotion: boolean, fading: boolean) {
+    const { cam, width, height } = this;
+    const was = this.baseCam;
+    let redraw = this.baseDirty || !was || fading;
+    if (!redraw && was && (cam.x !== was.x || cam.y !== was.y || cam.k !== was.k)) {
+      if (!inMotion) {
+        redraw = true;
+      } else {
+        const s = cam.k / was.k;
+        const tx = width / 2 - cam.x * cam.k - s * (width / 2 - was.x * was.k);
+        const ty = height / 2 - cam.y * cam.k - s * (height / 2 - was.y * was.k);
+        const bareX = (Math.max(0, tx) + Math.max(0, width - tx - width * s)) / width;
+        const bareY = (Math.max(0, ty) + Math.max(0, height - ty - height * s)) / height;
+        redraw =
+          s > STRETCH_LIMIT || s < 1 / STRETCH_LIMIT || bareX > BARE_LIMIT || bareY > BARE_LIMIT;
+      }
+    } else if (!redraw && !inMotion && !this.baseFull) {
+      // At rest on a quick drawing: take the time for the careful one now.
+      redraw = true;
+    }
+
+    if (redraw) {
+      const full = !inMotion || fading;
+      this.drawBase(full);
+      this.baseCam = { ...cam };
+      this.baseFull = full;
+      this.baseDirty = false;
+      this.topDirty = true;
+      if (this.baseShifted) {
+        this.base.style.transform = "";
+        this.baseShifted = false;
+      }
+      return;
+    }
+    if (!was) return;
+    const s = cam.k / was.k;
+    const tx = width / 2 - cam.x * cam.k - s * (width / 2 - was.x * was.k);
+    const ty = height / 2 - cam.y * cam.k - s * (height / 2 - was.y * was.k);
+    if (s === 1 && tx === 0 && ty === 0) {
+      if (this.baseShifted) {
+        this.base.style.transform = "";
+        this.baseShifted = false;
+      }
+      return;
+    }
+    this.base.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+    this.baseShifted = true;
+  }
 
   // Inside the United States the state is what gets tinted, never the whole
   // country; everywhere else it is the country.
@@ -1142,7 +1214,8 @@ export class Atlas {
     };
   }
 
-  private drawBase() {
+  /** `full` adds the stippled bloom around visited places, the one slow flourish. */
+  private drawBase(full: boolean) {
     const { baseCtx: ctx, width, height, ratio, cam, tones, world } = this;
     const k = cam.k;
     const originX = width / 2 - cam.x * k;
@@ -1228,8 +1301,8 @@ export class Atlas {
     // Visited states and countries wear a stippled bloom that fades into the sea.
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     const bloom = clamp(4 + k * 1.1, 6, 19);
-    const dense = anchor(this.haloDense, 4);
-    const sparse = anchor(this.haloSparse, 6);
+    const dense = full ? anchor(this.haloDense, 4) : null;
+    const sparse = full ? anchor(this.haloSparse, 6) : null;
     const outlines: Array<{ shape: Shape; path: Path2D }> = [];
     for (const shape of this.visited) {
       const range = this.copies(shape.bounds[0] - 4, shape.bounds[2] + 4);
@@ -1306,7 +1379,7 @@ export class Atlas {
     for (const state of states.states) {
       if (!state.at) continue;
       const code = state.id.slice(3);
-      const room = ctx.measureText(code).width + 8;
+      const room = this.textWidth(ctx, code) + 8;
       // Alaska's islands run past the antimeridian, so its box is no guide.
       const wide = code === "AK" ? 30 * k : (state.bounds[2] - state.bounds[0]) * k;
       if (wide < room || (state.bounds[3] - state.bounds[1]) * k < 16) continue;
@@ -1458,48 +1531,59 @@ export class Atlas {
         const reach = grown * STEPS;
         const whole = Math.min(STEPS, Math.floor(reach));
         const part = reach - whole;
-        const count = Math.min(STEPS, whole + 1);
         const sway = Math.min(thread.length * 0.03, 22 / k);
+        // A thread an inch long on the screen needs a fraction of the points
+        // of one that spans it; the sway is too slight to show the difference.
+        const span = thread.length * k;
+        const stride = span > 420 ? 1 : span > 200 ? 2 : span > 90 ? 3 : 4;
         const { first, last } = this.copies(thread.left, thread.right);
         for (let copy = first; copy <= last; copy += 1) {
           const shift = originX + copy * WORLD_WIDTH * k;
           for (const strand of thread.strands) {
             if (!lit && strand.tone !== tone) continue;
-            for (let index = 0; index <= count; index += 1) {
+            // Samples at every `stride` points up to the grown end, then the
+            // end itself, then the point past it for the part-grown tip.
+            let n = 0;
+            const sample = (index: number) => {
               const t = index / STEPS;
               const wave =
                 0.62 * Math.sin(TAU * strand.f1 * t + strand.p1 + time * strand.w1) +
                 0.38 * Math.sin(TAU * strand.f2 * t + strand.p2 - time * strand.w2);
               const offset = sway * ENVELOPE[index] * (strand.spread * 0.62 + wave * 0.38);
-              xs[index] =
-                shift + (thread.points[index * 2] + thread.normals[index * 2] * offset) * k;
-              ys[index] =
+              xs[n] = shift + (thread.points[index * 2] + thread.normals[index * 2] * offset) * k;
+              ys[n] =
                 originY +
                 (thread.points[index * 2 + 1] + thread.normals[index * 2 + 1] * offset) * k;
-            }
+              n += 1;
+            };
+            for (let index = 0; index < whole; index += stride) sample(index);
+            sample(whole);
+            const end = n - 1;
+            if (whole < STEPS) sample(whole + 1);
             ctx.moveTo(xs[0], ys[0]);
-            for (let index = 1; index <= whole; index += 1) ctx.lineTo(xs[index], ys[index]);
+            for (let at = 1; at <= end; at += 1) ctx.lineTo(xs[at], ys[at]);
             if (whole < STEPS && part > 0) {
-              ctx.lineTo(
-                lerp(xs[whole], xs[whole + 1], part),
-                lerp(ys[whole], ys[whole + 1], part),
-              );
+              ctx.lineTo(lerp(xs[end], xs[end + 1], part), lerp(ys[end], ys[end + 1], part));
             }
             if (lit && !sheen) {
-              sheen = ctx.createLinearGradient(xs[0], ys[0], xs[count], ys[count]);
+              sheen = ctx.createLinearGradient(xs[0], ys[0], xs[n - 1], ys[n - 1]);
               const turn = mod(time * 0.00006, 1);
               for (let stop = 0; stop < IRIDESCENT.length; stop += 1) {
                 sheen.addColorStop(mod(stop / (IRIDESCENT.length - 1) + turn, 1), IRIDESCENT[stop]);
               }
             }
             if (grown < 1) continue;
-            // Seed pearls strung on the thread, drifting out from home.
+            // Seed pearls strung on the thread, drifting out from home. Fully
+            // grown, the samples sit at 0, stride, 2·stride … and then STEPS.
             for (const bead of strand.beads) {
               const along = mod(bead + time * strand.pace, 1) * STEPS;
-              const index = Math.min(STEPS - 1, Math.floor(along));
+              const at = Math.min(end - 1, Math.floor(along / stride));
+              const low = at * stride;
+              const high = Math.min(STEPS, low + stride);
+              const between = (along - low) / (high - low);
               (lit ? litBeads : beads).push(
-                lerp(xs[index], xs[index + 1], along - index),
-                lerp(ys[index], ys[index + 1], along - index),
+                lerp(xs[at], xs[at + 1], between),
+                lerp(ys[at], ys[at + 1], between),
                 Math.sqrt(Math.sin((Math.PI * along) / STEPS)),
               );
             }
@@ -1602,6 +1686,43 @@ export class Atlas {
     return sheen;
   }
 
+  /** Measuring text is slow and the names never change, so each is measured once per font. */
+  private textWidth(ctx: CanvasRenderingContext2D, text: string) {
+    const key = `${ctx.font}|${text}`;
+    let width = this.widths.get(key);
+    if (width === undefined) {
+      width = ctx.measureText(text).width;
+      this.widths.set(key, width);
+    }
+    return width;
+  }
+
+  /**
+   * A gradient drawn about the origin, kept for the next token of the same
+   * kind and size. Tokens are drawn translated to their spot, so one gradient
+   * serves them all instead of a fresh one for each, every frame.
+   */
+  private radial(
+    ctx: CanvasRenderingContext2D,
+    key: string,
+    x0: number,
+    y0: number,
+    r0: number,
+    x1: number,
+    y1: number,
+    r1: number,
+    stops: Array<[number, string]>,
+  ) {
+    let gradient = this.gradients.get(key);
+    if (!gradient) {
+      if (this.gradients.size > 600) this.gradients.clear();
+      gradient = ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+      for (const [at, colour] of stops) gradient.addColorStop(at, colour);
+      this.gradients.set(key, gradient);
+    }
+    return gradient;
+  }
+
   private drawToken(ctx: CanvasRenderingContext2D, mark: Mark, size: number, time: number) {
     const { tones } = this;
     const { dot, x, y } = mark;
@@ -1610,63 +1731,69 @@ export class Atlas {
     const { kind, id } = dot.place;
     const chosen = id === this.selected;
     const lit = chosen || id === this.hover;
-    const pop = size * (0.6 + 0.4 * easeOut(shown));
+    // Sizes are rounded to a twentieth of a pixel so that tokens share gradients.
+    const pop = Math.round(size * (0.6 + 0.4 * easeOut(shown)) * 20) / 20;
     const pulse = 1 + 0.1 * Math.sin(time * 0.0019 + dot.phase);
 
+    ctx.save();
+    ctx.translate(x, y);
     ctx.globalAlpha = shown;
 
     if (lit) {
       const ring = (kind === "visited" ? 9.5 : 11.5) * pop;
       ctx.beginPath();
-      ctx.arc(x, y, ring, 0, TAU);
+      ctx.arc(0, 0, ring, 0, TAU);
       ctx.lineWidth = 4.6;
       ctx.strokeStyle = tones.dark ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.9)";
       ctx.stroke();
       ctx.lineWidth = chosen ? 2.6 : 2;
-      ctx.strokeStyle = this.iridescence(ctx, x, y, time * 0.0011 + dot.phase);
+      ctx.strokeStyle = this.iridescence(ctx, 0, 0, time * 0.0011 + dot.phase);
       ctx.stroke();
     }
 
     if (kind === "hometown") {
       const r = 6.4 * pop;
-      const shadow = ctx.createRadialGradient(x, y + r * 0.35, r * 0.5, x, y + r * 0.35, r * 1.9);
-      shadow.addColorStop(0, tones.pearlShadow);
-      shadow.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = shadow;
+      ctx.fillStyle = this.radial(ctx, `h-shadow:${r}`, 0, r * 0.35, r * 0.5, 0, r * 0.35, r * 1.9, [
+        [0, tones.pearlShadow],
+        [1, "rgba(0, 0, 0, 0)"],
+      ]);
       ctx.beginPath();
-      ctx.arc(x, y + r * 0.35, r * 1.9, 0, TAU);
+      ctx.arc(0, r * 0.35, r * 1.9, 0, TAU);
       ctx.fill();
 
-      const body = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
-      body.addColorStop(0, "#ffffff");
-      body.addColorStop(0.55, "#f6f2ee");
-      body.addColorStop(1, "#c9cfd6");
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, TAU);
-      ctx.fillStyle = body;
+      ctx.arc(0, 0, r, 0, TAU);
+      ctx.fillStyle = this.radial(ctx, `h-body:${r}`, -r * 0.35, -r * 0.4, r * 0.1, 0, 0, r, [
+        [0, "#ffffff"],
+        [0.55, "#f6f2ee"],
+        [1, "#c9cfd6"],
+      ]);
       ctx.fill();
       ctx.save();
       ctx.clip();
       ctx.globalAlpha = shown * 0.5;
-      ctx.fillStyle = this.iridescence(ctx, x + r * 0.2, y + r * 0.25, time * 0.0005);
-      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      ctx.fillStyle = this.iridescence(ctx, r * 0.2, r * 0.25, time * 0.0005);
+      ctx.fillRect(-r, -r, r * 2, r * 2);
       ctx.globalAlpha = shown * 0.95;
-      const gleam = ctx.createRadialGradient(
-        x - r * 0.36,
-        y - r * 0.42,
+      ctx.fillStyle = this.radial(
+        ctx,
+        `h-gleam:${r}`,
+        -r * 0.36,
+        -r * 0.42,
         0,
-        x - r * 0.36,
-        y - r * 0.42,
+        -r * 0.36,
+        -r * 0.42,
         r * 0.6,
+        [
+          [0, "rgba(255, 255, 255, 1)"],
+          [1, "rgba(255, 255, 255, 0)"],
+        ],
       );
-      gleam.addColorStop(0, "rgba(255, 255, 255, 1)");
-      gleam.addColorStop(1, "rgba(255, 255, 255, 0)");
-      ctx.fillStyle = gleam;
-      ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      ctx.fillRect(-r, -r, r * 2, r * 2);
       ctx.restore();
       ctx.globalAlpha = shown;
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, TAU);
+      ctx.arc(0, 0, r, 0, TAU);
       ctx.lineWidth = 0.7;
       ctx.strokeStyle = tones.pearlEdge;
       ctx.stroke();
@@ -1676,53 +1803,55 @@ export class Atlas {
         const beat = mod(time / 2800, 1);
         ctx.globalAlpha = shown * (1 - beat) * 0.55;
         ctx.beginPath();
-        ctx.arc(x, y, r + 2 + beat * 15 * size, 0, TAU);
+        ctx.arc(0, 0, r + 2 + beat * 15 * size, 0, TAU);
         ctx.lineWidth = 1;
         ctx.strokeStyle = tones.cobalt;
         ctx.stroke();
         ctx.globalAlpha = shown;
       }
-      const halo = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 2.9);
-      halo.addColorStop(0, `rgba(${tones.cobaltGlow}, 0.34)`);
-      halo.addColorStop(1, `rgba(${tones.cobaltGlow}, 0)`);
-      ctx.fillStyle = halo;
+      ctx.fillStyle = this.radial(ctx, `c-halo:${r}`, 0, 0, r * 0.6, 0, 0, r * 2.9, [
+        [0, `rgba(${tones.cobaltGlow}, 0.34)`],
+        [1, `rgba(${tones.cobaltGlow}, 0)`],
+      ]);
       ctx.beginPath();
-      ctx.arc(x, y, r * 2.9, 0, TAU);
-      ctx.fill();
-      const body = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, 0, x, y, r);
-      body.addColorStop(0, tones.cobaltLight);
-      body.addColorStop(0.6, tones.cobalt);
-      body.addColorStop(1, tones.cobaltDeep);
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, TAU);
-      ctx.fillStyle = body;
+      ctx.arc(0, 0, r * 2.9, 0, TAU);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x - r * 0.32, y - r * 0.36, r * 0.22, 0, TAU);
+      ctx.arc(0, 0, r, 0, TAU);
+      ctx.fillStyle = this.radial(ctx, `c-body:${r}`, -r * 0.3, -r * 0.35, 0, 0, 0, r, [
+        [0, tones.cobaltLight],
+        [0.6, tones.cobalt],
+        [1, tones.cobaltDeep],
+      ]);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-r * 0.32, -r * 0.36, r * 0.22, 0, TAU);
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
       ctx.fill();
     } else {
       const r = 3.5 * pop;
-      const glow = r * 3.7 * pulse;
-      const halo = ctx.createRadialGradient(x, y, r * 0.5, x, y, glow);
-      halo.addColorStop(0, `rgba(${tones.aquaGlow}, 0.62)`);
-      halo.addColorStop(0.45, `rgba(${tones.aquaGlow}, 0.2)`);
-      halo.addColorStop(1, `rgba(${tones.aquaGlow}, 0)`);
-      ctx.fillStyle = halo;
+      // The halo breathes; its gradient is sized to the quarter pixel.
+      const glow = Math.round(r * 3.7 * pulse * 4) / 4;
+      ctx.fillStyle = this.radial(ctx, `v-halo:${r}:${glow}`, 0, 0, r * 0.5, 0, 0, glow, [
+        [0, `rgba(${tones.aquaGlow}, 0.62)`],
+        [0.45, `rgba(${tones.aquaGlow}, 0.2)`],
+        [1, `rgba(${tones.aquaGlow}, 0)`],
+      ]);
       ctx.beginPath();
-      ctx.arc(x, y, glow, 0, TAU);
+      ctx.arc(0, 0, glow, 0, TAU);
       ctx.fill();
-      const body = ctx.createRadialGradient(x - r * 0.3, y - r * 0.35, 0, x, y, r);
-      body.addColorStop(0, "#ffffff");
-      body.addColorStop(1, tones.aquaCore);
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, TAU);
-      ctx.fillStyle = body;
+      ctx.arc(0, 0, r, 0, TAU);
+      ctx.fillStyle = this.radial(ctx, `v-body:${r}`, -r * 0.3, -r * 0.35, 0, 0, 0, r, [
+        [0, "#ffffff"],
+        [1, tones.aquaCore],
+      ]);
       ctx.fill();
       ctx.lineWidth = 1.1;
       ctx.strokeStyle = tones.aquaEdge;
       ctx.stroke();
     }
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
 
@@ -1782,7 +1911,7 @@ export class Atlas {
       const lit = id === this.selected || id === this.hover;
       if (this.presence(dot) < 1 || wanted.has(dot)) return;
       if (!lit && kind === "visited" && k < 2.3) return;
-      const textWidth = ctx.measureText(dot.title).width;
+      const textWidth = this.textWidth(ctx, dot.title);
       const gap = (kind === "visited" ? 9 : 12) * size + (lit ? 4 : 0);
       const tall = fontSize + 2;
       const tries: Array<{ x: number; y: number; align: CanvasTextAlign; box: Box }> = [
