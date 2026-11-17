@@ -210,7 +210,7 @@ export const SEED_PLACES: Place[] = [
   seed("waterloo", "Waterloo, Ontario", "Canada", 43.4643, -80.5204),
 
   seed("chicago", "Chicago, Illinois", US, 41.8756, -87.6244, { kind: "lived", trips: ["spring 2024"] }),
-  seed("nashville", "Nashville, Tennessee", US, 36.1623, -86.7743, {
+  seed("vanderbilt", "Vanderbilt University, Nashville, Tennessee", US, 36.1438, -86.8028, {
     kind: "lived",
     trips: ["spring 2025"],
   }),
