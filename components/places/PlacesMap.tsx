@@ -10,6 +10,7 @@ import {
   useTransition,
   type FormEvent,
 } from "react";
+import Link from "next/link";
 import {
   addPlace,
   addPlaces,
@@ -1701,6 +1702,16 @@ export function PlacesMap({
             <button type="button" className={styles.link} onClick={beginRegions}>
               Check off
             </button>
+          </p>
+        ) : null}
+        {canEdit ? (
+          <p data-shown="">
+            <Link href="/controlroom" className={styles.link}>
+              Control room
+            </Link>
+            <Link href="/places" className={styles.link}>
+              Public map
+            </Link>
           </p>
         ) : null}
       </header>

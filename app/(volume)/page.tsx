@@ -23,20 +23,8 @@ const friendThings = [
   "force myself to do yoga",
 ] as const;
 
-const works = [
-  { title: "Teeny Tiny Things", href: "/teeny-tiny-things" },
-  {
-    title: "Modeling",
-    href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
-    external: true,
-  },
-  { title: "Poetry", href: "/poetry" },
-  { title: "Voice Memos", href: "/voice-memos" },
-  { title: "Places", href: "/places" },
-  { title: "Leave a Note", href: "/ask" },
-  { title: "Blow on a Fat Dandelion", href: "/blow-on-a-fat-dandelion" },
-  { title: "Secrets", href: "/secrets" },
-];
+const MODELING =
+  "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio";
 
 const updatedAt = new Date(process.env.SITE_UPDATED_AT ?? Date.now());
 
@@ -60,10 +48,18 @@ export default function HomePage() {
       <p className="index-bio">
         I am a being of high happiness. Frank and Elaine hatched me into the
         world some time ago and I now frolic across the great greens of San
-        Francisco. I maintain my cardiovascular homeostasis from my eternal
-        pursuit of <Link href="/poetry">poetry</Link>,{" "}
+        Francisco and, when the wind is right,{" "}
+        <Link href="/places">a good deal farther</Link>. I maintain my
+        cardiovascular homeostasis from my eternal pursuit of{" "}
+        <Link href="/poetry">poetry</Link>,{" "}
         <Link href="/teeny-tiny-things">play</Link>, and{" "}
-        <Link href="/ask">friendship with the world</Link>.
+        <Link href="/ask">friendship with the world</Link>. In between I{" "}
+        <Link href="/voice-memos">think out loud</Link>,{" "}
+        <a href={MODELING} target="_blank" rel="noreferrer">
+          hold very still for cameras
+        </a>
+        , <Link href="/blow-on-a-fat-dandelion">make wishes on weeds</Link>, and{" "}
+        <Link href="/secrets">keep a few things to myself</Link>.
       </p>
       <p className="index-bio">
         Message me on X{" "}
@@ -73,22 +69,6 @@ export default function HomePage() {
         - I’m always open to new friends
         <RotatingWords words={friendThings} prefix="to" suffix="with." />
       </p>
-      <nav className="toc" aria-label="Contents">
-        <h2>Contents</h2>
-        <ol>
-          {works.map((work) => (
-            <li key={work.href}>
-              {work.external ? (
-                <a href={work.href} target="_blank" rel="noreferrer">
-                  {work.title}
-                </a>
-              ) : (
-                <Link href={work.href}>{work.title}</Link>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
     </main>
   );
 }

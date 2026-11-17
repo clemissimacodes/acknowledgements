@@ -15,6 +15,11 @@ import { viewerIsOwner } from "@/lib/recording-owner";
 
 export type PlacesResult = { places: Place[]; id?: string; ids?: string[] } | { error: string };
 
+function revalidatePlaces() {
+  revalidatePath("/places");
+  revalidatePath("/controlroom/places");
+}
+
 async function requireOwner() {
   if (!(await viewerIsOwner())) throw new Error("Not authorized.");
 }
@@ -24,7 +29,7 @@ async function requireOwner() {
 async function settle(work: () => Promise<string | void>): Promise<PlacesResult> {
   try {
     const id = await work();
-    revalidatePath("/places");
+    revalidatePlaces();
     return { places: await getPlaces(), id: id || undefined };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "That did not save." };
@@ -51,7 +56,7 @@ export async function addPlaces(inputs: PlaceBatchInput[]): Promise<PlacesResult
   await requireOwner();
   try {
     const ids = await createPlaces(inputs);
-    revalidatePath("/places");
+    revalidatePlaces();
     return { places: await getPlaces(), ids };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "That did not save." };
