@@ -22,25 +22,29 @@ import {
 import {
   FEDERAL_DISTRICT,
   KIND_LABELS,
-  MONTHS,
   PLACE_BATCH_MAX,
   PLACE_COUNTRY_MAX,
   PLACE_KINDS,
   PLACE_NAME_MAX,
   PLACE_REASON_MAX,
+  PLACE_TRIPS_MAX,
   PLACE_YEAR_MAX,
   PLACE_YEAR_MIN,
+  SEASON_CHOICES,
   STATE_COUNT,
   UNITED_STATES,
   formatCoordinates,
-  formatPlaceDate,
+  formatTrip,
   isStateId,
   placeHasDetails,
+  seasonChoice,
+  seasonOfChoice,
   splitPlaceName,
   splitPlaceNames,
   type Place,
   type PlaceKind,
   type PlaceMatch,
+  type TripInput,
 } from "@/lib/place-types";
 import { milesBetween, wrapLongitude, type RawStates, type RawWorld } from "./atlas";
 import { Atlas, type Insets, type Region, type Spot } from "./engine";
@@ -55,7 +59,7 @@ type Row = {
   status: "waiting" | "looking" | "found" | "none" | "failed";
   matches: PlaceMatch[];
   pick: number;
-  month: string;
+  season: string;
   year: string;
   reason: string;
   open: boolean;
@@ -69,37 +73,86 @@ const DISTRICT_NAME = "Washington, D.C.";
 /** Two spots this close are the same place. */
 const SAME_PLACE_MILES = 2;
 
+/** A trip as the form holds it: the season is one of SEASON_CHOICES, or "". */
+type TripDraft = {
+  key: number;
+  /** Set when the trip is already on the map. */
+  id?: string;
+  season: string;
+  year: string;
+  reason: string;
+  /** Whether its reason is showing. */
+  open: boolean;
+};
+
 type Draft = {
   name: string;
   country: string;
   kind: PlaceKind;
-  month: string;
-  year: string;
-  reason: string;
+  note: string;
+  trips: TripDraft[];
 };
 
-const EMPTY_DRAFT: Draft = { name: "", country: "", kind: "visited", month: "", year: "", reason: "" };
+let tripKeys = 0;
 
-function draftOf(place: Place): Draft {
+function blankTrip(): TripDraft {
+  return { key: (tripKeys += 1), season: "", year: "", reason: "", open: false };
+}
+
+/** A place still to be added, with room for one trip. */
+function emptyDraft(): Draft {
+  return { name: "", country: "", kind: "visited", note: "", trips: [blankTrip()] };
+}
+
+function draftOf(place: Place, another = false): Draft {
+  const trips = place.trips.map(
+    (trip): TripDraft => ({
+      key: (tripKeys += 1),
+      id: trip.id,
+      season: seasonChoice(trip),
+      year: String(trip.year),
+      reason: trip.reason,
+      open: Boolean(trip.reason),
+    }),
+  );
   return {
     name: place.name,
     country: place.country,
     kind: place.kind,
-    month: place.month ? String(place.month) : "",
-    year: place.year ? String(place.year) : "",
-    reason: place.reason,
+    note: place.note,
+    trips: another ? [...trips, blankTrip()] : trips,
   };
 }
 
-function detailsOf(draft: Draft) {
-  return {
-    name: draft.name,
-    country: draft.country,
-    kind: draft.kind,
-    month: draft.month ? Number(draft.month) : null,
-    year: draft.year.trim() ? Number(draft.year) : null,
-    reason: draft.reason,
-  };
+type TripFields = Pick<TripDraft, "id" | "season" | "year" | "reason">;
+
+/** What she typed, as trips. A row left wholly blank is no trip at all. */
+function readTrips(rows: TripFields[]): { trips: TripInput[]; error: string } {
+  const trips: TripInput[] = [];
+  for (const row of rows) {
+    const year = row.year.trim();
+    if (!year && !row.season && !row.reason.trim()) continue;
+    if (!year) return { trips, error: "A trip needs a year." };
+    if (!/^\d{4}$/.test(year) || +year < PLACE_YEAR_MIN || +year > PLACE_YEAR_MAX) {
+      return { trips, error: "That year looks wrong." };
+    }
+    trips.push({ id: row.id, ...seasonOfChoice(row.season), year: Number(year), reason: row.reason });
+  }
+  return { trips, error: "" };
+}
+
+/** For a new place: one trip at most. A reason given with no season or year is about the place. */
+function readFirst(row: TripFields) {
+  if (!row.year.trim() && !row.season && row.reason.trim()) {
+    return { trips: [], note: row.reason, error: "" };
+  }
+  return { ...readTrips([row]), note: "" };
+}
+
+/** "Summer 2024", "2024", "Summer", or nothing, as a row is being filled in. */
+function tripLabel(row: Pick<TripDraft, "season" | "year">) {
+  const season = SEASON_CHOICES.find((choice) => choice.value === row.season)?.label.split(",")[0];
+  return [season, row.year.trim()].filter(Boolean).join(" ");
 }
 
 function plural(count: number, one: string, many: string) {
@@ -114,6 +167,17 @@ function matchLabel(match: PlaceMatch, typed: string) {
   if (!where) return match.name;
   return match.name.toLowerCase() === typed.toLowerCase() ? where : `${match.name}, ${where}`;
 }
+
+const seasonOptions = (
+  <>
+    <option value="">—</option>
+    {SEASON_CHOICES.map((choice) => (
+      <option key={choice.value} value={choice.value}>
+        {choice.label}
+      </option>
+    ))}
+  </>
+);
 
 function Swatch({ kind }: { kind: PlaceKind | "thread" }) {
   if (kind === "thread") {
@@ -143,13 +207,14 @@ export function PlacesMap({
   const headRef = useRef<HTMLElement>(null);
   const keyRef = useRef<HTMLUListElement>(null);
   const cardRef = useRef<HTMLElement>(null);
+  const zoomRef = useRef<HTMLDivElement>(null);
   const atlasRef = useRef<Atlas | null>(null);
 
   const [places, setPlaces] = useState(initialPlaces);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("view");
   const [dark, setDark] = useState(false);
-  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [pin, setPin] = useState<Spot | null>(null);
   const [placing, setPlacing] = useState(false);
   const [query, setQuery] = useState("");
@@ -193,6 +258,27 @@ export function PlacesMap({
   }, [places, home]);
 
   const selected = places.find((place) => place.id === selectedId) ?? null;
+
+  // The list of places, a country at a time: her own first, then by name.
+  const groups = useMemo(() => {
+    const byCountry = new Map<string, Place[]>();
+    for (const place of places) {
+      const country = place.country || "Elsewhere";
+      byCountry.set(country, [...(byCountry.get(country) ?? []), place]);
+    }
+    const title = (place: Place) => splitPlaceName(place.name).title;
+    const first = home?.country ?? "";
+    return [...byCountry.entries()]
+      .map(([country, list]) => ({
+        country,
+        list: list.sort((a, b) => title(a).localeCompare(title(b), "en")),
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.country === first) - Number(a.country === first) ||
+          a.country.localeCompare(b.country, "en"),
+      );
+  }, [places, home]);
 
   // Which states and countries count as visited: the ones with a place in
   // them, and the ones checked off. The map's own shapes decide what is where.
@@ -264,6 +350,27 @@ export function PlacesMap({
     return insets;
   }, []);
 
+  // Where the words are, so the map writes no name underneath them.
+  const settle = useCallback(
+    (atlas: Atlas) => {
+      atlas.setInsets(measure());
+      const host = hostRef.current?.getBoundingClientRect();
+      if (!host) return;
+      const narrow = host.width < 720;
+      const boxes: Array<[number, number, number, number]> = [];
+      const head = headRef.current?.getBoundingClientRect();
+      // The site's own name stands above the title, so everything up to the title's foot is spoken for.
+      if (head) boxes.push([0, 0, narrow ? host.width : head.right - host.left + 12, head.bottom - host.top + 4]);
+      const covered = narrow && cardRef.current;
+      for (const element of covered ? [] : [keyRef.current, zoomRef.current]) {
+        const box = element?.getBoundingClientRect();
+        if (box) boxes.push([box.left - host.left - 8, box.top - host.top - 6, box.right - host.left + 8, box.bottom - host.top + 6]);
+      }
+      atlas.keepClear(boxes);
+    },
+    [measure],
+  );
+
   const open = useCallback((id: string | null) => {
     setSelectedId(id);
     setConfirming(false);
@@ -315,7 +422,7 @@ export function PlacesMap({
     );
     atlasRef.current = atlas;
     setDark(atlas.dark);
-    atlas.setInsets(measure());
+    settle(atlas);
     atlas.setChecked(state.current.regions);
     atlas.setPlaces(state.current.places);
 
@@ -343,7 +450,7 @@ export function PlacesMap({
       atlas.destroy();
       atlasRef.current = null;
     };
-  }, [measure, open]);
+  }, [settle, open]);
 
   useEffect(() => {
     atlasRef.current?.setPlaces(places);
@@ -356,9 +463,9 @@ export function PlacesMap({
   useLayoutEffect(() => {
     const atlas = atlasRef.current;
     if (!atlas) return;
-    atlas.setInsets(measure());
+    settle(atlas);
     atlas.focus(selectedId);
-  }, [selectedId, mode, listOpen, stage, measure]);
+  }, [selectedId, mode, listOpen, stage, settle]);
 
   useEffect(() => {
     const atlas = atlasRef.current;
@@ -368,10 +475,10 @@ export function PlacesMap({
   }, [mode]);
 
   useEffect(() => {
-    const onResize = () => atlasRef.current?.setInsets(measure());
+    const onResize = () => atlasRef.current && settle(atlasRef.current);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [measure]);
+  }, [settle]);
 
   const close = useCallback(() => {
     lookup.current += 1;
@@ -419,9 +526,9 @@ export function PlacesMap({
     });
   };
 
-  const beginEdit = () => {
+  const beginEdit = (another = false) => {
     if (!selected) return;
-    setDraft(draftOf(selected));
+    setDraft(draftOf(selected, another));
     setConfirming(false);
     setError("");
     setMode("edit");
@@ -429,7 +536,7 @@ export function PlacesMap({
 
   const beginAdd = () => {
     open(null);
-    setDraft(EMPTY_DRAFT);
+    setDraft(emptyDraft());
     guess.current = "";
     setPin(null);
     setMatches(null);
@@ -548,7 +655,7 @@ export function PlacesMap({
         status: "waiting",
         matches: [],
         pick: 0,
-        month: "",
+        season: "",
         year: "",
         reason: "",
         open: false,
@@ -586,13 +693,11 @@ export function PlacesMap({
   const onAddAll = (event: FormEvent) => {
     event.preventDefault();
     if (!fresh.length || looking) return;
-    const wrong = fresh.find((row) => {
-      const year = row.year.trim();
-      return year && !(/^\d{4}$/.test(year) && +year >= PLACE_YEAR_MIN && +year <= PLACE_YEAR_MAX);
-    });
+    const wrong = fresh.find((row) => readFirst(row).error);
     if (wrong) {
+      const message = readFirst(wrong).error;
       patchRow(wrong.key, { open: true });
-      setError(`${wrong.matches[wrong.pick].name}: that year looks wrong.`);
+      setError(`${wrong.matches[wrong.pick].name}: ${message.charAt(0).toLowerCase()}${message.slice(1)}`);
       return;
     }
     setError("");
@@ -601,14 +706,14 @@ export function PlacesMap({
         const result = await addPlaces(
           fresh.map((row) => {
             const match = row.matches[row.pick];
+            const { trips, note } = readFirst(row);
             return {
               name: match.name,
               country: match.country,
               lat: match.lat,
               lng: match.lng,
-              month: row.month ? Number(row.month) : null,
-              year: row.year.trim() ? Number(row.year) : null,
-              reason: row.reason,
+              note,
+              trips,
             };
           }),
         );
@@ -627,13 +732,13 @@ export function PlacesMap({
     });
   };
 
-  // The places just added that still have no month, year or reason.
+  // The places just added that still have no trip and no note.
   const bare = places.filter((place) => added.includes(place.id) && !placeHasDetails(place));
 
   const fillIn = () => {
     const first = tour.find((place) => bare.includes(place));
     if (!first) return;
-    setDraft(draftOf(first));
+    setDraft(draftOf(first, true));
     setMode("edit");
     open(first.id);
   };
@@ -655,8 +760,14 @@ export function PlacesMap({
     const id = selected.id;
     const onward = andNext.current;
     andNext.current = false;
+    const { trips, error: wrong } = readTrips(draft.trips);
+    if (wrong) {
+      setError(wrong);
+      return;
+    }
+    const { name, country, kind, note } = draft;
     apply(
-      () => savePlace(id, detailsOf(draft)),
+      () => savePlace(id, { name, country, kind, note, trips }),
       (next) => {
         if (!onward) {
           setMode("view");
@@ -676,7 +787,8 @@ export function PlacesMap({
           setMode("view");
           return;
         }
-        setDraft(draftOf(waiting));
+        // It has nothing yet, so a trip is ready to be filled in.
+        setDraft(draftOf(waiting, true));
         open(waiting.id);
       },
     );
@@ -685,8 +797,14 @@ export function PlacesMap({
   const onAdd = (event: FormEvent) => {
     event.preventDefault();
     if (!pin) return;
+    const { trips, note, error: wrong } = readFirst(draft.trips[0] ?? blankTrip());
+    if (wrong) {
+      setError(wrong);
+      return;
+    }
+    const { name, country, kind } = draft;
     apply(
-      () => addPlace({ ...detailsOf(draft), lat: pin.lat, lng: pin.lng }),
+      () => addPlace({ name, country, kind, note, trips, lat: pin.lat, lng: pin.lng }),
       (_next, id) => {
         setMode("view");
         setPin(null);
@@ -740,31 +858,35 @@ export function PlacesMap({
     atlasRef.current?.setPin(spot, true);
   };
 
-  const field = <K extends keyof Draft>(key: K) => ({
+  const field = <K extends "name" | "country" | "kind" | "note">(key: K) => ({
     value: draft[key],
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     ) => setDraft((current) => ({ ...current, [key]: event.target.value })),
   });
 
-  const detailFields = (
+  const patchTrip = (key: number, patch: Partial<TripDraft>) =>
+    setDraft((current) => ({
+      ...current,
+      trips: current.trips.map((trip) => (trip.key === key ? { ...trip, ...patch } : trip)),
+    }));
+
+  // A new place: when she went, if she wants to say. More trips can follow once it is on the map.
+  const first = draft.trips[0];
+  const firstTripFields = first ? (
     <>
       <div className={styles.pair}>
         <label className={styles.field}>
-          <span>Month</span>
-          <select {...field("month")}>
-            <option value="">—</option>
-            {MONTHS.map((month, index) => (
-              <option key={month} value={index + 1}>
-                {month}
-              </option>
-            ))}
+          <span>Season</span>
+          <select value={first.season} onChange={(event) => patchTrip(first.key, { season: event.target.value })}>
+            {seasonOptions}
           </select>
         </label>
         <label className={styles.field}>
           <span>Year</span>
           <input
-            {...field("year")}
+            value={first.year}
+            onChange={(event) => patchTrip(first.key, { year: event.target.value })}
             inputMode="numeric"
             pattern="[0-9]{4}"
             title="Four digits, like 2019"
@@ -776,9 +898,100 @@ export function PlacesMap({
       </div>
       <label className={styles.field}>
         <span>Reason</span>
-        <textarea {...field("reason")} rows={2} maxLength={PLACE_REASON_MAX} />
+        <textarea
+          value={first.reason}
+          onChange={(event) => patchTrip(first.key, { reason: event.target.value })}
+          rows={2}
+          maxLength={PLACE_REASON_MAX}
+        />
       </label>
     </>
+  ) : null;
+
+  // A place on the map: every trip on a line of its own, oldest first.
+  const tripFields = (
+    <div className={styles.trips} role="group" aria-label="Trips">
+      <p className={styles.tripsHead}>
+        <span>{draft.trips.length ? "Trips" : "No trips yet"}</span>
+        <button
+          type="button"
+          className={styles.more}
+          disabled={draft.trips.length >= PLACE_TRIPS_MAX}
+          onClick={() => setDraft((current) => ({ ...current, trips: [...current.trips, blankTrip()] }))}
+        >
+          Add a trip
+        </button>
+      </p>
+      {draft.trips.length ? (
+        <ul>
+          {draft.trips.map((trip, index) => {
+            const label = tripLabel(trip) || `trip ${index + 1}`;
+            return (
+              <li key={trip.key} className={styles.trip}>
+                <select
+                  value={trip.season}
+                  onChange={(event) => patchTrip(trip.key, { season: event.target.value })}
+                  aria-label={`Season, ${label}`}
+                >
+                  {seasonOptions}
+                </select>
+                <input
+                  value={trip.year}
+                  onChange={(event) => patchTrip(trip.key, { year: event.target.value })}
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  title="Four digits, like 2019"
+                  maxLength={4}
+                  placeholder="Year"
+                  autoComplete="off"
+                  aria-label={`Year, ${label}`}
+                />
+                <button
+                  type="button"
+                  className={styles.why}
+                  aria-expanded={trip.open}
+                  aria-label={`Why, ${label}`}
+                  onClick={() => patchTrip(trip.key, { open: !trip.open })}
+                >
+                  why
+                </button>
+                <button
+                  type="button"
+                  className={styles.drop}
+                  aria-label={`Remove ${label}`}
+                  onClick={() =>
+                    setDraft((current) => ({
+                      ...current,
+                      trips: current.trips.filter((entry) => entry.key !== trip.key),
+                    }))
+                  }
+                >
+                  <CloseGlyph />
+                </button>
+                {trip.open ? (
+                  <input
+                    className={styles.tripWhy}
+                    value={trip.reason}
+                    onChange={(event) => patchTrip(trip.key, { reason: event.target.value })}
+                    maxLength={PLACE_REASON_MAX}
+                    placeholder="Why"
+                    autoComplete="off"
+                    aria-label={`Reason, ${label}`}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+
+  const noteField = (
+    <label className={styles.field}>
+      <span>Note</span>
+      <textarea {...field("note")} rows={2} maxLength={PLACE_REASON_MAX} />
+    </label>
   );
 
   const nameFields = (
@@ -877,7 +1090,7 @@ export function PlacesMap({
                 requestAnimationFrame(() => {
                   const host = hostRef.current?.getBoundingClientRect();
                   const head = headRef.current?.getBoundingClientRect();
-                  atlasRef.current?.setInsets(measure());
+                  if (atlasRef.current) settle(atlasRef.current);
                   // On a wide screen the title sits on the map: the states start below it.
                   atlasRef.current?.showUnitedStates(host && head ? head.bottom - host.top + 10 : 0);
                 });
@@ -1044,10 +1257,7 @@ export function PlacesMap({
                   );
                 }
                 const known = onMap(match);
-                const when = formatPlaceDate({
-                  month: row.month ? Number(row.month) : null,
-                  year: row.year.trim() ? Number(row.year) : null,
-                });
+                const when = tripLabel(row);
                 return (
                   <li key={row.key} className={styles.row} data-known={known ? "" : undefined}>
                     <div className={styles.rowHead}>
@@ -1093,17 +1303,12 @@ export function PlacesMap({
                       <div className={styles.rowMore}>
                         <div className={styles.pair}>
                           <label className={styles.field}>
-                            <span>Month</span>
+                            <span>Season</span>
                             <select
-                              value={row.month}
-                              onChange={(event) => patchRow(row.key, { month: event.target.value })}
+                              value={row.season}
+                              onChange={(event) => patchRow(row.key, { season: event.target.value })}
                             >
-                              <option value="">—</option>
-                              {MONTHS.map((month, index) => (
-                                <option key={month} value={index + 1}>
-                                  {month}
-                                </option>
-                              ))}
+                              {seasonOptions}
                             </select>
                           </label>
                           <label className={styles.field}>
@@ -1268,7 +1473,7 @@ export function PlacesMap({
               </button>
             </p>
             {nameFields}
-            {detailFields}
+            {firstTripFields}
             {error ? <p className={styles.error}>{error}</p> : null}
             <div className={styles.actions}>
               <button type="submit" className={styles.action} data-strong="" disabled={pending}>
@@ -1293,29 +1498,42 @@ export function PlacesMap({
             <CloseGlyph />
           </button>
         </header>
-        <ul className={styles.index}>
-          {tour.map((place) => (
-            <li key={place.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("view");
-                  open(place.id);
-                }}
-              >
-                <Swatch kind={place.kind} />
-                <strong>{splitPlaceName(place.name).title}</strong>
-                <span>{place.country}</span>
-              </button>
-            </li>
+        <div className={styles.index}>
+          {groups.map(({ country, list }) => (
+            <section key={country} aria-label={country}>
+              <h3>
+                {country}
+                <span>{list.length}</span>
+              </h3>
+              <ul>
+                {list.map((place) => {
+                  const { title, rest } = splitPlaceName(place.name);
+                  return (
+                    <li key={place.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("view");
+                          open(place.id);
+                        }}
+                      >
+                        <Swatch kind={place.kind} />
+                        <strong>{title}</strong>
+                        <span>{rest}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       </section>
     );
   } else if (selected) {
     const { title, rest } = splitPlaceName(selected.name);
     const where = [rest, selected.country].filter(Boolean).join(", ");
-    const when = formatPlaceDate(selected);
+    const told = selected.trips.filter((trip) => trip.reason);
     const away =
       home && home.id !== selected.id
         ? `${Math.round(milesBetween(home, selected)).toLocaleString("en-US")} mi from ${splitPlaceName(home.name).title}`
@@ -1343,8 +1561,9 @@ export function PlacesMap({
 
         {mode === "edit" && canEdit ? (
           <form className={styles.form} onSubmit={onSave}>
-            {detailFields}
+            {tripFields}
             {nameFields}
+            {noteField}
             {error ? <p className={styles.error}>{error}</p> : null}
             {confirming ? (
               <div className={styles.actions}>
@@ -1388,8 +1607,23 @@ export function PlacesMap({
           </form>
         ) : (
           <>
-            {when ? <p className={styles.when}>{when}</p> : null}
-            {selected.reason ? <p className={styles.reason}>{selected.reason}</p> : null}
+            {selected.trips.length ? (
+              <ul className={styles.when} aria-label="Trips">
+                {selected.trips.map((trip, index) => (
+                  <li key={trip.id}>
+                    <span>{formatTrip(trip)}</span>
+                    {index < selected.trips.length - 1 ? "\u00a0· " : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {told.map((trip) => (
+              <p key={trip.id} className={styles.reason}>
+                {selected.trips.length > 1 ? <span className={styles.tag}>{formatTrip(trip)}</span> : null}
+                {trip.reason}
+              </p>
+            ))}
+            {selected.note ? <p className={styles.reason}>{selected.note}</p> : null}
             <p className={styles.coordinates}>
               <span>{formatCoordinates(selected.lat, selected.lng)}</span>
               {away ? <span>{away}</span> : null}
@@ -1408,9 +1642,14 @@ export function PlacesMap({
             <ArrowGlyph />
           </button>
           {canEdit && mode !== "edit" ? (
-            <button type="button" className={styles.action} onClick={beginEdit}>
-              Edit
-            </button>
+            <>
+              <button type="button" className={styles.action} onClick={() => beginEdit(true)}>
+                Add a trip
+              </button>
+              <button type="button" className={styles.action} onClick={() => beginEdit()}>
+                Edit
+              </button>
+            </>
           ) : null}
           {mode === "edit" ? (
             <button type="button" className={styles.action} onClick={() => setMode("view")}>
@@ -1476,6 +1715,10 @@ export function PlacesMap({
           where I am now
         </li>
         <li>
+          <Swatch kind="lived" />
+          where I’ve lived
+        </li>
+        <li>
           <Swatch kind="visited" />
           where I’ve been
         </li>
@@ -1485,7 +1728,7 @@ export function PlacesMap({
         </li>
       </ul>
 
-      <div className={styles.zoom}>
+      <div ref={zoomRef} className={styles.zoom}>
         <button type="button" onClick={() => atlasRef.current?.zoomBy(1.7)} aria-label="Zoom in">
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M8 2.5v11M2.5 8h11" />
