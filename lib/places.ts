@@ -8,14 +8,19 @@ import {
   PLACE_KINDS,
   PLACE_NAME_MAX,
   PLACE_REASON_MAX,
+  PLACE_TRIPS_MAX,
   PLACE_YEAR_MAX,
   PLACE_YEAR_MIN,
   REGION_ID,
   REGION_MAX,
+  SEASONS,
   SEED_PLACES,
+  sortTrips,
   type Place,
   type PlaceKind,
   type PlaceMatch,
+  type Season,
+  type Trip,
 } from "@/lib/place-types";
 
 // The public world map at /places. Unrelated to the control room's private
@@ -27,11 +32,19 @@ function db() {
   return neon(url);
 }
 
+// How close two spots must be to count as the same place when seeds are
+// planted: about two miles, the same as the map uses, and less than the gap
+// between Boston and Cambridge.
+const SAME_SPOT = 0.03;
+
 let ready: Promise<void> | null = null;
 
 function ensureTable() {
   ready ??= (async () => {
     const sql = db();
+    // month and year are from before a place could hold several trips. They
+    // are no longer written; what they held is carried into map_place_trips
+    // below, and the columns stay so that nothing already stored is touched.
     await sql`
       CREATE TABLE IF NOT EXISTS map_places (
         id TEXT PRIMARY KEY,
@@ -47,26 +60,46 @@ function ensureTable() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
-    // The ledger of seeds already planted. A seed's row here outlives the
-    // place itself, so a seeded place that gets deleted is never planted again.
-    await sql`
-      CREATE TABLE IF NOT EXISTS map_place_seeds (
-        id TEXT PRIMARY KEY,
-        seeded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `;
-    // States and countries she has checked off without naming a town in them.
-    // A row means "been there"; unchecking deletes it.
-    await sql`
-      CREATE TABLE IF NOT EXISTS map_regions (
-        id TEXT PRIMARY KEY,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      )
-    `;
+    await Promise.all([
+      // The ledger of everything already planted: seed places, seed trips, and
+      // the trips carried over from the old month and year. A row here
+      // outlives what it stands for, so whatever she deletes is never planted
+      // again.
+      sql`
+        CREATE TABLE IF NOT EXISTS map_place_seeds (
+          id TEXT PRIMARY KEY,
+          seeded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+      // States and countries she has checked off without naming a town in them.
+      // A row means "been there"; unchecking deletes it.
+      sql`
+        CREATE TABLE IF NOT EXISTS map_regions (
+          id TEXT PRIMARY KEY,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+      // A place has any number of trips, and they go when the place goes.
+      sql`
+        CREATE TABLE IF NOT EXISTS map_place_trips (
+          id TEXT PRIMARY KEY,
+          place_id TEXT NOT NULL REFERENCES map_places (id) ON DELETE CASCADE,
+          season TEXT,
+          late BOOLEAN NOT NULL DEFAULT FALSE,
+          year SMALLINT NOT NULL,
+          reason TEXT NOT NULL DEFAULT '',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `,
+    ]);
     // A seed added in a later version may be somewhere she has already put on
     // the map herself: it is entered in the ledger all the same, and the place
     // is planted only if nothing of hers already sits on that spot.
-    const seeds = SEED_PLACES.map((place, index) => ({ ...place, rank: index }));
+    const seeds = SEED_PLACES.map(({ trips: _trips, note: _note, ...place }, index) => ({
+      ...place,
+      rank: index,
+    }));
     await sql`
       WITH seeds AS (
         SELECT *
@@ -100,9 +133,111 @@ function ensureTable() {
       WHERE NOT EXISTS (
         SELECT 1
         FROM map_places AS already
-        WHERE ABS(already.lat - seeds.lat) < 0.05
-          AND ABS(already.lng - seeds.lng) < 0.05
+        WHERE ABS(already.lat - seeds.lat) < ${SAME_SPOT}
+          AND ABS(already.lng - seeds.lng) < ${SAME_SPOT}
       )
+      ON CONFLICT (id) DO NOTHING
+    `;
+    // What a place held before it could hold several trips. A year becomes a
+    // trip, once: the month gives the season and the reason goes with it. A
+    // reason with no year stays where it is, as the place's own note.
+    await sql`
+      WITH old AS (
+        SELECT id, month, year, reason
+        FROM map_places
+        WHERE year IS NOT NULL
+      ),
+      carried AS (
+        INSERT INTO map_place_seeds (id)
+        SELECT 'first-trip-' || id FROM old
+        ON CONFLICT (id) DO NOTHING
+        RETURNING id
+      )
+      INSERT INTO map_place_trips (id, place_id, season, late, year, reason)
+      SELECT
+        'first-trip-' || old.id,
+        old.id,
+        CASE
+          WHEN old.month IN (12, 1, 2) THEN 'winter'
+          WHEN old.month BETWEEN 3 AND 5 THEN 'spring'
+          WHEN old.month BETWEEN 6 AND 8 THEN 'summer'
+          WHEN old.month BETWEEN 9 AND 11 THEN 'fall'
+        END,
+        COALESCE(old.month = 12, FALSE),
+        old.year,
+        old.reason
+      FROM old
+      JOIN carried ON carried.id = 'first-trip-' || old.id
+      ON CONFLICT (id) DO NOTHING
+    `;
+    // Seed trips go to the seed place, or to the place of hers that stood in
+    // for it. A trip that is already there, by season and year, is not added
+    // a second time; a place she took off the map gets none.
+    const trips = SEED_PLACES.flatMap((place) =>
+      place.trips.map((trip) => ({
+        id: trip.id,
+        place_id: place.id,
+        lat: place.lat,
+        lng: place.lng,
+        season: trip.season,
+        late: trip.late,
+        year: trip.year,
+      })),
+    ).map((trip, rank) => ({ ...trip, rank }));
+    await sql`
+      WITH seeds AS (
+        SELECT *
+        FROM jsonb_to_recordset(${JSON.stringify(trips)}::jsonb) AS seed(
+          id TEXT,
+          place_id TEXT,
+          lat DOUBLE PRECISION,
+          lng DOUBLE PRECISION,
+          season TEXT,
+          late BOOLEAN,
+          year SMALLINT,
+          rank INTEGER
+        )
+      ),
+      planted AS (
+        INSERT INTO map_place_seeds (id)
+        SELECT id FROM seeds
+        ON CONFLICT (id) DO NOTHING
+        RETURNING id
+      ),
+      homes AS (
+        SELECT
+          seeds.*,
+          COALESCE(
+            (SELECT place.id FROM map_places AS place WHERE place.id = seeds.place_id),
+            (
+              SELECT place.id
+              FROM map_places AS place
+              WHERE ABS(place.lat - seeds.lat) < ${SAME_SPOT}
+                AND ABS(place.lng - seeds.lng) < ${SAME_SPOT}
+              ORDER BY ABS(place.lat - seeds.lat) + ABS(place.lng - seeds.lng), place.created_at, place.id
+              LIMIT 1
+            )
+          ) AS home
+        FROM seeds
+        JOIN planted ON planted.id = seeds.id
+      )
+      INSERT INTO map_place_trips (id, place_id, season, late, year, created_at)
+      SELECT
+        homes.id,
+        homes.home,
+        homes.season,
+        homes.late,
+        homes.year,
+        NOW() + homes.rank * INTERVAL '1 millisecond'
+      FROM homes
+      WHERE homes.home IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM map_place_trips AS already
+          WHERE already.place_id = homes.home
+            AND already.year = homes.year
+            AND already.season IS NOT DISTINCT FROM homes.season
+        )
       ON CONFLICT (id) DO NOTHING
     `;
   })().catch((error) => {
@@ -112,8 +247,20 @@ function ensureTable() {
   return ready;
 }
 
+function mapTrip(row: Record<string, unknown>): Trip {
+  const season = String(row.season ?? "");
+  return {
+    id: String(row.id),
+    season: SEASONS.includes(season as Season) ? (season as Season) : null,
+    late: season === "winter" && row.late === true,
+    year: Number(row.year),
+    reason: String(row.reason ?? ""),
+  };
+}
+
 function mapPlace(row: Record<string, unknown>): Place {
   const kind = String(row.kind);
+  const trips = typeof row.trips === "string" ? JSON.parse(row.trips) : row.trips;
   return {
     id: String(row.id),
     name: String(row.name),
@@ -121,9 +268,8 @@ function mapPlace(row: Record<string, unknown>): Place {
     lat: Number(row.lat),
     lng: Number(row.lng),
     kind: PLACE_KINDS.includes(kind as PlaceKind) ? (kind as PlaceKind) : "visited",
-    month: row.month == null ? null : Number(row.month),
-    year: row.year == null ? null : Number(row.year),
-    reason: String(row.reason ?? ""),
+    note: String(row.note ?? ""),
+    trips: sortTrips(Array.isArray(trips) ? trips.map(mapTrip) : []),
   };
 }
 
@@ -150,6 +296,47 @@ function cleanWhole(value: unknown, minimum: number, maximum: number, message: s
   return number;
 }
 
+const TRIP_ID = /^[A-Za-z0-9_-]{1,140}$/;
+
+type CleanTrip = Trip & { rank: number };
+
+/** Trips as they will be stored. Two in the same season of the same year are one. */
+function cleanTrips(value: unknown): CleanTrip[] {
+  if (value === null || value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error("Those trips did not come through.");
+  if (value.length > PLACE_TRIPS_MAX) {
+    throw new Error(`A place holds up to ${PLACE_TRIPS_MAX} trips.`);
+  }
+  const trips: CleanTrip[] = [];
+  for (const entry of value) {
+    const input = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
+    const year = cleanWhole(input.year, PLACE_YEAR_MIN, PLACE_YEAR_MAX, "That year looks wrong.");
+    if (year === null) throw new Error("A trip needs a year.");
+    const given = input.season === null || input.season === undefined ? "" : String(input.season);
+    if (given && !SEASONS.includes(given as Season)) throw new Error("That season does not exist.");
+    const season = given ? (given as Season) : null;
+    const reason = cleanLine(input.reason, PLACE_REASON_MAX);
+    const same = trips.find((trip) => trip.year === year && trip.season === season);
+    if (same) {
+      same.reason ||= reason;
+      continue;
+    }
+    // An id is kept only for a trip already on the map, and only once.
+    const known =
+      typeof input.id === "string" && TRIP_ID.test(input.id) && !trips.some((trip) => trip.id === input.id);
+    const id = known ? String(input.id) : randomUUID();
+    trips.push({
+      id,
+      season,
+      late: season === "winter" && input.late === true,
+      year,
+      reason,
+      rank: trips.length,
+    });
+  }
+  return trips;
+}
+
 function cleanDetails(input: Record<string, unknown>) {
   const name = cleanLine(input.name, PLACE_NAME_MAX);
   if (!name) throw new Error("A place needs a name.");
@@ -160,9 +347,8 @@ function cleanDetails(input: Record<string, unknown>) {
     name,
     country: cleanLine(input.country, PLACE_COUNTRY_MAX),
     kind,
-    month: cleanWhole(input.month, 1, 12, "That month does not exist."),
-    year: cleanWhole(input.year, PLACE_YEAR_MIN, PLACE_YEAR_MAX, "That year looks wrong."),
-    reason: cleanLine(input.reason, PLACE_REASON_MAX),
+    note: cleanLine(input.note, PLACE_REASON_MAX),
+    trips: cleanTrips(input.trips),
   };
 }
 
@@ -177,10 +363,36 @@ function cleanCoordinates(input: Record<string, unknown>) {
 
 export async function getPlaces() {
   await ensureTable();
+  // A reason left beside an old year went with that year into a trip; only a
+  // reason that stands alone is the place's note.
   const rows = (await db()`
-    SELECT id, name, country, lat, lng, kind, month, year, reason
-    FROM map_places
-    ORDER BY created_at, id
+    SELECT
+      place.id,
+      place.name,
+      place.country,
+      place.lat,
+      place.lng,
+      place.kind,
+      CASE WHEN place.year IS NULL THEN place.reason ELSE '' END AS note,
+      COALESCE(
+        (
+          SELECT jsonb_agg(
+            jsonb_build_object(
+              'id', trip.id,
+              'season', trip.season,
+              'late', trip.late,
+              'year', trip.year,
+              'reason', trip.reason
+            )
+            ORDER BY trip.created_at, trip.id
+          )
+          FROM map_place_trips AS trip
+          WHERE trip.place_id = place.id
+        ),
+        '[]'::jsonb
+      ) AS trips
+    FROM map_places AS place
+    ORDER BY place.created_at, place.id
   `) as Array<Record<string, unknown>>;
   return rows.map(mapPlace);
 }
@@ -224,7 +436,7 @@ export async function setRegionVisited(idValue: unknown, visited: unknown) {
 }
 
 // There is one hometown and one "now". Naming a new one turns the old one into
-// somewhere she has been, in the same statement as the write.
+// somewhere she has lived, in the same statement as the write.
 
 export async function createPlace(input: Record<string, unknown>) {
   const details = cleanDetails(input);
@@ -234,14 +446,30 @@ export async function createPlace(input: Record<string, unknown>) {
   await db()`
     WITH demoted AS (
       UPDATE map_places
-      SET kind = 'visited', updated_at = NOW()
-      WHERE kind = ${details.kind} AND kind <> 'visited'
+      SET kind = 'lived', updated_at = NOW()
+      WHERE kind = ${details.kind} AND kind IN ('hometown', 'current')
+    ),
+    place AS (
+      INSERT INTO map_places (id, name, country, lat, lng, kind, reason)
+      VALUES (
+        ${id}, ${details.name}, ${details.country}, ${lat}, ${lng},
+        ${details.kind}, ${details.note}
+      )
+      RETURNING id
     )
-    INSERT INTO map_places (id, name, country, lat, lng, kind, month, year, reason)
-    VALUES (
-      ${id}, ${details.name}, ${details.country}, ${lat}, ${lng},
-      ${details.kind}, ${details.month}, ${details.year}, ${details.reason}
+    INSERT INTO map_place_trips (id, place_id, season, late, year, reason, created_at)
+    SELECT
+      trip.id, place.id, trip.season, trip.late, trip.year, trip.reason,
+      NOW() + trip.rank * INTERVAL '1 millisecond'
+    FROM jsonb_to_recordset(${JSON.stringify(details.trips)}::jsonb) AS trip(
+      id TEXT,
+      season TEXT,
+      late BOOLEAN,
+      year SMALLINT,
+      reason TEXT,
+      rank INTEGER
     )
+    CROSS JOIN place
   `;
   return id;
 }
@@ -257,28 +485,47 @@ export async function createPlaces(inputs: unknown) {
     const details = cleanDetails({ ...input, kind: "visited" });
     return { id: randomUUID(), ...details, ...cleanCoordinates(input), rank };
   });
+  const trips = rows.flatMap((row) => row.trips.map((trip) => ({ ...trip, place_id: row.id })));
   await ensureTable();
   await db()`
-    INSERT INTO map_places (id, name, country, lat, lng, kind, month, year, reason, created_at)
+    WITH placed AS (
+      INSERT INTO map_places (id, name, country, lat, lng, kind, reason, created_at)
+      SELECT
+        entry.id, entry.name, entry.country, entry.lat, entry.lng, 'visited', entry.note,
+        NOW() + entry.rank * INTERVAL '1 millisecond'
+      FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS entry(
+        id TEXT,
+        name TEXT,
+        country TEXT,
+        lat DOUBLE PRECISION,
+        lng DOUBLE PRECISION,
+        note TEXT,
+        rank INTEGER
+      )
+      RETURNING id
+    )
+    INSERT INTO map_place_trips (id, place_id, season, late, year, reason, created_at)
     SELECT
-      entry.id, entry.name, entry.country, entry.lat, entry.lng, 'visited',
-      entry.month, entry.year, entry.reason,
-      NOW() + entry.rank * INTERVAL '1 millisecond'
-    FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS entry(
+      trip.id, placed.id, trip.season, trip.late, trip.year, trip.reason,
+      NOW() + trip.rank * INTERVAL '1 millisecond'
+    FROM jsonb_to_recordset(${JSON.stringify(trips)}::jsonb) AS trip(
       id TEXT,
-      name TEXT,
-      country TEXT,
-      lat DOUBLE PRECISION,
-      lng DOUBLE PRECISION,
-      month SMALLINT,
+      place_id TEXT,
+      season TEXT,
+      late BOOLEAN,
       year SMALLINT,
       reason TEXT,
       rank INTEGER
     )
+    JOIN placed ON placed.id = trip.place_id
   `;
   return rows.map((row) => row.id);
 }
 
+/**
+ * The place and its trips as she left them: trips no longer listed are
+ * removed, the rest are changed or added. One statement: all or none.
+ */
 export async function updatePlace(idValue: unknown, input: Record<string, unknown>) {
   const id = cleanId(idValue);
   const details = cleanDetails(input);
@@ -286,24 +533,56 @@ export async function updatePlace(idValue: unknown, input: Record<string, unknow
   await db()`
     WITH demoted AS (
       UPDATE map_places
-      SET kind = 'visited', updated_at = NOW()
-      WHERE kind = ${details.kind} AND kind <> 'visited' AND id <> ${id}
+      SET kind = 'lived', updated_at = NOW()
+      WHERE kind = ${details.kind} AND kind IN ('hometown', 'current') AND id <> ${id}
+    ),
+    place AS (
+      UPDATE map_places
+      SET name = ${details.name},
+          country = ${details.country},
+          kind = ${details.kind},
+          month = NULL,
+          year = NULL,
+          reason = ${details.note},
+          updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id
+    ),
+    incoming AS (
+      SELECT *
+      FROM jsonb_to_recordset(${JSON.stringify(details.trips)}::jsonb) AS trip(
+        id TEXT,
+        season TEXT,
+        late BOOLEAN,
+        year SMALLINT,
+        reason TEXT,
+        rank INTEGER
+      )
+    ),
+    removed AS (
+      DELETE FROM map_place_trips
+      WHERE place_id = ${id} AND id NOT IN (SELECT id FROM incoming)
     )
-    UPDATE map_places
-    SET name = ${details.name},
-        country = ${details.country},
-        kind = ${details.kind},
-        month = ${details.month},
-        year = ${details.year},
-        reason = ${details.reason},
+    INSERT INTO map_place_trips (id, place_id, season, late, year, reason, created_at)
+    SELECT
+      incoming.id, place.id, incoming.season, incoming.late, incoming.year, incoming.reason,
+      NOW() + incoming.rank * INTERVAL '1 millisecond'
+    FROM incoming
+    CROSS JOIN place
+    ON CONFLICT (id) DO UPDATE
+    SET season = EXCLUDED.season,
+        late = EXCLUDED.late,
+        year = EXCLUDED.year,
+        reason = EXCLUDED.reason,
         updated_at = NOW()
-    WHERE id = ${id}
+    WHERE map_place_trips.place_id = EXCLUDED.place_id
   `;
 }
 
 export async function deletePlace(idValue: unknown) {
   const id = cleanId(idValue);
   await ensureTable();
+  // Its trips go with it (ON DELETE CASCADE).
   await db()`DELETE FROM map_places WHERE id = ${id}`;
 }
 

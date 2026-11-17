@@ -187,6 +187,18 @@
     0 0 0 4.5px rgba(104, 198, 228, 0.24);
 }
 
+/* The same aqua, held in a silver setting. */
+.swatch[data-kind="lived"] {
+  background: radial-gradient(circle at 34% 30%, #fff, #c4ebf6);
+  box-shadow: 0 0 0 1px #4eaecf;
+  outline: 1px solid rgba(118, 132, 148, 0.78);
+  outline-offset: 2px;
+}
+
+.root[data-tone="dark"] .swatch[data-kind="lived"] {
+  outline-color: rgba(214, 222, 232, 0.9);
+}
+
 .threadSwatch {
   flex: none;
   width: 1.5rem;
@@ -227,15 +239,17 @@
   pointer-events: none;
 }
 
-/* The checklist stops short of the zoom buttons. */
-.card[data-list] {
+/* The checklist and the list of places stop short of the zoom buttons. */
+.card[data-list],
+.card[data-index] {
   display: flex;
   flex-direction: column;
   max-height: calc(100% - var(--site-content-top) - 7.4rem);
   overflow: hidden;
 }
 
-.card[data-list] > * {
+.card[data-list] > *,
+.card[data-index] > * {
   flex: none;
 }
 
@@ -364,9 +378,36 @@
   white-space: nowrap;
 }
 
+/* Her trips, oldest first, running on like a sentence. Four lines show; more scroll. */
 .when {
+  max-height: 6.3rem;
   margin: 0.75rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 1.08rem;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.when li {
+  display: inline;
+}
+
+.when li span {
+  white-space: nowrap;
+}
+
+/* Which trip a reason belongs to, when there is more than one. */
+.tag {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--pl-mute);
+  font-family: var(--pl-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.07em;
+  line-height: 1.6;
+  text-transform: uppercase;
 }
 
 .reason {
@@ -494,6 +535,10 @@
   margin-left: auto;
 }
 
+.cardFoot .action + .action {
+  margin-left: 0.4rem;
+}
+
 /* —— Owner forms —— */
 
 .form {
@@ -524,6 +569,8 @@
 .field input,
 .field select,
 .field textarea,
+.trip input,
+.trip select,
 .search input,
 .rowHead input,
 .choice {
@@ -550,11 +597,86 @@
 .field input:focus,
 .field select:focus,
 .field textarea:focus,
+.trip input:focus,
+.trip select:focus,
 .search input:focus,
 .rowHead input:focus,
 .choice:focus {
   outline: none;
   border-color: var(--pl-ink);
+}
+
+/* —— Trips, while editing: a season, a year, and why if she likes —— */
+
+.trips {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.tripsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.tripsHead span {
+  color: var(--pl-mute);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.tripsHead .more {
+  min-height: 1.9rem;
+  padding: 0;
+}
+
+.trips ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.1rem auto 2.1rem;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.trip input,
+.trip select {
+  padding: 0 0.5rem;
+}
+
+.trip .drop {
+  grid-column: auto;
+}
+
+.tripWhy {
+  grid-column: 1 / -1;
+}
+
+.why {
+  min-height: 2.5rem;
+  padding: 0 0.15rem;
+  border: 0;
+  background: none;
+  color: var(--pl-mute);
+  font-size: 0.95rem;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--pl-line);
+  text-underline-offset: 0.2em;
+}
+
+.why:hover,
+.why[aria-expanded="true"] {
+  color: var(--pl-ink);
 }
 
 .actions {
@@ -596,10 +718,43 @@
   max-height: 11.5rem;
 }
 
-.index {
-  max-height: min(24rem, 46vh);
+/* Every place, a country at a time; the country's name stays in sight as its places go by. */
+.card[data-index] .index {
+  flex: 1 1 auto;
+  min-height: 0;
   margin-right: -0.4rem;
   padding-right: 0.4rem;
+}
+
+.index ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.index h3 {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0.7rem 0 0.35rem;
+  background: var(--pl-card-solid);
+  color: var(--pl-mute);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.index section:first-child h3 {
+  padding-top: 0.2rem;
+}
+
+.index h3 span {
+  font-family: var(--pl-mono);
+  letter-spacing: 0.07em;
 }
 
 .matches button,
@@ -630,7 +785,7 @@
 }
 
 .matches span,
-.index span:last-child {
+.index button span:last-child {
   overflow: hidden;
   color: var(--pl-mute);
   font-size: 0.95rem;
@@ -639,7 +794,7 @@
   white-space: nowrap;
 }
 
-.index span:last-child {
+.index button span:last-child {
   padding-left: 0.4rem;
   text-align: right;
 }
@@ -950,7 +1105,8 @@
     height: 2.75rem;
   }
 
-  .card {
+  .card,
+  .card[data-index] {
     top: auto;
     right: var(--site-gutter);
     bottom: 0.7rem;

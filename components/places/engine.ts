@@ -42,7 +42,12 @@ export type AtlasEvents = {
 const TAU = Math.PI * 2;
 const STEPS = 72;
 const ROUTE_STEPS = 56;
-const MAX_ZOOM = 48;
+// Close enough to pull apart two dots a few miles from each other.
+const MAX_ZOOM = 640;
+/** Dots nearer than this on the screen cannot be told apart by a finger. */
+const PILE = 9;
+/** Places within this many degrees of each other share their silver. */
+const CROWD = 12;
 const SPECKLE_TILE = 220;
 /** How long the view must hold still before the land is drawn sharp again. */
 const SETTLE_MS = 200;
@@ -100,6 +105,7 @@ function tonesFor(ground: string) {
         cobaltGlow: "70, 110, 255",
         pearlEdge: "rgba(220, 228, 238, 0.7)",
         pearlShadow: "rgba(0, 0, 0, 0.4)",
+        setting: "rgba(214, 222, 232, 0.9)",
       }
     : {
         dark,
@@ -129,6 +135,7 @@ function tonesFor(ground: string) {
         cobaltGlow: "23, 54, 176",
         pearlEdge: "rgba(132, 144, 158, 0.8)",
         pearlShadow: "rgba(70, 84, 104, 0.3)",
+        setting: "rgba(118, 132, 148, 0.78)",
       };
 }
 
@@ -209,7 +216,10 @@ type Flight = {
 
 type Route = { points: Point[]; start: number; duration: number; ease: (t: number) => number };
 
-function buildThread(home: Dot, dot: Dot): Thread {
+/** Which of a thread's five strands are spun when it gets fewer. */
+const STRAND_SETS = [[2], [1, 3], [0, 2, 4], [0, 1, 3, 4], [0, 1, 2, 3, 4]];
+
+function buildThread(home: Dot, dot: Dot, count: number): Thread {
   const path = greatCircle(home.place, dot.place, STEPS, home.x);
   const points = new Float32Array((STEPS + 1) * 2);
   const normals = new Float32Array((STEPS + 1) * 2);
@@ -234,8 +244,8 @@ function buildThread(home: Dot, dot: Dot): Thread {
   }
   const random = seeded(dot.place.id);
   const spreads = [-1, -0.46, 0.08, 0.52, 1];
-  const strands = spreads.map((spread, tone) => ({
-    spread: spread + (random() - 0.5) * 0.3,
+  const strands = STRAND_SETS[clamp(count, 1, 5) - 1].map((tone) => ({
+    spread: spreads[tone] + (random() - 0.5) * 0.3,
     tone,
     f1: 0.7 + random() * 0.9,
     f2: 1.9 + random() * 1.6,
@@ -276,6 +286,10 @@ export class Atlas {
   private landAlpha = 0;
   private dots: Dot[] = [];
   private home: Dot | null = null;
+  /** How many strands of silver leave home in all. */
+  private strands = 0;
+  /** Parts of the screen with words on them, where no name is written. */
+  private furniture: Box[] = [];
   /** Checked off by hand: state and country ids. */
   private checked = new Set<string>();
   /** Every shape that wears the tint: by a dot in it, or by a check. */
@@ -399,7 +413,8 @@ export class Atlas {
   locate(spot: Spot): { country: Shape | null; state: Shape | null } {
     const world = this.world;
     if (!world) return { country: null, state: null };
-    const country = countryAt(world, spot.lat, spot.lng);
+    // Wide enough that an island too small to be drawn still finds its country.
+    const country = countryAt(world, spot.lat, spot.lng, 1.6);
     const state =
       country?.id === UNITED_STATES && this.states
         ? shapeAt(this.states.states, spot.lat, spot.lng, 1.5)
@@ -492,10 +507,20 @@ export class Atlas {
       dots[0] ??
       null;
     if (home) {
+      // A place on its own gets a full thread of five strands. Places that
+      // crowd together share: each brings fewer, so a dozen towns in one
+      // corner make one rope between them instead of a dozen.
       for (const dot of dots) {
-        if (dot !== home) dot.thread = buildThread(home, dot);
+        if (dot === home) continue;
+        let crowd = 0;
+        for (const other of dots) {
+          if (other === home) continue;
+          if (Math.hypot(wrapLongitude(other.x - dot.x), other.y - dot.y) < CROWD) crowd += 1;
+        }
+        dot.thread = buildThread(home, dot, Math.round(6 / crowd));
       }
     }
+    this.strands = dots.reduce((sum, dot) => sum + (dot.thread?.strands.length ?? 0), 0);
     this.dots = dots;
     this.home = home;
     this.markVisited();
@@ -510,13 +535,19 @@ export class Atlas {
     if (this.pristine) this.overview(false);
   }
 
+  /** The title, the key and the buttons, as boxes on the map: names keep off them. */
+  keepClear(boxes: Array<[number, number, number, number]>) {
+    this.furniture = boxes;
+    this.topDirty = true;
+  }
+
   /** Marks a place as chosen and flies there, or lets go of the choice. */
   focus(id: string | null) {
     this.selected = id;
     this.topDirty = true;
     const dot = id ? this.dots.find((entry) => entry.place.id === id) : null;
     if (!dot) return;
-    this.travel(dot.place, Math.max(this.cam.k, this.closeUp()));
+    this.travel(dot.place, Math.max(this.cam.k, this.closeUpFor(dot)));
   }
 
   setPinMode(on: boolean) {
@@ -579,6 +610,17 @@ export class Atlas {
 
   private closeUp() {
     return clamp(this.width / 30, 13, 20);
+  }
+
+  /** Closer for a place with near neighbours, so they come apart, but never out of sight of the coast. */
+  private closeUpFor(dot: Dot) {
+    const base = this.closeUp();
+    let nearest = Infinity;
+    for (const other of this.dots) {
+      if (other === dot) continue;
+      nearest = Math.min(nearest, Math.hypot(wrapLongitude(other.x - dot.x), other.y - dot.y));
+    }
+    return clamp(16 / nearest, base, base * 3);
   }
 
   /** Keeps the map sheet from drifting off the paper. */
@@ -983,6 +1025,18 @@ export class Atlas {
     return best;
   }
 
+  /**
+   * The place under a tap. Dots too close to tell apart take turns: when the
+   * chosen place is in the pile, the tap picks the next one in it.
+   */
+  private pick(x: number, y: number, reach: number) {
+    const best = this.hit(x, y, reach);
+    if (!best) return null;
+    const pile = this.marks.filter((mark) => Math.hypot(mark.x - best.x, mark.y - best.y) < PILE);
+    const at = pile.findIndex((mark) => mark.dot.place.id === this.selected);
+    return at < 0 ? best : pile[(at + 1) % pile.length];
+  }
+
   /** The state or country under a point on the screen. */
   private regionUnder(x: number, y: number) {
     const world = this.world;
@@ -1035,7 +1089,7 @@ export class Atlas {
       if (shape) this.events.onRegion({ id: shape.id, name: shape.name });
       return;
     }
-    const mark = this.hit(x, y, finger ? 26 : 16);
+    const mark = this.pick(x, y, finger ? 26 : 16);
     if (again && !mark) {
       this.zoomGoal = { k: this.limitZoom(this.cam.k * 2), px: x, py: y };
       this.pristine = false;
@@ -1425,7 +1479,7 @@ export class Atlas {
   private drawGraticule(ctx: CanvasRenderingContext2D, originX: number, originY: number) {
     const { width, height, cam, tones } = this;
     const k = cam.k;
-    const step = [1, 2, 5, 10, 15, 30].find((size) => size * k >= 58) ?? 30;
+    const step = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30].find((size) => size * k >= 58) ?? 30;
     const top = Math.max(0, originY + WORLD_TOP * k);
     const bottom = Math.min(height, originY + WORLD_BOTTOM * k);
     if (bottom <= top) return;
@@ -1512,14 +1566,29 @@ export class Atlas {
     }
     this.marks = marks;
 
+    // Drawn last, and named first: the chosen place, then where she is, where
+    // she is from, where she has lived, and then the places she goes back to.
     const rank = (mark: Mark) => {
-      const { id, kind } = mark.dot.place;
-      if (id === this.selected) return 4;
-      if (id === this.hover) return 3;
-      return kind === "current" ? 2 : kind === "hometown" ? 1 : 0;
+      const { id, kind, trips } = mark.dot.place;
+      if (id === this.selected) return 5;
+      if (id === this.hover) return 4;
+      if (kind === "current") return 3;
+      if (kind === "hometown") return 2;
+      return (kind === "lived" ? 1 : 0) + Math.min(trips.length, 9) / 10;
     };
-    const ordered = [...marks].sort((a, b) => rank(a) - rank(b));
     const size = clamp(0.9 + Math.log2(k / 3) * 0.1, 0.82, 1.35);
+    // From far off, the towns around home sit right under the pearl, and the
+    // ones around where she is now under the cobalt. They wait there unseen,
+    // rather than ring it with their own light, until the map is close enough
+    // to tell them apart.
+    const anchors = marks.filter(({ dot }) => dot.place.kind === "hometown" || dot.place.kind === "current");
+    const ordered = marks
+      .filter(
+        (mark) =>
+          rank(mark) >= 2 ||
+          !anchors.some((anchor) => Math.hypot(anchor.x - mark.x, anchor.y - mark.y) < 5 * size),
+      )
+      .sort((a, b) => rank(a) - rank(b));
     for (const mark of ordered) this.drawToken(ctx, mark, size, time);
     this.drawLabels(
       ctx,
@@ -1544,10 +1613,33 @@ export class Atlas {
     const beads: number[] = [];
     const litBeads: number[] = [];
 
+    const string = (list: number[], radius: number, alpha: number, edge: string) => {
+      if (!list.length) return;
+      ctx.beginPath();
+      for (let index = 0; index < list.length; index += 3) {
+        const r = radius * list[index + 2];
+        if (r < 0.3) continue;
+        ctx.moveTo(list[index] + r, list[index + 1]);
+        ctx.arc(list[index], list[index + 1], r, 0, TAU);
+      }
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = tones.bead;
+      ctx.fill();
+      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = edge;
+      ctx.stroke();
+    };
+
     // One stroke per shade of silver rather than one per strand: the same
     // picture for a fraction of the drawing.
     for (let tone = 0; tone <= 5; tone += 1) {
       const lit = tone === 5;
+      if (lit) {
+        // The plain threads are down. They thin out where they all meet, and
+        // the chosen one is drawn after, whole.
+        string(beads, 1.5, (chosen ? 0.45 : 1) * (1 - this.hush), tones.beadEdge);
+        this.clearHome(ctx, originX, originY);
+      }
       let sheen: CanvasGradient | null = null;
       ctx.beginPath();
       for (const dot of this.dots) {
@@ -1621,25 +1713,36 @@ export class Atlas {
       ctx.stroke();
     }
 
-    const string = (list: number[], radius: number, alpha: number, edge: string) => {
-      if (!list.length) return;
-      ctx.beginPath();
-      for (let index = 0; index < list.length; index += 3) {
-        const r = radius * list[index + 2];
-        if (r < 0.3) continue;
-        ctx.moveTo(list[index] + r, list[index + 1]);
-        ctx.arc(list[index], list[index + 1], r, 0, TAU);
-      }
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = tones.bead;
-      ctx.fill();
-      ctx.lineWidth = 0.6;
-      ctx.strokeStyle = edge;
-      ctx.stroke();
-    };
-    string(beads, 1.5, (chosen ? 0.45 : 1) * (1 - this.hush), tones.beadEdge);
     string(litBeads, 2.1, 1, IRIDESCENT[2]);
     ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Every thread starts at home, and a few dozen lines leaving one point are
+   * a grey knot whatever the zoom. Around home they fade toward the pearl
+   * instead, the more of them the more they fade, so it sits in a clearing.
+   */
+  private clearHome(ctx: CanvasRenderingContext2D, originX: number, originY: number) {
+    const home = this.home;
+    if (!home || this.strands < 30) return;
+    const k = this.cam.k;
+    const reach = clamp(36 + this.strands, 70, 150);
+    const depth = clamp(1 - 26 / this.strands, 0, 0.8);
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "destination-out";
+    const { first, last } = this.copies(home.x - 2, home.x + 2);
+    for (let copy = first; copy <= last; copy += 1) {
+      const x = originX + (home.x + copy * WORLD_WIDTH) * k;
+      const y = originY + home.y * k;
+      const fade = ctx.createRadialGradient(x, y, 0, x, y, reach);
+      fade.addColorStop(0, `rgba(0, 0, 0, ${depth})`);
+      fade.addColorStop(0.35, `rgba(0, 0, 0, ${depth * 0.82})`);
+      fade.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = fade;
+      ctx.fillRect(x - reach, y - reach, reach * 2, reach * 2);
+    }
+    ctx.restore();
   }
 
   /** The outline under the cursor while checking off, and the one just ticked. */
@@ -1804,6 +1907,7 @@ export class Atlas {
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
       ctx.fill();
     } else {
+      const lived = kind === "lived";
       const r = 3.5 * pop;
       const glow = r * 3.7 * pulse;
       const halo = ctx.createRadialGradient(x, y, r * 0.5, x, y, glow);
@@ -1824,6 +1928,14 @@ export class Atlas {
       ctx.lineWidth = 1.1;
       ctx.strokeStyle = tones.aquaEdge;
       ctx.stroke();
+      if (lived) {
+        // A place she has lived is the same aqua, held in a silver setting.
+        ctx.beginPath();
+        ctx.arc(x, y, r + 2.7 * pop, 0, TAU);
+        ctx.lineWidth = 0.9;
+        ctx.strokeStyle = tones.setting;
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -1866,7 +1978,7 @@ export class Atlas {
     ctx.lineJoin = "round";
 
     const taken: Box[] = marks.map((mark) => [mark.x - 6, mark.y - 6, mark.x + 6, mark.y + 6]);
-    taken.push(...blocked);
+    taken.push(...blocked, ...this.furniture);
     const free = (box: Box, own: number) =>
       taken.every(
         (other, index) =>
@@ -1883,16 +1995,31 @@ export class Atlas {
       const { id, kind } = dot.place;
       const lit = id === this.selected || id === this.hover;
       if (this.presence(dot) < 1 || wanted.has(dot)) return;
-      if (!lit && kind === "visited" && k < 2.3) return;
+      // Far out, only home and where she is now are named.
+      if (!lit && kind !== "hometown" && kind !== "current" && k < 2.3) return;
       const textWidth = ctx.measureText(dot.title).width;
-      const gap = (kind === "visited" ? 9 : 12) * size + (lit ? 4 : 0);
+      const gap = (kind === "visited" ? 9 : 12.5) * size + (lit ? 4 : 0);
       const tall = fontSize + 2;
-      const tries: Array<{ x: number; y: number; align: CanvasTextAlign; box: Box }> = [
-        { x: mark.x + gap, y: mark.y, align: "left", box: [mark.x + gap, mark.y - tall / 2, mark.x + gap + textWidth, mark.y + tall / 2] },
-        { x: mark.x - gap, y: mark.y, align: "right", box: [mark.x - gap - textWidth, mark.y - tall / 2, mark.x - gap, mark.y + tall / 2] },
-        { x: mark.x, y: mark.y - gap - tall / 2, align: "center", box: [mark.x - textWidth / 2, mark.y - gap - tall, mark.x + textWidth / 2, mark.y - gap] },
-        { x: mark.x, y: mark.y + gap + tall / 2, align: "center", box: [mark.x - textWidth / 2, mark.y + gap, mark.x + textWidth / 2, mark.y + gap + tall] },
-      ];
+      const tries: Array<{ x: number; y: number; align: CanvasTextAlign; box: Box }> = [];
+      const offer = (x: number, y: number, align: CanvasTextAlign) => {
+        const left = align === "left" ? x : align === "right" ? x - textWidth : x - textWidth / 2;
+        tries.push({ x, y, align, box: [left, y - tall / 2, left + textWidth, y + tall / 2] });
+      };
+      // Beside the dot first, then above and below, then off its corners.
+      // Home and where she is now may stand a little further off to be named.
+      const anchor = kind === "hometown" || kind === "current";
+      for (const reach of anchor ? [gap, gap + 12] : [gap]) {
+        const corner = reach * 0.6;
+        const rise = reach * 0.6 + tall / 2;
+        offer(mark.x + reach, mark.y, "left");
+        offer(mark.x - reach, mark.y, "right");
+        offer(mark.x, mark.y - reach - tall / 2, "center");
+        offer(mark.x, mark.y + reach + tall / 2, "center");
+        offer(mark.x + corner, mark.y + rise, "left");
+        offer(mark.x + corner, mark.y - rise, "left");
+        offer(mark.x - corner, mark.y + rise, "right");
+        offer(mark.x - corner, mark.y - rise, "right");
+      }
       const fit =
         tries.find(
           ({ box }) =>
