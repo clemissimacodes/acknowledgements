@@ -6607,3 +6607,47 @@ html:has(.voice-memos-page) .site-anchor {
     grid-row: auto;
   }
 }
+
+/* —— Places —— */
+
+/* The paper the map is drawn on. Everything else on the page takes its
+   colours from this, so a dark ground is this one line. */
+:root {
+  --places-ground: #f3f4f1;
+}
+
+html:has(.places-page) body,
+html:has(.places-page) .volume {
+  background: var(--places-ground);
+}
+
+html:has(.places-page) .volume {
+  min-height: 0;
+}
+
+/* A drag that starts on the title or the card should not tug the page. */
+html:has(.places-page) {
+  overscroll-behavior: none;
+}
+
+html:has(.places-page) .site-anchor {
+  background: none;
+}
+
+html:has(.places-page[data-tone="dark"]) .site-anchor {
+  color: #f6f1e8;
+}
+
+html:has(.places-page[data-tone="dark"]) .site-footer {
+  --ink: #fff;
+  --mute: rgba(255, 255, 255, 0.5);
+}
+
+/* One screen tall including the site footer, so nothing needs a scroll. */
+.places-page {
+  position: relative;
+  height: calc(100dvh - var(--site-footer-height));
+  min-height: 0;
+  overflow: hidden;
+  background: var(--places-ground);
+}
