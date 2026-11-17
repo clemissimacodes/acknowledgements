@@ -48,25 +48,35 @@ export default function HomePage() {
       <p className="index-bio">
         I am a being of high happiness. Frank and Elaine hatched me into the
         world some time ago and I now frolic across the great greens of San
-        Francisco and, when the wind is right,{" "}
-        <Link href="/places">a good deal farther</Link>. I maintain my
-        cardiovascular homeostasis from my eternal pursuit of{" "}
+        Francisco and, when the wind is right, across{" "}
+        <Link href="/places">different countrysides around the planet</Link>. I
+        maintain my cardiovascular homeostasis from my eternal pursuit of{" "}
         <Link href="/poetry">poetry</Link>,{" "}
         <Link href="/teeny-tiny-things">play</Link>, and{" "}
-        <Link href="/ask">friendship with the world</Link>. In between I{" "}
-        <Link href="/voice-memos">think out loud</Link>,{" "}
-        <a href={MODELING} target="_blank" rel="noreferrer">
-          hold very still for cameras
-        </a>
-        , <Link href="/blow-on-a-fat-dandelion">make wishes on weeds</Link>, and{" "}
-        <Link href="/secrets">keep a few things to myself</Link>.
+        <Link href="/ask">friendship with this wonderful world</Link>.
       </p>
       <p className="index-bio">
-        Message me on X{" "}
+        I often think out loud and like to record{" "}
+        <Link href="/voice-memos">voice memos</Link> as a palimpsest of growth.
+        I also got randomly scouted to model this year, so I guess I do{" "}
+        <a href={MODELING} target="_blank" rel="noreferrer">
+          runways and brand shoots
+        </a>
+        . I feel lucky to be living a dream of a life - it might have something
+        to do with my habit of{" "}
+        <Link href="/blow-on-a-fat-dandelion">
+          wishing on all the fat dandelions
+        </Link>{" "}
+        I come across. My secret to my life is{" "}
+        <Link href="/secrets">here</Link>.
+      </p>
+      <p className="index-bio">
+        Never be shy to message me -{" "}
         <a href="https://x.com/clemissima" target="_blank" rel="noreferrer">
           @clemissima
         </a>{" "}
-        - I’m always open to new friends
+        everywhere -{" "}
+        <span className="index-keep">I’m always open to new friends</span>
         <RotatingWords words={friendThings} prefix="to" suffix="with." />
       </p>
     </main>
