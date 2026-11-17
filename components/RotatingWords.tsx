@@ -36,19 +36,19 @@ export function RotatingWords({
     return () => window.clearTimeout(timer);
   }, [index, still, words]);
 
-  // Every phrase sits in the same grid cell, so the slot is always as tall as
-  // the longest one and the text around it never reflows.
+  // The phrase flows inline with the sentence, so it wraps like any other
+  // words instead of dropping onto a line of its own.
   return (
     <>
       <span className="visually-hidden">
         {prefix} {words.join(", ")} {suffix}
       </span>
       <span className="rotating-words" aria-hidden="true">
-        {words.map((word, wordIndex) => (
-          <span key={word} className={wordIndex === index ? "is-current" : undefined}>
-            {prefix} <em>{word}</em> {suffix}
-          </span>
-        ))}
+        {prefix}{" "}
+        <em key={index} className="rotating-word">
+          {words[index]}
+        </em>{" "}
+        {suffix}
       </span>
     </>
   );

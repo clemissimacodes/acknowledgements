@@ -49,6 +49,10 @@ const PILE = 9;
 /** Places within this many degrees of each other share their silver. */
 const CROWD = 12;
 const SPECKLE_TILE = 220;
+/** How long the view must hold still before the land is drawn sharp again. */
+const SETTLE_MS = 200;
+/** The snapshot's resolution is capped near this many pixels. */
+const SNAPSHOT_PIXELS = 4_000_000;
 const IRIDESCENT = ["#f7b9d6", "#b4ebf3", "#c9c1f7", "#fbeab8", "#b3efd4", "#f7b9d6"];
 const MONO = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace';
 /** The lower forty-eight, as west, south, east, north. */
@@ -193,6 +197,15 @@ type Box = [number, number, number, number];
 
 type Camera = { x: number; y: number; k: number };
 
+/** The land drawn once, a margin wider than the screen, for moving views. */
+type Snapshot = {
+  canvas: HTMLCanvasElement;
+  cam: Camera;
+  pad: number;
+  width: number;
+  height: number;
+};
+
 type Flight = {
   from: Camera;
   to: Camera;
@@ -312,6 +325,14 @@ export class Atlas {
   private drawn = 0;
   private baseDirty = true;
   private topDirty = true;
+  // Redrawing every coastline each frame is what makes a drag stutter, so a
+  // moving view slides and scales a snapshot of the land instead, and the
+  // land is drawn sharp again once the view holds still.
+  private snapshot: Snapshot | null = null;
+  private snapshotFresh = false;
+  private motionAt = -Infinity;
+  private rough = false;
+  private patternRatio = 1;
   private still: boolean;
   private font = "serif";
   private speckle: CanvasPattern | null = null;
@@ -370,6 +391,7 @@ export class Atlas {
 
   /** The countries, and the US states when they loaded too. */
   setShapes(world: RawWorld, states: RawStates | null) {
+    this.snapshot = null;
     this.world = buildWorld(world);
     try {
       this.states = states ? buildStates(states) : null;
@@ -407,6 +429,7 @@ export class Atlas {
   }
 
   setChecked(ids: string[]) {
+    this.snapshot = null;
     this.checked = new Set(ids);
     this.markVisited();
     this.baseDirty = true;
@@ -414,6 +437,7 @@ export class Atlas {
 
   /** While on, a tap picks the state or country under it instead of a place. */
   setRegionMode(on: boolean) {
+    this.snapshot = null;
     this.regionMode = on;
     this.hoverRegion = null;
     if (!this.pinMode) this.host.style.cursor = "grab";
@@ -461,6 +485,7 @@ export class Atlas {
   }
 
   setPlaces(places: Place[]) {
+    this.snapshot = null;
     const known = new Map(this.dots.map((dot) => [dot.place.id, dot]));
     const first = this.dots.length === 0;
     const dots = places.map((place, index): Dot => {
@@ -568,6 +593,7 @@ export class Atlas {
       canvas.height = Math.round(height * ratio);
     }
     this.makePatterns();
+    this.snapshot = null;
     if (this.pristine) this.overview(false);
     else this.settle(this.cam);
     this.baseDirty = true;
@@ -969,6 +995,7 @@ export class Atlas {
     this.settle(this.cam);
     this.pristine = false;
     this.baseDirty = true;
+    this.motionAt = performance.now();
   }
 
   private zoomAt(k: number, px: number, py: number) {
@@ -982,6 +1009,7 @@ export class Atlas {
     this.settle(cam);
     this.pristine = false;
     this.baseDirty = true;
+    this.motionAt = performance.now();
   }
 
   private hit(x: number, y: number, reach: number) {
@@ -1118,11 +1146,22 @@ export class Atlas {
     }
     if (this.moveJet(dt)) moving = true;
     if (moving) this.baseDirty = true;
+    if (moving) this.motionAt = now;
 
-    if (this.baseDirty) {
-      this.drawBase();
+    const settling = now - this.motionAt < SETTLE_MS && this.landAlpha >= 1;
+    if (this.baseDirty || (this.rough && !settling)) {
+      if (settling && this.drawMoved()) {
+        this.rough = true;
+      } else {
+        this.drawBase();
+        this.rough = false;
+        this.snapshotFresh = false;
+      }
       this.baseDirty = false;
       this.topDirty = true;
+    } else if (!this.snapshotFresh && now - this.motionAt > 400 && this.landAlpha >= 1) {
+      // Ready for the next drag while nothing else is happening.
+      this.takeSnapshot();
     }
 
     // Idle, the threads only sway: thirty frames a second is plenty.
@@ -1159,6 +1198,7 @@ export class Atlas {
 
   private makePatterns() {
     const ratio = this.ratio;
+    this.patternRatio = ratio;
     const tile = (size: number, paint: (ctx: CanvasRenderingContext2D) => void) => {
       const canvas = document.createElement("canvas");
       canvas.width = canvas.height = Math.round(size * ratio);
@@ -1196,6 +1236,68 @@ export class Atlas {
     };
   }
 
+  /** Draws the land into an offscreen canvas a margin wider than the screen. */
+  private takeSnapshot() {
+    const { width, height } = this;
+    if (!width || !height) return;
+    const pad = Math.round(Math.min(width, height) * 0.4);
+    const outerWidth = width + pad * 2;
+    const outerHeight = height + pad * 2;
+    // Softer than the screen is fine for a view in motion, and far cheaper.
+    const ratio = Math.min(this.ratio, 1.5, Math.sqrt(SNAPSHOT_PIXELS / (outerWidth * outerHeight)));
+    const canvas = this.snapshot?.canvas ?? document.createElement("canvas");
+    canvas.width = Math.round(outerWidth * ratio);
+    canvas.height = Math.round(outerHeight * ratio);
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) return;
+
+    // drawBase draws for whatever size and context the map has, so lend it these.
+    const screen = { ctx: this.baseCtx, ratio: this.ratio };
+    this.baseCtx = ctx;
+    this.width = outerWidth;
+    this.height = outerHeight;
+    this.ratio = ratio;
+    try {
+      this.drawBase();
+    } finally {
+      this.baseCtx = screen.ctx;
+      this.width = width;
+      this.height = height;
+      this.ratio = screen.ratio;
+    }
+    this.snapshot = { canvas, cam: { ...this.cam }, pad, width, height };
+    this.snapshotFresh = true;
+  }
+
+  /** Slides and scales the snapshot to the current view; false if it cannot. */
+  private drawMoved() {
+    const fits = () => {
+      const snap = this.snapshot;
+      if (!snap || snap.width !== this.width || snap.height !== this.height) return null;
+      const { cam, width, height } = this;
+      const scale = cam.k / snap.cam.k;
+      // A view zoomed far past the snapshot would only show its blur.
+      if (scale > 2.2) return null;
+      const outerWidth = (width + snap.pad * 2) * scale;
+      const outerHeight = (height + snap.pad * 2) * scale;
+      const x = width / 2 - outerWidth / 2 + (snap.cam.x - cam.x) * cam.k;
+      const y = height / 2 - outerHeight / 2 + (snap.cam.y - cam.y) * cam.k;
+      if (x > 0 || y > 0 || x + outerWidth < width || y + outerHeight < height) return null;
+      return { snap, x, y, outerWidth, outerHeight };
+    };
+    let view = fits();
+    if (!view) {
+      this.takeSnapshot();
+      view = fits();
+    }
+    if (!view) return false;
+    const ctx = this.baseCtx;
+    ctx.setTransform(this.ratio, 0, 0, this.ratio, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(view.snap.canvas, view.x, view.y, view.outerWidth, view.outerHeight);
+    return true;
+  }
+
   private drawBase() {
     const { baseCtx: ctx, width, height, ratio, cam, tones, world } = this;
     const k = cam.k;
@@ -1209,7 +1311,7 @@ export class Atlas {
 
     const anchor = (pattern: CanvasPattern | null, size: number) => {
       pattern?.setTransform(
-        new DOMMatrix().translate(mod(originX, size), mod(originY, size)).scale(1 / ratio),
+        new DOMMatrix().translate(mod(originX, size), mod(originY, size)).scale(1 / this.patternRatio),
       );
       return pattern;
     };
