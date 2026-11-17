@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { PlacesMap } from "@/components/places/PlacesMap";
 import { loadPlaces } from "@/lib/places";
-import { viewerIsOwner } from "@/lib/recording-owner";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,8 @@ export const viewport: Viewport = {
   themeColor: "#f3f4f1",
 };
 
+// The public map only shows. Every change is made from /controlroom/places.
 export default async function PlacesPage() {
-  const [{ places, regions, live }, owner] = await Promise.all([loadPlaces(), viewerIsOwner()]);
-  return <PlacesMap initialPlaces={places} initialRegions={regions} canEdit={owner && live} />;
+  const { places, regions } = await loadPlaces();
+  return <PlacesMap initialPlaces={places} initialRegions={regions} canEdit={false} />;
 }
