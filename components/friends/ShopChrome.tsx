@@ -2,20 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { FRIEND_ERAS, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
+import { useEffect, useRef, useState } from "react";
+import { FRIEND_ERAS, SALE_NAME, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
 import { sumPrices, useBag } from "./bag";
 
-const MARQUEE =
-  "Friends & Family Sale ♡ Everything is 0% off ♡ Prices only go up ♡ Nothing ships ♡ All sales final ♡ Open Thanksgiving, Black Friday & every day after";
+const MARQUEE = `${SALE_NAME} ♡ 0% off everything ♡ Buy one, get nothing ♡ Prices only go up ♡ Nothing ships ♡ Doorbusters unavailable, we don't have a door`;
 
 export function ShopHeader() {
   const bag = useBag();
   const pathname = usePathname();
-  const router = useRouter();
-  const [menu, setMenu] = useState<"shop" | "about" | null>(null);
+  const [menu, setMenu] = useState<"shop" | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -31,12 +28,6 @@ export function ShopHeader() {
     window.addEventListener("pointerdown", close);
     return () => window.removeEventListener("pointerdown", close);
   }, [menu]);
-
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    const q = query.trim();
-    router.push(q ? `/collections/${SHOP_HANDLE}?q=${encodeURIComponent(q)}` : `/collections/${SHOP_HANDLE}`);
-  };
 
   return (
     <header className="ff-header">
@@ -83,49 +74,22 @@ export function ShopHeader() {
               ))}
             </ul>
           </li>
-          <li className="ff-nav-item">
-            <button
-              type="button"
-              aria-expanded={menu === "about"}
-              onClick={() => setMenu(menu === "about" ? null : "about")}
-            >
-              About <Chevron />
-            </button>
-            <ul className={`ff-dropdown${menu === "about" ? " ff-dropdown-open" : ""}`}>
-              <li>
-                <Link href="/pages/about-the-sale">About the Sale</Link>
-              </li>
-              <li>
-                <Link href="/pages/apply">Apply to Be Listed</Link>
-              </li>
-              <li>
-                <Link href="/">Clemissima.com</Link>
-              </li>
-            </ul>
+          <li>
+            <Link href="/pages/about-the-sale">Fine Print</Link>
           </li>
-          <li className="ff-nav-signin">
-            <Link href="/admin">Sign In</Link>
+          <li>
+            <Link href="/pages/apply">Apply</Link>
           </li>
         </ul>
 
         <Link href={`/collections/${SHOP_HANDLE}`} className="ff-logo">
           <span className="ff-logo-mark">{SHOP_NAME.toUpperCase()}</span>
-          <span className="ff-logo-sub">By Clemissima</span>
         </Link>
 
         <div className="ff-nav-right">
           <button type="button" className="ff-bag-link" onClick={() => bag.setOpen(true)}>
             Bag {String(bag.items.length).padStart(2, "0")}
           </button>
-          <form className="ff-search" onSubmit={search} role="search">
-            <input
-              value={query}
-              placeholder="SEARCH"
-              aria-label="Search friends"
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <button type="submit">Enter</button>
-          </form>
         </div>
       </nav>
     </header>
@@ -266,13 +230,14 @@ export function ShopFooter() {
       <div className="ff-footer-cols">
         <div>
           <p className="ff-footer-head">{SHOP_NAME}</p>
-          <p>A shop where every item is a person and nothing is for sale.</p>
+          <p>A shop where every item is a person and nothing is for sale. You're in good company.</p>
         </div>
         <div>
           <p className="ff-footer-head">Customer Care</p>
           <Link href="/pages/about-the-sale">About the Sale</Link>
           <Link href="/pages/apply">Apply to Be Listed</Link>
           <Link href="/ask">Chat With Us</Link>
+          <Link href="/admin">Staff Only</Link>
         </div>
         <div>
           <p className="ff-footer-head">Policies</p>
@@ -287,7 +252,7 @@ export function ShopFooter() {
         </div>
       </div>
       <p className="ff-footer-legal">
-        © {new Date().getFullYear()} Clemissima · Friends & Family · Made with love, not inventory.
+        © {new Date().getFullYear()} {SHOP_NAME} · A Clemissima production · Made with love, not inventory.
       </p>
     </footer>
   );

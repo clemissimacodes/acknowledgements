@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function CollectionPage({ params, searchParams }: Props) {
   const { handle } = await params;
   const { q } = await searchParams;
-  if (handle === "all" || handle === "shop") redirect(`/collections/${SHOP_HANDLE}`);
+  if (handle === "all" || handle === "shop" || handle === "friends-and-family") redirect(`/collections/${SHOP_HANDLE}`);
   const era = handle === SHOP_HANDLE ? null : isFriendEra(handle) ? handle : null;
   if (handle !== SHOP_HANDLE && !era) notFound();
 

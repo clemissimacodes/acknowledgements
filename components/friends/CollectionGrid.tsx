@@ -4,24 +4,36 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   FRIEND_BADGES,
-  FRIEND_ERAS,
   MET_HOW,
-  eraLabel,
+  RELATIONSHIPS,
+  SHOP_HANDLE,
+  daysToFriendiversary,
   friendPrice,
   formatPrice,
   type Friend,
 } from "@/lib/friend-types";
 
-type Sort = "featured" | "longest" | "newest" | "az" | "price-asc" | "price-desc";
+type Sort = "featured" | "longest" | "newest" | "friendiversary" | "family" | "hometown" | "az" | "fate";
 
 const SORTS: Array<[Sort, string]> = [
   ["featured", "Featured"],
   ["longest", "Longest Known"],
-  ["newest", "New Arrivals"],
-  ["az", "A – Z"],
-  ["price-asc", "Price, Low to High"],
-  ["price-desc", "Price, High to Low"],
+  ["newest", "Most Recently Acquired"],
+  ["friendiversary", "Next Friendiversary"],
+  ["family", "Family First"],
+  ["hometown", "Hometown, A – Z"],
+  ["az", "Alphabetically, A – Z"],
+  ["fate", "Leave It to Fate"],
 ];
+
+/* Deterministic shuffle so "fate" is stable across a visit. */
+function fateOrder(seed: number) {
+  let state = seed || 1;
+  return () => {
+    state = (state * 48271) % 2147483647;
+    return state / 2147483647;
+  };
+}
 
 type Props = {
   friends: Friend[];
@@ -30,14 +42,16 @@ type Props = {
 };
 
 export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
-  const [era, setEra] = useState<string>(lockedEra ?? "");
+  const era = lockedEra ?? "";
   const [metHow, setMetHow] = useState("");
+  const [relationship, setRelationship] = useState("");
   const [badge, setBadge] = useState("");
   const [sort, setSort] = useState<Sort>("featured");
   const [open, setOpen] = useState<string | null>(null);
+  const [fateSeed, setFateSeed] = useState(0);
   const barRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setEra(lockedEra ?? ""), [lockedEra]);
+  useEffect(() => setFateSeed(Math.floor(Math.random() * 2147483646) + 1), []);
 
   useEffect(() => {
     if (!open) return;
@@ -54,6 +68,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
       (f) =>
         (!era || f.era === era) &&
         (!metHow || f.metHow === metHow) &&
+        (!relationship || f.relationship === relationship) &&
         (!badge || f.badge === badge) &&
         (!q ||
           f.nickname.toLowerCase().includes(q) ||
@@ -66,18 +81,28 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
         return list.sort(byDate);
       case "newest":
         return list.sort((a, b) => byDate(b, a));
+      case "friendiversary":
+        return list.sort((a, b) => daysToFriendiversary(a.metOn) - daysToFriendiversary(b.metOn));
+      case "family":
+        return list.sort((a, b) => Number(b.relationship === "Family") - Number(a.relationship === "Family") || byDate(a, b));
+      case "hometown":
+        return list.sort((a, b) => (a.hometown || "\uffff").localeCompare(b.hometown || "\uffff") || byDate(a, b));
       case "az":
         return list.sort((a, b) => a.nickname.localeCompare(b.nickname));
-      case "price-asc":
-        return list.sort((a, b) => Number(friendPrice(a.metOn)) - Number(friendPrice(b.metOn)));
-      case "price-desc":
-        return list.sort((a, b) => Number(friendPrice(b.metOn)) - Number(friendPrice(a.metOn)));
+      case "fate": {
+        const next = fateOrder(fateSeed);
+        return list
+          .map((f) => [next(), f] as const)
+          .sort((a, b) => a[0] - b[0])
+          .map(([, f]) => f);
+      }
       default:
         return list;
     }
-  }, [friends, era, metHow, badge, sort, query]);
+  }, [friends, era, metHow, relationship, badge, sort, query, fateSeed]);
 
   const metHowOptions = MET_HOW.filter((how) => friends.some((f) => f.metHow === how));
+  const relationshipOptions = RELATIONSHIPS.filter((r) => friends.some((f) => f.relationship === r));
   const badgeOptions = (Object.keys(FRIEND_BADGES) as Array<keyof typeof FRIEND_BADGES>).filter(
     (key) => key !== "none" && friends.some((f) => f.badge === key),
   );
@@ -130,13 +155,13 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
       <div ref={barRef} className="ff-filterbar">
         <div className="ff-filterbar-left">
           <span className="ff-filter-label">Filter:</span>
-          {!lockedEra ? (
+          {relationshipOptions.length ? (
             <Filter
-              id="era"
-              label="Era"
-              value={era}
-              options={FRIEND_ERAS.map((e) => [e.handle, e.label])}
-              onPick={setEra}
+              id="relationship"
+              label="Relationship"
+              value={relationship}
+              options={relationshipOptions.map((r) => [r, r])}
+              onPick={setRelationship}
             />
           ) : null}
           {metHowOptions.length ? (
@@ -158,7 +183,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
             />
           ) : null}
           {query ? (
-            <Link href={lockedEra ? `/collections/${lockedEra}` : "/collections/friends-and-family"} className="ff-filter-clear">
+            <Link href={lockedEra ? `/collections/${lockedEra}` : `/collections/${SHOP_HANDLE}`} className="ff-filter-clear">
               “{query}” ×
             </Link>
           ) : null}
@@ -199,7 +224,6 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
                 <span className="ff-card-text">
                   <span className="ff-card-name">{f.nickname}</span>
                   <span className="ff-card-price">$ {formatPrice(friendPrice(f.metOn))} USD</span>
-                  <span className="ff-card-era">{eraLabel(f.era)}</span>
                 </span>
               </Link>
             </li>

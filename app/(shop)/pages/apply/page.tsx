@@ -8,7 +8,9 @@ export default function Apply() {
   return (
     <main className="ff-page">
       <p className="ff-crumbs">
-        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link> › Apply to Be Listed
+        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
+        <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
+        <em>Apply to Be Listed</em>
       </p>
       <h1 className="ff-title">Apply to Be Listed</h1>
       <div className="ff-prose">

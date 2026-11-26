@@ -8,7 +8,9 @@ export default function AboutTheSale() {
   return (
     <main className="ff-page">
       <p className="ff-crumbs">
-        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link> › About the Sale
+        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
+        <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
+        <em>About the Sale</em>
       </p>
       <h1 className="ff-title">About the Sale</h1>
       <div className="ff-prose">

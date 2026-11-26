@@ -40,7 +40,7 @@ function date(value: string) {
 const vaultPages = [
   { title: "Leave a Note replies", href: "/controlroom/ask" },
   { title: "Voice Memos", href: "/controlroom/voice-memos" },
-  { title: "Friends & Family", href: "/controlroom/friends-and-family" },
+  { title: "Good Company", href: "/controlroom/friends-and-family" },
   { title: "Places", href: "/controlroom/places" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },

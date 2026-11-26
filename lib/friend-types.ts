@@ -1,5 +1,6 @@
-export const SHOP_NAME = "Friends & Family";
-export const SHOP_HANDLE = "friends-and-family";
+export const SHOP_NAME = "Good Company";
+export const SHOP_HANDLE = "good-company";
+export const SALE_NAME = "Friends & Family Sale";
 
 /* Backroom only until Clementine says go. When false, every shop route
    and the checkout API 404 for anyone who is not the owner. */
