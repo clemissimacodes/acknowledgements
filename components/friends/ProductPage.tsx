@@ -6,6 +6,7 @@ import {
   DIARY_PATH,
   FRIEND_BADGES,
   SHOP_HANDLE,
+  collectionLabel,
   formatMetOn,
   friendPrice,
   formatPrice,
@@ -141,12 +142,14 @@ export function ProductPage({ friend }: Props) {
               </div>
             ) : null}
 
-            <div>
-              <dt>Known since</dt>
-              <dd className="ff-desc">
-                <p>{formatMetOn(friend.metOn)}</p>
-              </dd>
-            </div>
+            {friend.collection ? (
+              <div>
+                <dt>Collection</dt>
+                <dd className="ff-desc">
+                  <p>{collectionLabel(friend.collection)}</p>
+                </dd>
+              </div>
+            ) : null}
 
             {options.length ? (
               <div>

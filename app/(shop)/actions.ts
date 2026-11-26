@@ -33,6 +33,7 @@ function fromForm(form: FormData): FriendInput {
     era: get("era"),
     badge: get("badge"),
     metOn: get("metOn"),
+    collection: get("collection"),
     metHow: get("metHow"),
     hometown: get("hometown"),
     madeOf: get("madeOf"),
@@ -59,6 +60,7 @@ export async function rosterUpdateForm(form: FormData) {
   for (const id of ids) {
     await updateFriendRoster(id, {
       metOn: form.get(`metOn-${id}`) ?? undefined,
+      collection: form.get(`collection-${id}`) ?? undefined,
       era: form.get(`era-${id}`) ?? undefined,
       relationship: form.get(`relationship-${id}`) ?? undefined,
       visible: form.get(`visible-${id}`) ?? undefined,

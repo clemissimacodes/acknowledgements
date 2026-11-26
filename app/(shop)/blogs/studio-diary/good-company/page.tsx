@@ -31,7 +31,7 @@ const QA: QA[] = [
   },
   {
     q: "What is on a listing?",
-    a: "Only true things. My nickname for them and their real name. Where they\u2019re from, under Made In. How we met. The date we met. A trait I love and a memory I keep. A poem by someone else that reminds me of them, under Pairs Well With.",
+    a: "Only true things. My nickname for them and their real name. Where they\u2019re from, under Made In. How we met. The season we met, filed as a collection, the way a store would say Fall 2024. A trait I love and a memory I keep. A poem by someone else that reminds me of them, under Pairs Well With.",
   },
   {
     q: "What do Friend and Family mean?",
@@ -39,7 +39,7 @@ const QA: QA[] = [
   },
   {
     q: "What are the eras?",
-    a: "Where I was when we met. Childhood, Vanderbilt, San Francisco, New York City. New Arrivals is for the people I\u2019ve met most recently. It is the closest thing this store has to a seasonal collection.",
+    a: "Where I was when we met. Childhood, Vanderbilt, San Francisco, New York City. New Arrivals is for the people I\u2019ve met most recently. It is the front table.",
   },
   {
     q: "Can I buy someone?",

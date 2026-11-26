@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { clearFriendImageForm, deleteFriendForm, rosterUpdateForm, toggleVisibleForm } from "@/app/(shop)/actions";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import { FriendForm } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
 import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
@@ -94,15 +95,15 @@ export default async function FriendsControlPage() {
       <section className="admin-section">
         <h2>Roster</h2>
         <p className="admin-muted">
-          Date, era, relationship and visibility for everyone at once. Jan 1, 2026 means the date is still a placeholder.
-          Photos and the trait/memory copy live in each listing below.
+          Collection (the season you met), era, relationship, poem and visibility for everyone at once. Highlighted rows
+          still need a collection. Photos and the trait/memory copy live in each listing below.
         </p>
         <form action={rosterUpdateForm} className="admin-roster-form">
           <table className="admin-roster">
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Date met</th>
+                <th>Collection</th>
                 <th>Era</th>
                 <th>Relationship</th>
                 <th>Poem</th>
@@ -113,14 +114,14 @@ export default async function FriendsControlPage() {
             </thead>
             <tbody>
               {friends.map((f) => (
-                <tr key={f.id} className={f.metOn === "2026-01-01" ? "admin-roster-todo" : undefined}>
+                <tr key={f.id} className={!f.collection ? "admin-roster-todo" : undefined}>
                   <td>
                     <input type="hidden" name="ids" value={f.id} />
                     <a href={`#${f.id}`}>{f.nickname}</a>
                     {f.productName ? <small> {f.productName}</small> : null}
                   </td>
                   <td>
-                    <input type="date" name={`metOn-${f.id}`} defaultValue={f.metOn} />
+                    <CollectionSelect name={`collection-${f.id}`} defaultValue={f.collection} />
                   </td>
                   <td>
                     <select name={`era-${f.id}`} defaultValue={f.era}>

@@ -1,4 +1,5 @@
 import { createFriendForm, updateFriendForm } from "@/app/(shop)/actions";
+import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import {
   FRIEND_BADGES,
   FRIEND_ERAS,
@@ -29,7 +30,11 @@ export function FriendForm({ friend }: Props) {
         <input name="slug" defaultValue={friend?.slug ?? ""} maxLength={60} placeholder="auto from nickname" />
       </label>
       <label>
-        Date we met <small>(price)</small>
+        Collection <small>(the season we met; shows as Known Since)</small>
+        <CollectionSelect name="collection" defaultValue={friend?.collection ?? ""} />
+      </label>
+      <label>
+        Exact date <small>(only if you know it; currently sets the price)</small>
         <input type="date" name="metOn" defaultValue={friend?.metOn ?? ""} required />
       </label>
       <label>

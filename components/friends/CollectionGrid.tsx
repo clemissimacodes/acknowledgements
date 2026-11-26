@@ -7,19 +7,18 @@ import {
   MET_HOW,
   RELATIONSHIPS,
   SHOP_HANDLE,
-  daysToFriendiversary,
+  collectionOrder,
   friendPrice,
   formatPrice,
   type Friend,
 } from "@/lib/friend-types";
 
-type Sort = "featured" | "longest" | "newest" | "friendiversary" | "family" | "hometown" | "az" | "fate";
+type Sort = "featured" | "longest" | "newest" | "family" | "hometown" | "az" | "fate";
 
 const SORTS: Array<[Sort, string]> = [
   ["featured", "Featured"],
   ["longest", "Longest Known"],
   ["newest", "Most Recently Acquired"],
-  ["friendiversary", "Next Friendiversary"],
   ["family", "Family First"],
   ["hometown", "Hometown, A – Z"],
   ["az", "Alphabetically, A – Z"],
@@ -75,14 +74,14 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
           f.productName.toLowerCase().includes(q) ||
           f.hometown.toLowerCase().includes(q)),
     );
-    const byDate = (a: Friend, b: Friend) => a.metOn.localeCompare(b.metOn);
+    /* Collection order ("Fall 2024"); unknowns last, then by name so it is stable. */
+    const byDate = (a: Friend, b: Friend) =>
+      collectionOrder(a.collection) - collectionOrder(b.collection) || a.nickname.localeCompare(b.nickname);
     switch (sort) {
       case "longest":
         return list.sort(byDate);
       case "newest":
         return list.sort((a, b) => byDate(b, a));
-      case "friendiversary":
-        return list.sort((a, b) => daysToFriendiversary(a.metOn) - daysToFriendiversary(b.metOn));
       case "family":
         return list.sort((a, b) => Number(b.relationship === "Family") - Number(a.relationship === "Family") || byDate(a, b));
       case "hometown":

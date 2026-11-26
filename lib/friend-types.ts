@@ -30,6 +30,49 @@ export const MET_HOW = ["School", "Work", "Internet", "Mutuals", "Fate"] as cons
 /* The "sizes". One is in stock per friend, the rest read as sold out. */
 export const RELATIONSHIPS = ["Friend", "Family"] as const;
 
+/* The "collection": the season we met, fashion-calendar style ("Fall 2024").
+   Stored as "fall-2024", or just "2024" when the season is a blur. */
+export const SEASONS = [
+  { handle: "spring", label: "Spring" },
+  { handle: "summer", label: "Summer" },
+  { handle: "fall", label: "Fall" },
+  { handle: "winter", label: "Winter" },
+] as const;
+export const COLLECTION_YEARS = Array.from({ length: 2026 - 2000 + 1 }, (_, i) => 2026 - i);
+
+export function parseCollection(value: string): { year: number; season: number } | null {
+  const m = /^(?:(spring|summer|fall|winter)-)?(\d{4})$/.exec(value || "");
+  if (!m) return null;
+  const year = Number(m[2]);
+  if (year < 1900 || year > 2100) return null;
+  const season = m[1] ? SEASONS.findIndex((s) => s.handle === m[1]) + 1 : 0;
+  return { year, season };
+}
+
+export function isCollection(value: unknown): value is string {
+  return typeof value === "string" && parseCollection(value) !== null;
+}
+
+export function collectionLabel(value: string) {
+  const c = parseCollection(value);
+  if (!c) return "";
+  return c.season ? `${SEASONS[c.season - 1].label} ${c.year}` : String(c.year);
+}
+
+/* Sortable: earlier collections sort first; a year without a season sorts before its seasons. */
+export function collectionOrder(value: string) {
+  const c = parseCollection(value);
+  return c ? c.year * 10 + c.season : Number.POSITIVE_INFINITY;
+}
+
+/* Rough season for a YYYY-MM-DD, used once to backfill from exact dates. */
+export function collectionFromDate(date: string) {
+  const [y, m] = date.split("-").map(Number);
+  if (!y || !m) return "";
+  const season = m <= 2 || m === 12 ? "winter" : m <= 5 ? "spring" : m <= 8 ? "summer" : "fall";
+  return `${season}-${y}`;
+}
+
 export type FriendColor = { name: string; hex: string };
 
 export type Friend = {
@@ -39,7 +82,8 @@ export type Friend = {
   productName: string;
   era: FriendEra;
   badge: FriendBadge;
-  metOn: string; // YYYY-MM-DD
+  metOn: string; // YYYY-MM-DD (exact date when known; still sets the price)
+  collection: string; // "fall-2024" | "2024" | ""
   metHow: string;
   hometown: string;
   madeOf: string[];
