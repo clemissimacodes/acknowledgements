@@ -30,6 +30,7 @@ export const MET_HOW = [
   "Through a Friend",
   "Family",
   "Pure Chance",
+  "Fate",
 ] as const;
 
 /* The "sizes". One is in stock per friend, the rest read as sold out. */
