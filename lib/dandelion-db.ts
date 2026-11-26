@@ -62,6 +62,31 @@ export async function postgresListWishes(): Promise<Wish[] | null> {
   }
 }
 
+export async function postgresListAllWishes(): Promise<
+  Array<{ id: string; body: string }> | null
+> {
+  if (!postgresConfigured()) return null;
+  try {
+    await ensureTable();
+    return (await sql()`
+      SELECT id, body FROM dandelion_wishes
+    `) as Array<{ id: string; body: string }>;
+  } catch {
+    return null;
+  }
+}
+
+export async function postgresDeleteWishes(ids: string[]): Promise<boolean> {
+  if (!postgresConfigured()) return false;
+  if (ids.length === 0) return true;
+  try {
+    await sql()`DELETE FROM dandelion_wishes WHERE id = ANY(${ids})`;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function postgresAddWish(
   wish: Wish,
   extras: WishExtras,

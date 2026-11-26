@@ -13,7 +13,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-function FriendCard({ friend, all }: { friend: Friend; all: Friend[] }) {
+function FriendCard({ friend }: { friend: Friend }) {
   return (
     <details className="admin-ask admin-friend" id={friend.id}>
       <summary>
@@ -55,7 +55,7 @@ function FriendCard({ friend, all }: { friend: Friend; all: Friend[] }) {
         </div>
       </div>
 
-      <FriendForm friend={friend} all={all} />
+      <FriendForm friend={friend} />
 
       <div className="admin-roll-actions">
         <form action={toggleVisibleForm}>
@@ -93,12 +93,12 @@ export default async function FriendsControlPage() {
 
       <section className="admin-section">
         <h2>Add a friend</h2>
-        <FriendForm all={friends} />
+        <FriendForm />
       </section>
 
       <section className="admin-section">
         <h2>Listings</h2>
-        {friends.length ? friends.map((friend) => <FriendCard key={friend.id} friend={friend} all={friends} />) : (
+        {friends.length ? friends.map((friend) => <FriendCard key={friend.id} friend={friend} />) : (
           <p className="admin-muted">No one yet.</p>
         )}
       </section>

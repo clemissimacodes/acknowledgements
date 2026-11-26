@@ -32,6 +32,24 @@ export const MET_HOW = [
   "Pure Chance",
 ] as const;
 
+/* The "sizes". One is in stock per friend, the rest read as sold out. */
+export const RELATIONSHIPS = [
+  "Friend",
+  "Good Friend",
+  "Best Friend",
+  "Acquaintance",
+  "Coworker",
+  "Roommate",
+  "Neighbor",
+  "Family",
+  "Emergency Contact",
+  "Plus One",
+  "Mutual",
+  "Former Enemy",
+  "Pen Pal",
+  "Ex",
+] as const;
+
 export type FriendColor = { name: string; hex: string };
 
 export type Friend = {
@@ -47,6 +65,8 @@ export type Friend = {
   madeOf: string[];
   care: string;
   description: string;
+  favoriteMemory: string;
+  favoriteTrait: string;
   relationship: string;
   relationshipOptions: string[];
   colors: FriendColor[];

@@ -12,13 +12,14 @@ import {
   friendPrice,
   formatPrice,
   friendiversaryLabel,
+  RELATIONSHIPS,
   type Friend,
 } from "@/lib/friend-types";
 import { useBag } from "./bag";
 
-type Props = { friend: Friend; pairs: Friend[] };
+type Props = { friend: Friend };
 
-export function ProductPage({ friend, pairs }: Props) {
+export function ProductPage({ friend }: Props) {
   const bag = useBag();
   const [pick, setPick] = useState(friend.relationship);
   const [swatch, setSwatch] = useState(0);
@@ -26,7 +27,9 @@ export function ProductPage({ friend, pairs }: Props) {
   const inBag = bag.has(friend.slug);
   const days = daysKnown(friend.metOn);
   const until = daysToFriendiversary(friend.metOn);
-  const options = friend.relationshipOptions.length ? friend.relationshipOptions : [friend.relationship].filter(Boolean);
+  const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
+    ? [friend.relationship, ...RELATIONSHIPS]
+    : [...RELATIONSHIPS];
 
   return (
     <main className="ff-product">
@@ -93,6 +96,28 @@ export function ProductPage({ friend, pairs }: Props) {
               </dd>
             </div>
 
+            {friend.favoriteTrait ? (
+              <div>
+                <dt>Favorite trait</dt>
+                <dd className="ff-desc">
+                  {friend.favoriteTrait.split(/\n\n+/).map((para, index) => (
+                    <p key={index}>{para}</p>
+                  ))}
+                </dd>
+              </div>
+            ) : null}
+
+            {friend.favoriteMemory ? (
+              <div>
+                <dt>Favorite memory</dt>
+                <dd className="ff-desc">
+                  {friend.favoriteMemory.split(/\n\n+/).map((para, index) => (
+                    <p key={index}>{para}</p>
+                  ))}
+                </dd>
+              </div>
+            ) : null}
+
             {friend.description ? (
               <div>
                 <dt>Description</dt>
@@ -100,15 +125,21 @@ export function ProductPage({ friend, pairs }: Props) {
                   {friend.description.split(/\n\n+/).map((para, index) => (
                     <p key={index}>{para}</p>
                   ))}
-                  <p className="ff-note">
-                    In my possession since {formatMetOn(friend.metOn)} — {days.toLocaleString()} days.
-                    {until === 0
-                      ? " Friendiversary is today."
-                      : ` Friendiversary ${friendiversaryLabel(friend.metOn)}, ${until} day${until === 1 ? "" : "s"} away.`}
-                  </p>
                 </dd>
               </div>
             ) : null}
+
+            <div>
+              <dt>Provenance</dt>
+              <dd className="ff-desc">
+                <p className="ff-note">
+                  In my possession since {formatMetOn(friend.metOn)} — {days.toLocaleString()} days.
+                  {until === 0
+                    ? " Friendiversary is today."
+                    : ` Friendiversary ${friendiversaryLabel(friend.metOn)}, ${until} day${until === 1 ? "" : "s"} away.`}
+                </p>
+              </dd>
+            </div>
 
             {options.length ? (
               <div>
@@ -197,27 +228,6 @@ export function ProductPage({ friend, pairs }: Props) {
         </section>
       </div>
 
-      {pairs.length ? (
-        <section className="ff-pairs" aria-labelledby="pairs">
-          <h2 id="pairs">Pairs well with</h2>
-          <ul className="ff-grid ff-grid-pairs">
-            {pairs.map((f) => (
-              <li key={f.id} className="ff-card">
-                <Link href={`/products/${f.slug}`}>
-                  <span className="ff-card-media">
-                    {f.heroUrl ? <img className="ff-card-hero" src={f.heroUrl} alt={f.nickname} loading="lazy" /> : <span className="ff-card-blank" />}
-                    {f.altUrl ? <img className="ff-card-alt" src={f.altUrl} alt="" loading="lazy" /> : null}
-                  </span>
-                  <span className="ff-card-text">
-                    <span className="ff-card-name">{f.nickname}</span>
-                    <span className="ff-card-price">$ {formatPrice(friendPrice(f.metOn))} USD</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
     </main>
   );
 }

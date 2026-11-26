@@ -1,7 +1,14 @@
 import { randomUUID } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { postgresAddWish, postgresConfigured, postgresListWishes } from "@/lib/dandelion-db";
+import {
+  postgresAddWish,
+  postgresConfigured,
+  postgresDeleteWishes,
+  postgresListAllWishes,
+  postgresListWishes,
+} from "@/lib/dandelion-db";
+import { isRubbishWish } from "@/lib/dandelion-rubbish";
 import { DANDELION_WISH_MIN, type Wish, type WishExtras } from "@/lib/dandelion-types";
 
 export type { Wish, WishExtras } from "@/lib/dandelion-types";
@@ -47,6 +54,11 @@ function remembered(): Wish[] {
 
 function remember(wishes: Wish[]) {
   memory.__dandelionWishes = wishes.slice(0, DANDELION_VISIBLE);
+}
+
+function forget(ids: string[]) {
+  const gone = new Set(ids);
+  memory.__dandelionWishes = remembered().filter((wish) => !gone.has(wish.id));
 }
 
 function writeFileWishes(wishes: Wish[]) {
@@ -147,7 +159,7 @@ function extrasFromProperties(properties: Record<string, NotionProp>): WishExtra
   };
 }
 
-async function notionQuery(): Promise<Wish[] | null> {
+async function notionQuery(limit = DANDELION_VISIBLE): Promise<Wish[] | null> {
   const token = process.env.NOTION_TOKEN;
   const databaseId = process.env.DANDELION_DATABASE_ID;
   if (!token || !databaseId) return null;
@@ -200,9 +212,22 @@ async function notionQuery(): Promise<Wish[] | null> {
       });
     }
     cursor = payload.has_more && payload.next_cursor ? payload.next_cursor : undefined;
-  } while (cursor && wishes.length < DANDELION_VISIBLE);
+  } while (cursor && wishes.length < limit);
 
-  return wishes.slice(0, DANDELION_VISIBLE);
+  return wishes.slice(0, limit);
+}
+
+async function notionArchive(token: string, pageId: string): Promise<boolean> {
+  const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ archived: true }),
+  });
+  return response.ok;
 }
 
 async function notionCreate(
@@ -336,6 +361,52 @@ export async function addWish(body: string, extras: WishExtras = {}): Promise<Wi
   remember(wishes);
   writeFileWishes(wishes);
   return wish;
+}
+
+export type SweptWish = Pick<Wish, "id" | "body">;
+
+export type Sweep = {
+  store: "postgres" | "notion" | "file";
+  swept: SweptWish[];
+};
+
+/** Deletes every stored wish that reads as keyboard mashing or filler. */
+export async function sweepRubbishWishes(): Promise<Sweep> {
+  if (postgresConfigured()) {
+    const all = await postgresListAllWishes();
+    if (!all) throw new Error("postgres unavailable");
+    const swept = all.filter((wish) => isRubbishWish(wish.body));
+    const deleted = await postgresDeleteWishes(swept.map((wish) => wish.id));
+    if (!deleted) throw new Error("postgres delete failed");
+    forget(swept.map((wish) => wish.id));
+    return { store: "postgres", swept };
+  }
+
+  const token = process.env.NOTION_TOKEN;
+  if (token && notionConfigured()) {
+    const all = await notionQuery(Infinity);
+    if (!all) throw new Error("notion unavailable");
+    const swept: SweptWish[] = [];
+    for (const wish of all) {
+      if (!isRubbishWish(wish.body)) continue;
+      // One at a time: Notion allows about three requests a second.
+      if (await notionArchive(token, wish.id)) {
+        swept.push({ id: wish.id, body: wish.body });
+      }
+    }
+    forget(swept.map((wish) => wish.id));
+    return { store: "notion", swept };
+  }
+
+  const all = gatheredWishes();
+  const swept = all.filter((wish) => isRubbishWish(wish.body));
+  const kept = all.filter((wish) => !isRubbishWish(wish.body));
+  remember(kept);
+  writeFileWishes(kept);
+  return {
+    store: "file",
+    swept: swept.map((wish) => ({ id: wish.id, body: wish.body })),
+  };
 }
 
 export function hasBlown(value: string | undefined) {

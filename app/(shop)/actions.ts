@@ -37,6 +37,8 @@ function fromForm(form: FormData): FriendInput {
     madeOf: get("madeOf"),
     care: get("care"),
     description: get("description"),
+    favoriteMemory: get("favoriteMemory"),
+    favoriteTrait: get("favoriteTrait"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
     colors: get("colors"),
