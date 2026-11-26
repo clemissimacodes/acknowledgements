@@ -360,6 +360,142 @@ html.ff-locked {
   font-style: italic;
 }
 
+/* ---- Founder voice (hairline) -------------------------------------- */
+
+.ff-voice {
+  margin: 0;
+  padding: 14px 50px 0;
+}
+
+.ff-voice-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ff-voice-icon {
+  flex: none;
+  width: 1.2em;
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.ff-voice-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+.ff-voice-time {
+  flex: none;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.ff-voice-line {
+  height: 2px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+
+.ff-voice-line i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--ink);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 80ms linear;
+}
+
+/* ---- Anthem (Spotify) ---------------------------------------------- */
+
+.ff-anthem {
+  position: relative;
+  margin: 28px 50px 0;
+  padding: 0 0 8px;
+}
+
+.ff-anthem-whisper {
+  display: block;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+}
+
+p.ff-anthem-whisper {
+  cursor: default;
+}
+
+.ff-anthem-frame {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: 80px;
+  border: 0;
+  border-radius: 8px;
+  opacity: 0.92;
+}
+
+.ff-anthem:not(.is-on) .ff-anthem-frame {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Review / also like -------------------------------------------- */
+
+.ff-review-by {
+  margin-top: 10px !important;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.ff-also {
+  margin: 0;
+  padding: 48px 50px 64px;
+}
+
+.ff-also-title {
+  margin: 0 0 18px;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.ff-also-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 /* ---- Grid ---------------------------------------------------------- */
 
 .ff-grid {
@@ -1197,6 +1333,17 @@ html.ff-locked {
 }
 
 @media (max-width: 900px) {
+  .ff-voice,
+  .ff-anthem,
+  .ff-also {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .ff-also-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .ff-product-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;

@@ -12,6 +12,7 @@ import {
   isFriendBadge,
   isFriendEra,
   slugifyFriend,
+  spotifyTrackId,
   type Friend,
   type FriendColor,
   type Receipt,
@@ -124,6 +125,11 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_url TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS collection TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS birthday TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_url TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS review TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_url TEXT`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_pathname TEXT`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_duration_ms INTEGER`;
       await sql`ALTER TABLE friends ALTER COLUMN met_on DROP NOT NULL`;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
@@ -165,6 +171,14 @@ function toFriend(row: Row): Friend {
     poemTitle: String(row.poem_title ?? ""),
     poemPoet: String(row.poem_poet ?? ""),
     poemUrl: String(row.poem_url ?? ""),
+    anthemUrl: String(row.anthem_url ?? ""),
+    review: String(row.review ?? ""),
+    voiceUrl: (row.voice_url as string | null) ?? null,
+    voicePathname: (row.voice_pathname as string | null) ?? null,
+    voiceDurationMs:
+      row.voice_duration_ms === null || row.voice_duration_ms === undefined
+        ? null
+        : Number(row.voice_duration_ms),
     relationship: String(row.relationship ?? ""),
     relationshipOptions: Array.isArray(row.relationship_options) ? (row.relationship_options as string[]) : [],
     colors: Array.isArray(row.colors) ? (row.colors as FriendColor[]) : [],
@@ -222,6 +236,8 @@ export type FriendInput = {
   poemTitle?: unknown;
   poemPoet?: unknown;
   poemUrl?: unknown;
+  anthemUrl?: unknown;
+  review?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
   colors?: unknown;
@@ -229,6 +245,12 @@ export type FriendInput = {
   visible?: unknown;
   sortOrder?: unknown;
 };
+
+function cleanAnthemUrl(value: unknown) {
+  const raw = httpUrl(value);
+  if (!raw) return "";
+  return spotifyTrackId(raw) ? raw : "";
+}
 
 function normalise(input: FriendInput) {
   const nickname = text(input.nickname, 60);
@@ -255,6 +277,8 @@ function normalise(input: FriendInput) {
     poemTitle: text(input.poemTitle, 160),
     poemPoet: text(input.poemPoet, 80),
     poemUrl: httpUrl(input.poemUrl),
+    anthemUrl: cleanAnthemUrl(input.anthemUrl),
+    review: text(input.review, 4000),
     relationship,
     relationshipOptions: options,
     colors: colors(input.colors),
@@ -273,9 +297,11 @@ export async function createFriend(input: FriendInput) {
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
     INSERT INTO friends (id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown, made_of, care,
-      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, relationship, relationship_options, colors, pairs_with, visible, sort_order)
+      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, review,
+      relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.birthday}, ${f.collection}, ${f.metHow},
-      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl}, ${f.relationship},
+      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
+      ${f.anthemUrl}, ${f.review}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -294,6 +320,7 @@ export async function updateFriend(id: string, input: FriendInput) {
       made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
       favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
+      anthem_url = ${f.anthemUrl}, review = ${f.review},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       updated_at = NOW()
@@ -363,6 +390,32 @@ export async function setFriendImage(
   }
 }
 
+export async function setFriendVoice(
+  id: string,
+  voice: { url: string; pathname: string; durationMs: number | null } | null,
+) {
+  await ensureTables();
+  const sql = db();
+  const current = await getFriendById(id);
+  if (!current) throw new Error("Friend not found.");
+  const oldPath = current.voicePathname;
+  const duration =
+    voice && Number.isFinite(voice.durationMs) && (voice.durationMs as number) > 0
+      ? Math.round(voice.durationMs as number)
+      : null;
+  await sql`
+    UPDATE friends SET
+      voice_url = ${voice?.url ?? null},
+      voice_pathname = ${voice?.pathname ?? null},
+      voice_duration_ms = ${duration},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+  if (oldPath && oldPath !== voice?.pathname && process.env.BLOB_READ_WRITE_TOKEN) {
+    await del(oldPath).catch(() => undefined);
+  }
+}
+
 export async function setFriendVisible(id: string, visible: boolean) {
   await ensureTables();
   await db()`UPDATE friends SET visible = ${visible}, updated_at = NOW() WHERE id = ${id}`;
@@ -374,7 +427,7 @@ export async function deleteFriend(id: string) {
   if (!current) return;
   await db()`DELETE FROM friends WHERE id = ${id}`;
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    for (const path of [current.heroPathname, current.altPathname]) {
+    for (const path of [current.heroPathname, current.altPathname, current.voicePathname]) {
       if (path) await del(path).catch(() => undefined);
     }
   }

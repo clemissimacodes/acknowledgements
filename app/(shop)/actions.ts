@@ -8,6 +8,7 @@ import {
   deleteFriend,
   setFriendImage,
   setFriendVisible,
+  setFriendVoice,
   updateFriend,
   updateFriendRoster,
   type FriendInput,
@@ -45,6 +46,8 @@ function fromForm(form: FormData): FriendInput {
     poemTitle: get("poemTitle"),
     poemPoet: get("poemPoet"),
     poemUrl: get("poemUrl"),
+    anthemUrl: get("anthemUrl"),
+    review: get("review"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
     pairsWith: get("pairsWith"),
@@ -124,5 +127,28 @@ export async function clearFriendImageForm(form: FormData) {
   const id = String(form.get("id") ?? "");
   const which = form.get("which") === "alt" ? "alt" : "hero";
   await setFriendImage(id, which, null);
+  refresh();
+}
+
+export async function attachFriendVoice(input: {
+  id: string;
+  url: string;
+  pathname: string;
+  durationMs: number | null;
+}) {
+  await requireOwner();
+  if (!/^[a-f0-9-]{36}$/.test(input.id)) throw new Error("Bad id.");
+  if (!input.pathname.startsWith("friends-and-family/")) throw new Error("Bad path.");
+  await setFriendVoice(input.id, {
+    url: input.url,
+    pathname: input.pathname,
+    durationMs: input.durationMs,
+  });
+  refresh();
+}
+
+export async function clearFriendVoiceForm(form: FormData) {
+  await requireOwner();
+  await setFriendVoice(String(form.get("id") ?? ""), null);
   refresh();
 }

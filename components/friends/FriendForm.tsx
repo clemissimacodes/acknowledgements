@@ -129,6 +129,24 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
           Description <small>(optional)</small>
           <textarea name="description" rows={6} defaultValue={friend?.description ?? ""} />
         </label>
+        <label className="admin-ff-block">
+          Review <small>(from the founder — shows on their page)</small>
+          <textarea
+            name="review"
+            rows={6}
+            defaultValue={friend?.review ?? ""}
+            placeholder="A short review of this one. The kind of thing you’d write on a hangtag."
+          />
+        </label>
+        <label className="admin-ff-block">
+          Anthem <small>(Spotify track URL — plays softly when they open the page)</small>
+          <input
+            name="anthemUrl"
+            type="url"
+            defaultValue={friend?.anthemUrl ?? ""}
+            placeholder="https://open.spotify.com/track/…"
+          />
+        </label>
       </section>
 
       <section className="admin-ff-section" hidden={!show("poem")}>

@@ -7,6 +7,7 @@ import type { SaveStatus } from "@/components/admin/AutoSaveForm";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { FORM_TABS, FriendForm, type FormTab } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
+import { VoiceUploader } from "@/components/friends/VoiceUploader";
 import { FRIEND_ERAS, collectionLabel, eraLabel, formatBirthday, priceLabel, type Friend } from "@/lib/friend-types";
 
 /* What a finished listing needs, and which tab fixes it. Order = order of the dots in the list. */
@@ -21,6 +22,9 @@ const CHECKS = [
   { key: "memory", label: "Memory", tab: "words", test: (f: Friend) => Boolean(f.favoriteMemory) },
   { key: "poem", label: "Poem", tab: "poem", test: (f: Friend) => Boolean(f.poemUrl) },
   { key: "madeOf", label: "Made of", tab: "madeOf", test: (f: Friend) => f.madeOf.length >= 2 },
+  { key: "voice", label: "Voice note", tab: "photos", test: (f: Friend) => Boolean(f.voiceUrl) },
+  { key: "anthem", label: "Anthem", tab: "words", test: (f: Friend) => Boolean(f.anthemUrl) },
+  { key: "review", label: "Review", tab: "words", test: (f: Friend) => Boolean(f.review) },
 ] as const satisfies readonly { key: string; label: string; tab: FormTab; test: (f: Friend) => boolean }[];
 type CheckKey = (typeof CHECKS)[number]["key"];
 
@@ -326,6 +330,11 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
             label={friend.altUrl ? "Second image" : "Second image (none yet)"}
             hint="Auto-cropped to 4:5, centred. Shows on hover."
             currentUrl={friend.altUrl}
+          />
+          <VoiceUploader
+            id={friend.id}
+            currentUrl={friend.voiceUrl}
+            currentDurationMs={friend.voiceDurationMs}
           />
         </div>
         <FriendForm friend={friend} tab={tab} onStatus={setStatus} />

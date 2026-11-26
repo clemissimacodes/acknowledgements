@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductPage } from "@/components/friends/ProductPage";
-import { SHOP_NAME, priceLabel } from "@/lib/friend-types";
-import { getFriendBySlug } from "@/lib/friends";
+import { SHOP_NAME, pickAlsoLike, priceLabel } from "@/lib/friend-types";
+import { getFriendBySlug, listFriends } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
 
@@ -15,14 +15,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = friend.productName ? `${friend.nickname} — ${friend.productName}` : friend.nickname;
   return {
     title,
-    description: `${priceLabel(friend.birthday)}. One of one. ${(friend.favoriteTrait || friend.description).slice(0, 140)}`,
+    description: `${priceLabel(friend.birthday)}. One of one. ${(friend.favoriteTrait || friend.description || friend.review).slice(0, 140)}`,
     openGraph: friend.heroUrl ? { images: [{ url: friend.heroUrl }] } : undefined,
   };
 }
 
 export default async function Product({ params }: Props) {
   const { slug } = await params;
-  const friend = await getFriendBySlug(slug);
+  const [friend, all] = await Promise.all([getFriendBySlug(slug), listFriends()]);
   if (!friend) notFound();
-  return <ProductPage friend={friend} />;
+  const alsoLike = pickAlsoLike(friend, all, 4);
+  return <ProductPage friend={friend} alsoLike={alsoLike} />;
 }

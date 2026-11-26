@@ -2,7 +2,12 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
-import { FRIEND_IMAGE_MAX_BYTES, IMAGE_CONTENT_TYPES } from "@/lib/friend-types";
+import {
+  FRIEND_IMAGE_MAX_BYTES,
+  FRIEND_VOICE_MAX_BYTES,
+  IMAGE_CONTENT_TYPES,
+  VOICE_CONTENT_TYPES,
+} from "@/lib/friend-types";
 import { FRIEND_BLOB_PREFIX } from "@/lib/friends";
 
 export const runtime = "nodejs";
@@ -22,9 +27,10 @@ export async function POST(request: Request) {
         const user = await currentUser();
         if (!isAdminUser(user)) throw new Error("Not authorized.");
         if (!pathname.startsWith(FRIEND_BLOB_PREFIX)) throw new Error("Bad path.");
+        const isVoice = /\/voice\./i.test(pathname);
         return {
-          allowedContentTypes: IMAGE_CONTENT_TYPES,
-          maximumSizeInBytes: FRIEND_IMAGE_MAX_BYTES,
+          allowedContentTypes: isVoice ? VOICE_CONTENT_TYPES : IMAGE_CONTENT_TYPES,
+          maximumSizeInBytes: isVoice ? FRIEND_VOICE_MAX_BYTES : FRIEND_IMAGE_MAX_BYTES,
           addRandomSuffix: true,
         };
       },

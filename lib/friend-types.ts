@@ -35,6 +35,25 @@ export const MADE_OF = [
   "Nonsense", "Restraint", "Backbone", "Gentleness", "Drama", "Competitiveness", "Wonder",
   "Charm", "Brains", "Taste", "Volume", "Quiet", "Discipline", "Romance", "Skepticism",
   "Optimism", "Appetite", "Courage", "Goofiness", "Precision", "Depth", "Swagger", "Kindness",
+  "Grace", "Candor", "Devotion", "Resilience", "Mirth", "Poise", "Verve", "Gumption", "Pluck",
+  "Moxie", "Tact", "Empathy", "Levity", "Gravitas", "Conviction", "Humility", "Zeal", "Wit",
+  "Sincerity", "Compassion", "Integrity", "Fortitude", "Serenity", "Vitality", "Radiance",
+  "Resolve", "Imagination", "Ingenuity", "Attentiveness", "Thoughtfulness", "Reliability",
+  "Decency", "Nobility", "Loyalty to a fault", "Big-heartedness", "Open-mindedness", "Forgiveness",
+  "Hospitality", "Playfulness", "Exuberance", "Buoyancy", "Joie de vivre", "Good humor",
+  "Quick laughter", "Fearlessness", "Daring", "Boldness", "Tenacity", "Perseverance", "Diligence",
+  "Dedication", "Craftsmanship", "Cleverness", "Sharpness", "Insight", "Intuition", "Perceptiveness",
+  "Wisdom", "Good sense", "Level-headedness", "Composure", "Equanimity", "Patience of a saint",
+  "Encouragement", "Cheer", "Delight", "Enthusiasm", "Eagerness", "Hopefulness", "Faith",
+  "Trust", "Openness", "Vulnerability", "Softheartedness", "Affection", "Fondness", "Care",
+  "Nurture", "Protectiveness", "Fierce loyalty", "Solidarity", "Presence", "Attention", "Listening",
+  "Magnetism", "Charisma", "Sparkle", "Shine", "Glow", "Luster", "Elegance", "Refinement",
+  "Flair", "Panache", "Style", "Aplomb", "Confidence", "Self-possession", "Dignity", "Spine",
+  "Principle", "Fairness", "Justice", "Mercy", "Benevolence", "Goodwill", "Magnanimity",
+  "Selflessness", "Thoughtful gifts", "Good instincts", "Steady hands", "Quiet strength",
+  "Loud joy", "Endless curiosity", "Easy laughter", "Rare patience", "Warm welcome",
+  "Lightness", "Brightness", "Sweetness", "Zest", "Spark", "Fire", "Heart", "Soul", "Nerve of steel",
+  "Second chances", "Benefit of the doubt", "Showing up", "Remembering birthdays", "Staying power",
   /* Materials. The kind of thing a fabric label would say if it were about a person. */
   "Moonlight", "Honey", "Thunder", "Velvet", "Sea salt", "Cinnamon", "Starlight", "Wildflowers",
   "Birdsong", "Old gold", "Warm rain", "Embers", "Linen", "Driftwood", "Clover", "Marmalade",
@@ -123,6 +142,11 @@ export type Friend = {
   poemTitle: string; // a poem from elsewhere that reminds me of them
   poemPoet: string;
   poemUrl: string;
+  anthemUrl: string; // Spotify track URL — their friendship anthem
+  review: string; // founder review on the product page
+  voiceUrl: string | null;
+  voicePathname: string | null;
+  voiceDurationMs: number | null;
   relationship: string;
   relationshipOptions: string[];
   colors: FriendColor[];
@@ -232,4 +256,90 @@ export function slugifyFriend(value: string) {
       .replace(/^-+|-+$/g, "")
       .slice(0, 48) || "friend"
   );
+}
+
+/* Spotify track ID from open.spotify.com/track/… or spotify:track:… links. */
+export function spotifyTrackId(url: string): string | null {
+  const raw = url.trim();
+  if (!raw) return null;
+  const href = /spotify:track:([A-Za-z0-9]{22})/.exec(raw);
+  if (href) return href[1];
+  try {
+    const parsed = new URL(raw);
+    if (!/(^|\.)spotify\.com$/i.test(parsed.hostname)) return null;
+    const path = /\/track\/([A-Za-z0-9]{22})/.exec(parsed.pathname);
+    return path?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export const FRIEND_VOICE_MAX_BYTES = 20 * 1024 * 1024;
+export const VOICE_CONTENT_TYPES = [
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/m4a",
+  "audio/x-m4a",
+  "audio/wav",
+  "audio/webm",
+  "audio/ogg",
+  "audio/aac",
+];
+
+/* FNV-1a style hash so the same slug always yields the same “also like” set. */
+function seedFrom(slug: string) {
+  let h = 2166136261;
+  for (let i = 0; i < slug.length; i += 1) {
+    h ^= slug.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed: number) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function birthdayMonth(birthday: string) {
+  if (!isBirthday(birthday)) return null;
+  return Number(birthday.slice(0, 2));
+}
+
+/* High-entropy related products: prefer different era, relationship, met-how,
+   little madeOf overlap, distant birthday month. Stable for a given slug. */
+export function pickAlsoLike(current: Friend, pool: Friend[], count = 4): Friend[] {
+  const others = pool.filter((f) => f.id !== current.id && f.visible);
+  if (!others.length) return [];
+  const currentMonth = birthdayMonth(current.birthday);
+  const currentMade = new Set(current.madeOf.map((m) => m.toLowerCase()));
+  const scored = others.map((f) => {
+    let score = 0;
+    if (f.era !== current.era) score += 5;
+    if (f.relationship && current.relationship && f.relationship !== current.relationship) score += 3;
+    if (f.metHow && current.metHow && f.metHow !== current.metHow) score += 2;
+    const overlap = f.madeOf.filter((m) => currentMade.has(m.toLowerCase())).length;
+    score += Math.max(0, 3 - overlap);
+    const month = birthdayMonth(f.birthday);
+    if (currentMonth !== null && month !== null) {
+      const dist = Math.min(Math.abs(month - currentMonth), 12 - Math.abs(month - currentMonth));
+      score += dist >= 4 ? 2 : dist >= 2 ? 1 : 0;
+    } else {
+      score += 1;
+    }
+    return { f, score };
+  });
+  scored.sort((a, b) => b.score - a.score || a.f.slug.localeCompare(b.f.slug));
+  const top = scored.slice(0, Math.min(scored.length, Math.max(count * 3, count)));
+  const rand = mulberry32(seedFrom(current.slug));
+  for (let i = top.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [top[i], top[j]] = [top[j], top[i]];
+  }
+  return top.slice(0, count).map((row) => row.f);
 }
