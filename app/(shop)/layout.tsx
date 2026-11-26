@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
-import { Albert_Sans, Caveat, Courier_Prime, Instrument_Serif } from "next/font/google";
+import { Albert_Sans, Ballet, Bodoni_Moda, Caveat, Courier_Prime, EB_Garamond, Instrument_Serif } from "next/font/google";
 import { BagProvider } from "@/components/friends/bag";
 import { BagDrawer, ChatPill, ShopFooter, ShopHeader } from "@/components/friends/ShopChrome";
 import { SHOP_LIVE, SHOP_NAME } from "@/lib/friend-types";
@@ -29,6 +29,28 @@ const scrawl = Caveat({
   variable: "--ff-scrawl",
 });
 
+const script = Ballet({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--ff-script",
+});
+
+const didone = Bodoni_Moda({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--ff-didone",
+});
+
+const garamond = EB_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--ff-garamond",
+});
+
 const receipt = Courier_Prime({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -52,7 +74,9 @@ export const viewport: Viewport = {
 export default async function ShopLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   if (!(await canSeeShop())) notFound();
   return (
-    <div className={`ff ${grotesk.variable} ${editorial.variable} ${scrawl.variable} ${receipt.variable}`}>
+    <div
+      className={`ff ${grotesk.variable} ${editorial.variable} ${scrawl.variable} ${receipt.variable} ${script.variable} ${didone.variable} ${garamond.variable}`}
+    >
       <BagProvider>
         <ShopHeader />
         {children}

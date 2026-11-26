@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FRIEND_ERAS, SALE_NAME, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
+import { DIARY_PATH, FRIEND_ERAS, SALE_NAME, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
 import { sumPrices, useBag } from "./bag";
 
 const MARQUEE = `${SALE_NAME} ♡ 0% off everything ♡ Buy one, get nothing ♡ Prices only go up ♡ Nothing ships ♡ Doorbusters unavailable, we don't have a door`;
@@ -31,7 +31,7 @@ export function ShopHeader() {
 
   return (
     <header className="ff-header">
-      <Link href="/pages/about-the-sale" className="ff-marquee" aria-label="About the sale">
+      <Link href={DIARY_PATH} className="ff-marquee" aria-label="About the sale">
         <span className="ff-marquee-track" aria-hidden="true">
           <span>{MARQUEE} →</span>
           <span>{MARQUEE} →</span>
@@ -75,10 +75,7 @@ export function ShopHeader() {
             </ul>
           </li>
           <li>
-            <Link href="/pages/about-the-sale">The Premise</Link>
-          </li>
-          <li>
-            <Link href="/pages/apply">Apply</Link>
+            <Link href={DIARY_PATH}>Studio Diary</Link>
           </li>
         </ul>
 
@@ -251,8 +248,7 @@ export function ShopFooter() {
         </div>
         <div>
           <p className="ff-footer-head">Customer Care</p>
-          <Link href="/pages/about-the-sale">The Premise</Link>
-          <Link href="/pages/apply">Apply to Be Listed</Link>
+          <Link href={DIARY_PATH}>Studio Diary</Link>
           <Link href="/ask">Chat With Us</Link>
           <Link href="/admin">Staff Only</Link>
         </div>
@@ -272,7 +268,7 @@ export function ShopFooter() {
 
 export function ChatPill() {
   return (
-    <Link href="/pages/about-the-sale" className="ff-chat">
+    <Link href={DIARY_PATH} className="ff-chat">
       <span className="ff-chat-dot" aria-hidden="true">
         ?
       </span>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  DIARY_PATH,
   FRIEND_BADGES,
   SHOP_HANDLE,
   formatMetOn,
@@ -264,7 +265,7 @@ export function ProductPage({ friend }: Props) {
                   <p>
                     Good Company is a Black Friday sale where every product is a real person in my life. The
                     price is the date we met. It has never been discounted and never will be.{" "}
-                    <Link href="/pages/about-the-sale">The whole premise.</Link>
+                    <Link href={DIARY_PATH}>Read the studio diary.</Link>
                   </p>
                 </details>
               </dd>
