@@ -36,7 +36,9 @@ export function ProductPage({ friend }: Props) {
   return (
     <main className="ff-product">
       <p className="ff-crumbs">
-        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link> › {friend.nickname}
+        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
+        <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
+        <em>{friend.nickname}</em>
       </p>
 
       <div className="ff-product-grid">
@@ -182,9 +184,6 @@ export function ProductPage({ friend }: Props) {
                       );
                     })}
                   </div>
-                  {friend.relationship ? (
-                    <p className="ff-size-note">Only “{friend.relationship}” is in stock. Other fits sold out.</p>
-                  ) : null}
                 </dd>
               </div>
             ) : null}
@@ -224,26 +223,48 @@ export function ProductPage({ friend }: Props) {
                 </p>
               </dd>
             </div>
-          </dl>
 
-          <button
-            type="button"
-            className="ff-pill ff-pill-dark ff-add"
-            onClick={() =>
-              inBag
-                ? bag.setOpen(true)
-                : bag.add({
-                    slug: friend.slug,
-                    nickname: friend.nickname,
-                    productName: friend.productName,
-                    price,
-                    heroUrl: friend.heroUrl,
-                  })
-            }
-          >
-            {inBag ? "In your bag — view" : "Add to cart"}
-          </button>
-          <p className="ff-ship">Ships never. Available for pickup in person, with notice.</p>
+            <div className="ff-buy-cta">
+              <dt aria-hidden="true" />
+              <dd>
+                <button
+                  type="button"
+                  className="ff-pill ff-pill-dark ff-add"
+                  onClick={() =>
+                    inBag
+                      ? bag.setOpen(true)
+                      : bag.add({
+                          slug: friend.slug,
+                          nickname: friend.nickname,
+                          productName: friend.productName,
+                          price,
+                          heroUrl: friend.heroUrl,
+                        })
+                  }
+                >
+                  {inBag ? "In your bag — view" : "Add to cart"}
+                </button>
+              </dd>
+            </div>
+
+            <div>
+              <dt>Details</dt>
+              <dd>
+                <details className="ff-acc">
+                  <summary>Size &amp; Fit</summary>
+                  <p>
+                    {friend.relationship
+                      ? `Comes in one size: ${friend.relationship}. Other fits sold out.`
+                      : "Comes in one size. True to life."}
+                  </p>
+                </details>
+                <details className="ff-acc">
+                  <summary>Shipping &amp; Returns</summary>
+                  <p>Ships never. Available for pickup in person, with notice. No returns, no exchanges, no restocks.</p>
+                </details>
+              </dd>
+            </div>
+          </dl>
         </section>
       </div>
 

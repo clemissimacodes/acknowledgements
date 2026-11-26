@@ -341,14 +341,23 @@ html.ff-locked {
 
 .ff-crumbs {
   margin: 0;
-  padding: 18px 24px 0;
-  font-family: var(--serif);
-  font-size: 13px;
-  font-style: italic;
+  padding: 36px 50px 0;
+  font-size: 12px;
+  line-height: 20px;
 }
 
 .ff-crumbs a:hover {
   text-decoration: underline;
+}
+
+.ff-crumb-sep {
+  margin: 0 10px;
+}
+
+.ff-crumbs em {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-style: italic;
 }
 
 /* ---- Grid ---------------------------------------------------------- */
@@ -454,9 +463,24 @@ html.ff-locked {
 
 .ff-product-grid {
   display: grid;
-  grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.5fr) minmax(280px, 1fr);
-  gap: 48px;
-  padding: 28px 48px 60px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  align-items: start;
+  padding: 50px 50px 90px;
+}
+
+.ff-specs,
+.ff-buy {
+  position: sticky;
+  top: 100px;
+}
+
+.ff-specs {
+  padding-right: 50px;
+}
+
+.ff-buy {
+  padding-left: 60px;
 }
 
 .ff-specs dl,
@@ -467,23 +491,26 @@ html.ff-locked {
 .ff-specs dl > div,
 .ff-buy-rows > div {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
-  gap: 0 16px;
-  margin-bottom: 20px;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 0 26px;
+  margin-bottom: 16px;
 }
 
 .ff-specs dt,
 .ff-buy-rows dt {
-  padding-top: 3px;
+  padding-top: 2px;
+  font-size: 10px;
   font-weight: 500;
-  font-size: 9px;
+  letter-spacing: 0;
+  line-height: 16px;
+  text-align: right;
 }
 
 .ff-specs dd,
 .ff-buy-rows dd {
   margin: 0;
-  font-size: 11px;
-  line-height: 1.55;
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .ff-specs dd span {
@@ -491,11 +518,13 @@ html.ff-locked {
 }
 
 .ff-alt {
-  margin: 36px 0 0;
+  margin: 4px 0 0;
 }
 
 .ff-alt img {
   width: 100%;
+  aspect-ratio: 390 / 656;
+  object-fit: cover;
   background: var(--paper-2);
 }
 
@@ -507,7 +536,7 @@ html.ff-locked {
 
 .ff-hero img {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   object-position: center bottom;
 }
@@ -515,7 +544,7 @@ html.ff-locked {
 .ff-hero .ff-card-blank {
   position: relative;
   display: block;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 2 / 3;
 }
 
 .ff-title {
@@ -524,12 +553,12 @@ html.ff-locked {
   font-size: 30px;
   font-style: italic;
   font-weight: 400;
-  line-height: 1.05;
+  line-height: 1.3;
 }
 
 .ff-subtitle {
-  margin: 4px 0 0;
-  font-size: 11px;
+  margin: 2px 0 0;
+  font-size: 12px;
 }
 
 .ff-sku {
@@ -541,7 +570,11 @@ html.ff-locked {
 }
 
 .ff-desc p {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
+}
+
+.ff-desc p:last-child {
+  margin-bottom: 0;
 }
 
 .ff-note {
@@ -552,35 +585,40 @@ html.ff-locked {
 .ff-sizes {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+  padding-top: 3px;
 }
 
-.ff-size {
-  padding: 5px 9px;
+.ff .ff-size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 31px;
+  height: 31px;
+  padding: 0 10px;
   border: 1px solid var(--ink);
-  border-radius: 3px;
+  border-radius: 0;
   background: none;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .ff-size[aria-checked="true"] {
   box-shadow: inset 0 0 0 1px var(--ink);
 }
 
-.ff-size-out {
+.ff .ff-size-out {
   color: var(--ink-2);
   border-color: var(--rule);
   text-decoration: line-through;
   cursor: not-allowed;
 }
 
-.ff-size-note {
-  margin: 8px 0 0;
-  color: var(--ink-2);
-  font-size: 10px;
-}
-
-.ff-color-name {
-  margin: 0 0 6px;
+.ff .ff-color-name {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0;
 }
 
 .ff-swatches {
@@ -612,19 +650,21 @@ html.ff-locked {
 }
 
 .ff-price {
-  display: flex;
-  gap: 6px;
+  display: inline-flex;
+  gap: 8px;
   align-items: baseline;
   margin: 0;
+  padding: 0 4px 3px 0;
+  border-bottom: 1px solid var(--ink);
 }
 
 .ff-price-sign {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .ff-price-scrawl {
   font-family: var(--scrawl);
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 600;
   line-height: 1;
   transform: rotate(-4deg);
@@ -632,14 +672,14 @@ html.ff-locked {
 }
 
 .ff-price-cur {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.04em;
 }
 
 .ff-price-fine {
-  margin: 6px 0 0;
-  color: var(--ink-2);
-  font-size: 9px;
+  margin: 8px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .ff-pill {
@@ -663,16 +703,53 @@ html.ff-locked {
   opacity: 0.5;
 }
 
-.ff-add {
-  width: 100%;
-  margin-top: 8px;
+.ff-buy-cta {
+  margin-top: 4px;
 }
 
-.ff-ship {
-  margin: 10px 0 0;
-  color: var(--ink-2);
-  font-size: 9px;
-  text-align: center;
+.ff .ff-add {
+  width: 100%;
+  height: 47px;
+  letter-spacing: 0.036em;
+}
+
+.ff-acc {
+  margin: 0 0 6px;
+}
+
+.ff-acc summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.ff-acc summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-acc summary::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-top: -3px;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  transform: rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.ff-acc[open] summary::after {
+  transform: rotate(-135deg);
+  margin-top: 2px;
+}
+
+.ff-acc p {
+  margin: 6px 0 10px;
 }
 
 .ff-pairs {
@@ -1097,6 +1174,16 @@ html.ff-locked {
 
 /* ---- Mobile -------------------------------------------------------- */
 
+@media (max-width: 1200px) {
+  .ff-specs {
+    padding-right: 16px;
+  }
+
+  .ff-buy {
+    padding-left: 20px;
+  }
+}
+
 @media (max-width: 900px) {
   .ff-product-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1107,6 +1194,12 @@ html.ff-locked {
   .ff-hero {
     order: -1;
     margin: 0 -20px;
+  }
+
+  .ff-specs,
+  .ff-buy {
+    position: static;
+    padding: 0;
   }
 
   .ff-specs {
@@ -1222,7 +1315,7 @@ html.ff-locked {
   }
 
   .ff-crumbs {
-    padding: 14px 14px 0;
+    padding: 18px 20px 0;
   }
 
   .ff-title {
@@ -1255,8 +1348,8 @@ html.ff-locked {
   margin-bottom: 4px;
   font-family: var(--serif);
   font-style: italic;
-  font-size: 20px;
-  line-height: 1.1;
+  font-size: 17px;
+  line-height: 1.2;
   text-decoration: none;
 }
 
@@ -1273,7 +1366,7 @@ html.ff-locked {
 .ff-poem-line {
   margin: 0;
   font-family: var(--serif);
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--ink-2);
 }
