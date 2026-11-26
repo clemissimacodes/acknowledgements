@@ -316,7 +316,7 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
             id={friend.id}
             which="hero"
             label={friend.heroUrl ? "Hero" : "Hero (none yet)"}
-            hint="Cutout on cream, about 2:3. Drop, paste, or click."
+            hint="Auto-cropped to 4:5, anchored at the feet. Cutouts keep their transparency."
             currentUrl={friend.heroUrl}
             pasteTarget
           />
@@ -324,7 +324,7 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
             id={friend.id}
             which="alt"
             label={friend.altUrl ? "Second image" : "Second image (none yet)"}
-            hint="Object or candid; shows on hover"
+            hint="Auto-cropped to 4:5, centred. Shows on hover."
             currentUrl={friend.altUrl}
           />
         </div>

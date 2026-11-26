@@ -4,6 +4,7 @@ import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { attachFriendImage, clearFriendImageForm } from "@/app/(shop)/actions";
+import { cropToSlot } from "@/lib/crop-image";
 import { FRIEND_IMAGE_MAX_BYTES, IMAGE_ACCEPT, IMAGE_CONTENT_TYPES, isHeicFile } from "@/lib/friend-types";
 
 /* Live Photos arrive as HEIC. Decode in the browser and store a JPEG. */
@@ -28,7 +29,7 @@ type Props = {
 export function ImageUploader({ id, which, label, hint, currentUrl, pasteTarget }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState<false | "converting" | "uploading">(false);
+  const [busy, setBusy] = useState<false | "converting" | "cropping" | "uploading">(false);
   const [over, setOver] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
@@ -52,13 +53,22 @@ export function ImageUploader({ id, which, label, hint, currentUrl, pasteTarget 
       setBusy(false);
       return;
     }
+    /* Crop to the shop's frame (4:5) right here, so Blob only ever holds what the site shows. */
+    setBusy("cropping");
+    setError("");
+    try {
+      file = await cropToSlot(file, which);
+    } catch {
+      setError("Couldn't read that image. Try a PNG or JPEG.");
+      setBusy(false);
+      return;
+    }
     if (file.size > FRIEND_IMAGE_MAX_BYTES) {
-      setError("That image is over 12 MB.");
+      setError("That image is over 12 MB even after cropping.");
       setBusy(false);
       return;
     }
     setBusy("uploading");
-    setError("");
     const local = URL.createObjectURL(file);
     setPreview(local);
     try {
@@ -131,7 +141,7 @@ export function ImageUploader({ id, which, label, hint, currentUrl, pasteTarget 
       >
         {shown ? <img src={shown} alt="" /> : <span className="admin-drop-empty">Drop image</span>}
         <span className="admin-drop-label">
-          <strong>{busy === "converting" ? "Converting…" : busy ? "Uploading…" : label}</strong>
+          <strong>{busy === "converting" ? "Converting…" : busy === "cropping" ? "Cropping to 4:5…" : busy ? "Uploading…" : label}</strong>
           {hint ? <small>{hint}</small> : null}
           <small>{shown ? "Drop, click or paste to replace" : "Drop, click or paste"}</small>
         </span>

@@ -523,7 +523,7 @@ html.ff-locked {
 
 .ff-alt img {
   width: 100%;
-  aspect-ratio: 390 / 656;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   background: var(--paper-2);
 }
@@ -536,7 +536,7 @@ html.ff-locked {
 
 .ff-hero img {
   width: 100%;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: center bottom;
 }
@@ -544,7 +544,7 @@ html.ff-locked {
 .ff-hero .ff-card-blank {
   position: relative;
   display: block;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 4 / 5;
 }
 
 .ff-title {

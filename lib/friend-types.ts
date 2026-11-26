@@ -152,6 +152,16 @@ export type Receipt = {
 };
 
 export const FRIEND_IMAGE_MAX_BYTES = 12 * 1024 * 1024;
+
+/* Every frame on the public site is 4:5 (grid card, product page, bag drawer).
+   Uploads are cropped to this in the browser before they reach Blob, so what
+   you see in the control room is exactly what the shop will show.
+   Hero cutouts anchor to the bottom (feet stay in); candids anchor to the centre. */
+export const IMAGE_SLOTS = {
+  hero: { width: 1200, height: 1500, anchor: "bottom" },
+  alt: { width: 1200, height: 1500, anchor: "center" },
+} as const satisfies Record<string, { width: number; height: number; anchor: "bottom" | "center" }>;
+export type ImageSlot = keyof typeof IMAGE_SLOTS;
 /* What Blob is allowed to store. HEIC is accepted at the drop zone and converted to JPEG first. */
 export const IMAGE_CONTENT_TYPES = ["image/png", "image/jpeg", "image/webp", "image/avif"];
 export const HEIC_CONTENT_TYPES = ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"];

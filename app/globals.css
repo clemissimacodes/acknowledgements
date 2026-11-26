@@ -7175,7 +7175,7 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   place-items: center;
   width: 100%;
   max-width: 240px;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   border: 1.5px dashed rgba(0, 0, 0, 0.25);
   border-radius: 0.5rem;
