@@ -109,6 +109,7 @@ function ensureTables() {
       `;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS favorite_memory TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS favorite_trait TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT ''`;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
           id TEXT PRIMARY KEY,
@@ -145,6 +146,7 @@ function toFriend(row: Row): Friend {
     description: String(row.description ?? ""),
     favoriteMemory: String(row.favorite_memory ?? ""),
     favoriteTrait: String(row.favorite_trait ?? ""),
+    notes: String(row.notes ?? ""),
     relationship: String(row.relationship ?? ""),
     relationshipOptions: Array.isArray(row.relationship_options) ? (row.relationship_options as string[]) : [],
     colors: Array.isArray(row.colors) ? (row.colors as FriendColor[]) : [],
@@ -197,6 +199,7 @@ export type FriendInput = {
   description?: unknown;
   favoriteMemory?: unknown;
   favoriteTrait?: unknown;
+  notes?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
   colors?: unknown;
@@ -227,6 +230,7 @@ function normalise(input: FriendInput) {
     description: text(input.description, 1600),
     favoriteMemory: text(input.favoriteMemory, 1600),
     favoriteTrait: text(input.favoriteTrait, 600),
+    notes: text(input.notes, 1200),
     relationship,
     relationshipOptions: options,
     colors: colors(input.colors),
@@ -245,9 +249,9 @@ export async function createFriend(input: FriendInput) {
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
     INSERT INTO friends (id, slug, nickname, product_name, era, badge, met_on, met_how, hometown, made_of, care,
-      description, favorite_memory, favorite_trait, relationship, relationship_options, colors, pairs_with, visible, sort_order)
+      description, favorite_memory, favorite_trait, notes, relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.metOn}, ${f.metHow},
-      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.relationship},
+      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -264,7 +268,7 @@ export async function updateFriend(id: string, input: FriendInput) {
     UPDATE friends SET slug = ${f.slug}, nickname = ${f.nickname}, product_name = ${f.productName}, era = ${f.era},
       badge = ${f.badge}, met_on = ${f.metOn}, met_how = ${f.metHow}, hometown = ${f.hometown},
       made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
-      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait},
+      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       sort_order = ${f.sortOrder}, updated_at = NOW()

@@ -107,6 +107,7 @@ export default async function FriendsControlPage() {
                 <th>Relationship</th>
                 <th>Hero</th>
                 <th>Visible</th>
+                <th>Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -136,6 +137,7 @@ export default async function FriendsControlPage() {
                   <td>
                     <input type="checkbox" name={`visible-${f.id}`} defaultChecked={f.visible} />
                   </td>
+                  <td className="admin-roster-notes">{f.notes}</td>
                 </tr>
               ))}
             </tbody>

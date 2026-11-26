@@ -6758,3 +6758,10 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
 .admin-roster-form {
   overflow-x: auto;
 }
+
+.admin-roster-notes {
+  max-width: 26rem;
+  font-size: 0.74rem;
+  line-height: 1.3;
+  color: rgba(22, 20, 18, 0.65);
+}

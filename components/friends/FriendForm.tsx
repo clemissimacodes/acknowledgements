@@ -85,6 +85,10 @@ export function FriendForm({ friend }: Props) {
         <textarea name="favoriteMemory" rows={5} defaultValue={friend?.favoriteMemory ?? ""} />
       </label>
       <label className="admin-friend-wide">
+        Backroom notes <small>(never shown in the shop)</small>
+        <textarea name="notes" rows={3} defaultValue={friend?.notes ?? ""} />
+      </label>
+      <label className="admin-friend-wide">
         Made of <small>(optional, one per line)</small>
         <textarea name="madeOf" rows={3} defaultValue={friend?.madeOf.join("\n") ?? ""} placeholder={"100% loyalty\nTrace amounts of chaos"} />
       </label>

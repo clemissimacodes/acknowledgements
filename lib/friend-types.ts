@@ -45,6 +45,7 @@ export type Friend = {
   description: string;
   favoriteMemory: string;
   favoriteTrait: string;
+  notes: string; // backroom only
   relationship: string;
   relationshipOptions: string[];
   colors: FriendColor[];
