@@ -318,18 +318,23 @@ export async function updateFriendRoster(
 ) {
   await ensureTables();
   const sql = db();
-  const birthday = isBirthday(input.birthday) ? input.birthday : "";
+  /* undefined = the field was not on the form; keep what is saved. */
+  const keep = (value: unknown) => value === undefined || value === null;
+  const birthday = keep(input.birthday) ? null : isBirthday(input.birthday) ? input.birthday : "";
   const era = isFriendEra(input.era) ? input.era : null;
-  const collection = isCollection(input.collection) ? input.collection : "";
+  const collection = keep(input.collection) ? null : isCollection(input.collection) ? input.collection : "";
+  const poemTitle = keep(input.poemTitle) ? null : text(input.poemTitle, 160);
+  const poemPoet = keep(input.poemPoet) ? null : text(input.poemPoet, 80);
+  const poemUrl = keep(input.poemUrl) ? null : httpUrl(input.poemUrl);
   const relationship = text(input.relationship, 40);
   const visible = input.visible === true || input.visible === "on" || input.visible === "true";
   await sql`
     UPDATE friends SET
-      poem_title = ${text(input.poemTitle, 160)},
-      poem_poet = ${text(input.poemPoet, 80)},
-      poem_url = ${httpUrl(input.poemUrl)},
-      birthday = ${birthday},
-      collection = ${collection},
+      poem_title = COALESCE(${poemTitle}, poem_title),
+      poem_poet = COALESCE(${poemPoet}, poem_poet),
+      poem_url = COALESCE(${poemUrl}, poem_url),
+      birthday = COALESCE(${birthday}, birthday),
+      collection = COALESCE(${collection}, collection),
       era = COALESCE(${era}, era),
       relationship = CASE WHEN ${relationship} = '' THEN relationship ELSE ${relationship} END,
       visible = ${visible},

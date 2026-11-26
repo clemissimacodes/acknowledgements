@@ -54,8 +54,10 @@ function fromForm(form: FormData): FriendInput {
   };
 }
 
-/* Two selects (month, day) -> "MM-DD"; "" when either is blank. */
+/* Two selects (month, day) -> "MM-DD"; "" when either is blank; undefined when the
+   form did not contain the field at all (a stale page must not wipe saved data). */
 function birthdayFrom(form: FormData, name: string) {
+  if (!form.has(`${name}-month`) && !form.has(`${name}-day`)) return undefined;
   const month = String(form.get(`${name}-month`) ?? "").padStart(2, "0");
   const day = String(form.get(`${name}-day`) ?? "").padStart(2, "0");
   return month === "00" || day === "00" ? "" : `${month}-${day}`;
@@ -71,9 +73,9 @@ export async function rosterUpdateForm(form: FormData) {
       era: form.get(`era-${id}`) ?? undefined,
       relationship: form.get(`relationship-${id}`) ?? undefined,
       visible: form.get(`visible-${id}`) ?? undefined,
-      poemTitle: form.get(`poemTitle-${id}`) ?? "",
-      poemPoet: form.get(`poemPoet-${id}`) ?? "",
-      poemUrl: form.get(`poemUrl-${id}`) ?? "",
+      poemTitle: form.get(`poemTitle-${id}`) ?? undefined,
+      poemPoet: form.get(`poemPoet-${id}`) ?? undefined,
+      poemUrl: form.get(`poemUrl-${id}`) ?? undefined,
     });
   }
   refresh();
