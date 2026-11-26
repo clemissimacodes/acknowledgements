@@ -180,7 +180,7 @@ export function BagDrawer() {
                     Remove
                   </button>
                 </div>
-                <p className="ff-drawer-price">$ {formatPrice(item.price)}</p>
+                <p className="ff-drawer-price">{item.price ? `$ ${formatPrice(item.price)}` : "P.O.R."}</p>
               </li>
             ))}
           </ul>
@@ -242,7 +242,7 @@ export function ShopFooter() {
         </div>
         <div>
           <p className="ff-footer-head">How it works</p>
-          <p>The price is the date we met, read as dollars. September 15 is $915.</p>
+          <p>Every price is a date, read as dollars. September 15 is $915. Which date is in the studio diary.</p>
           <p>Add people to your bag and check out. You get a receipt to share. No one is charged; nothing ships.</p>
           <p>Gift cards are not available. You cannot give someone a person.</p>
         </div>

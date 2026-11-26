@@ -1659,3 +1659,11 @@ html.ff-locked {
     font-size: 96px;
   }
 }
+
+/* Price upon request: the birthday is not filled in yet */
+.ff .ff-price-por {
+  font-family: var(--ff-serif);
+  font-style: italic;
+  font-size: 18px;
+  border-bottom: 0;
+}

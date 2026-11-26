@@ -7,7 +7,6 @@ import {
   FRIEND_BADGES,
   SHOP_HANDLE,
   collectionLabel,
-  formatMetOn,
   friendPrice,
   formatPrice,
   RELATIONSHIPS,
@@ -21,7 +20,7 @@ export function ProductPage({ friend }: Props) {
   const bag = useBag();
   const [pick, setPick] = useState(friend.relationship);
   const [swatch, setSwatch] = useState(0);
-  const price = friendPrice(friend.metOn);
+  const price = friendPrice(friend.birthday);
   const inBag = bag.has(friend.slug);
   const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
     ? [friend.relationship, ...RELATIONSHIPS]
@@ -202,15 +201,16 @@ export function ProductPage({ friend }: Props) {
             <div>
               <dt>Price</dt>
               <dd>
-                <p className="ff-price">
-                  <span className="ff-price-sign">$</span>
-                  <span className="ff-price-scrawl">{formatPrice(price)}</span>
-                  <span className="ff-price-cur">USD</span>
-                </p>
-                <p className="ff-price-fine">
-                  Every price here is the date we met, read as dollars: {formatMetOn(friend.metOn).replace(/,\s*\d{4}$/, "")} is $
-                  {formatPrice(price)}. Price history: unchanged since {friend.metOn.slice(0, 4)}. Has never been on sale.
-                </p>
+                {price ? (
+                  <p className="ff-price">
+                    <span className="ff-price-sign">$</span>
+                    <span className="ff-price-scrawl">{formatPrice(price)}</span>
+                    <span className="ff-price-cur">USD</span>
+                  </p>
+                ) : (
+                  <p className="ff-price ff-price-por">Price upon request</p>
+                )}
+                <p className="ff-price-fine">Has never been on sale. Never will be.</p>
               </dd>
             </div>
 
@@ -267,7 +267,7 @@ export function ProductPage({ friend }: Props) {
                   <summary>Why there is a price</summary>
                   <p>
                     Good Company is a Black Friday sale where every product is a real person in my life. The
-                    price is the date we met. It has never been discounted and never will be.{" "}
+                    price is a date, read as dollars. Which date is the kind of thing you know if you know them.{" "}
                     <Link href={DIARY_PATH}>Read the studio diary.</Link>
                   </p>
                 </details>

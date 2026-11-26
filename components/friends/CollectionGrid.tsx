@@ -8,8 +8,7 @@ import {
   RELATIONSHIPS,
   SHOP_HANDLE,
   collectionOrder,
-  friendPrice,
-  formatPrice,
+  priceLabel,
   type Friend,
 } from "@/lib/friend-types";
 
@@ -222,7 +221,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
                 </span>
                 <span className="ff-card-text">
                   <span className="ff-card-name">{f.nickname}</span>
-                  <span className="ff-card-price">$ {formatPrice(friendPrice(f.metOn))} USD</span>
+                  <span className="ff-card-price">{priceLabel(f.birthday)}</span>
                 </span>
               </Link>
             </li>

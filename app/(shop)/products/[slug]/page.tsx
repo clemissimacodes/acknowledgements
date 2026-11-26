@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductPage } from "@/components/friends/ProductPage";
-import { SHOP_NAME, formatPrice, friendPrice } from "@/lib/friend-types";
+import { SHOP_NAME, priceLabel } from "@/lib/friend-types";
 import { getFriendBySlug } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = friend.productName ? `${friend.nickname} — ${friend.productName}` : friend.nickname;
   return {
     title,
-    description: `$ ${formatPrice(friendPrice(friend.metOn))} USD. One of one. ${(friend.favoriteTrait || friend.description).slice(0, 140)}`,
+    description: `${priceLabel(friend.birthday)}. One of one. ${(friend.favoriteTrait || friend.description).slice(0, 140)}`,
     openGraph: friend.heroUrl ? { images: [{ url: friend.heroUrl }] } : undefined,
   };
 }

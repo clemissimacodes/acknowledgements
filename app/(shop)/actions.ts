@@ -32,7 +32,7 @@ function fromForm(form: FormData): FriendInput {
     productName: get("productName"),
     era: get("era"),
     badge: get("badge"),
-    metOn: get("metOn"),
+    birthday: birthdayFrom(form, "birthday"),
     collection: get("collection"),
     metHow: get("metHow"),
     hometown: get("hometown"),
@@ -54,12 +54,19 @@ function fromForm(form: FormData): FriendInput {
   };
 }
 
+/* Two selects (month, day) -> "MM-DD"; "" when either is blank. */
+function birthdayFrom(form: FormData, name: string) {
+  const month = String(form.get(`${name}-month`) ?? "").padStart(2, "0");
+  const day = String(form.get(`${name}-day`) ?? "").padStart(2, "0");
+  return month === "00" || day === "00" ? "" : `${month}-${day}`;
+}
+
 export async function rosterUpdateForm(form: FormData) {
   await requireOwner();
   const ids = form.getAll("ids").map(String);
   for (const id of ids) {
     await updateFriendRoster(id, {
-      metOn: form.get(`metOn-${id}`) ?? undefined,
+      birthday: birthdayFrom(form, `birthday-${id}`),
       collection: form.get(`collection-${id}`) ?? undefined,
       era: form.get(`era-${id}`) ?? undefined,
       relationship: form.get(`relationship-${id}`) ?? undefined,

@@ -65,13 +65,6 @@ export function collectionOrder(value: string) {
   return c ? c.year * 10 + c.season : Number.POSITIVE_INFINITY;
 }
 
-/* Rough season for a YYYY-MM-DD, used once to backfill from exact dates. */
-export function collectionFromDate(date: string) {
-  const [y, m] = date.split("-").map(Number);
-  if (!y || !m) return "";
-  const season = m <= 2 || m === 12 ? "winter" : m <= 5 ? "spring" : m <= 8 ? "summer" : "fall";
-  return `${season}-${y}`;
-}
 
 export type FriendColor = { name: string; hex: string };
 
@@ -82,7 +75,7 @@ export type Friend = {
   productName: string;
   era: FriendEra;
   badge: FriendBadge;
-  metOn: string; // YYYY-MM-DD (exact date when known; still sets the price)
+  birthday: string; // "MM-DD"; the price
   collection: string; // "fall-2024" | "2024" | ""
   metHow: string;
   hometown: string;
@@ -138,10 +131,25 @@ export function eraLabel(handle: string) {
   return FRIEND_ERAS.find((era) => era.handle === handle)?.label ?? handle;
 }
 
-/* The price is the date we met, in hundreds: Sep 15 -> $ 915, Dec 24 -> $ 1,224 */
-export function friendPrice(metOn: string) {
-  const [, month, day] = metOn.split("-").map(Number);
-  if (!month || !day) return "0";
+export const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+] as const;
+
+export function isBirthday(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  const m = /^(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return false;
+  const month = Number(m[1]);
+  const day = Number(m[2]);
+  return month >= 1 && month <= 12 && day >= 1 && day <= 31;
+}
+
+/* The price is their birthday, in hundreds: Sep 15 -> $ 915, Dec 24 -> $ 1,224.
+   Empty when the birthday is not filled in yet. */
+export function friendPrice(birthday: string) {
+  if (!isBirthday(birthday)) return "";
+  const [month, day] = birthday.split("-").map(Number);
   return `${month}${String(day).padStart(2, "0")}`;
 }
 
@@ -149,39 +157,16 @@ export function formatPrice(value: number | string) {
   return Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
-export function formatMetOn(metOn: string) {
-  const [y, m, d] = metOn.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
-    timeZone: "UTC",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+/* "$ 915 USD", or the luxury-store shrug when the birthday is not filled in. */
+export function priceLabel(birthday: string) {
+  const price = friendPrice(birthday);
+  return price ? `$ ${formatPrice(price)} USD` : "Price upon request";
 }
 
-export function daysKnown(metOn: string, now = new Date()) {
-  const [y, m, d] = metOn.split("-").map(Number);
-  const start = Date.UTC(y, m - 1, d);
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.max(0, Math.round((today - start) / 86_400_000));
-}
-
-/* Days until the next anniversary of the day we met (0 = today). */
-export function daysToFriendiversary(metOn: string, now = new Date()) {
-  const [, m, d] = metOn.split("-").map(Number);
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  let next = Date.UTC(now.getUTCFullYear(), m - 1, d);
-  if (next < today) next = Date.UTC(now.getUTCFullYear() + 1, m - 1, d);
-  return Math.round((next - today) / 86_400_000);
-}
-
-export function friendiversaryLabel(metOn: string) {
-  const [, m, d] = metOn.split("-").map(Number);
-  return new Date(Date.UTC(2000, m - 1, d)).toLocaleDateString("en-US", {
-    timeZone: "UTC",
-    month: "long",
-    day: "numeric",
-  });
+export function formatBirthday(birthday: string) {
+  if (!isBirthday(birthday)) return "";
+  const [m, d] = birthday.split("-").map(Number);
+  return `${MONTHS[m - 1]} ${d}`;
 }
 
 export function slugifyFriend(value: string) {

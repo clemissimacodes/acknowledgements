@@ -1,4 +1,5 @@
 import { createFriendForm, updateFriendForm } from "@/app/(shop)/actions";
+import { BirthdaySelect } from "@/components/friends/BirthdaySelect";
 import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import {
   FRIEND_BADGES,
@@ -34,8 +35,8 @@ export function FriendForm({ friend }: Props) {
         <CollectionSelect name="collection" defaultValue={friend?.collection ?? ""} />
       </label>
       <label>
-        Exact date <small>(only if you know it; currently sets the price)</small>
-        <input type="date" name="metOn" defaultValue={friend?.metOn ?? ""} required />
+        Birthday <small>(the price: Sep 15 → $915)</small>
+        <BirthdaySelect name="birthday" defaultValue={friend?.birthday ?? ""} />
       </label>
       <label>
         Era

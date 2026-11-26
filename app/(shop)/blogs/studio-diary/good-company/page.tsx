@@ -23,7 +23,7 @@ const QA: QA[] = [
   },
   {
     q: "Why are the prices so strange?",
-    a: "The price is the date we met, read as dollars. September 15 is $915. December 24 is $1,224. It isn\u2019t a valuation and it isn\u2019t negotiable. It is the one number about a friendship that never changes, which makes it the only honest price tag I could think of.",
+    a: "The price is their birthday, read as dollars. September 15 is $915. December 24 is $1,224. It isn\u2019t a valuation and it isn\u2019t negotiable. It is the one number about a person that never changes, which makes it the only honest price tag I could think of. It is also, if you are on here, a reminder that I know when it is.",
   },
   {
     q: "What happens when I check out?",

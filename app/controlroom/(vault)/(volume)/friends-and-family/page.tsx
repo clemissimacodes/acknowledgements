@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { clearFriendImageForm, deleteFriendForm, rosterUpdateForm, toggleVisibleForm } from "@/app/(shop)/actions";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
+import { BirthdaySelect } from "@/components/friends/BirthdaySelect";
 import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import { FriendForm } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
-import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
+import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, priceLabel, type Friend } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ function FriendCard({ friend }: { friend: Friend }) {
         </span>
         <strong>{friend.nickname}</strong>
         <span className="admin-muted">
-          $ {friendPrice(friend.metOn)} · {eraLabel(friend.era)} · {friend.visible ? "visible" : "hidden"}
+          {priceLabel(friend.birthday)} · {eraLabel(friend.era)} · {friend.visible ? "visible" : "hidden"}
           {" · "}
           <Link href={`/products/${friend.slug}`}>page</Link>
         </span>
@@ -87,7 +88,7 @@ export default async function FriendsControlPage() {
           <Link href={`/collections/${SHOP_HANDLE}`}>Open the shop</Link>
         </div>
         <p className="admin-muted">
-          {friends.length} listed · {visible} visible. Price is the date you met (Sep 15 → $915). Hero images should be
+          {friends.length} listed · {visible} visible. Price is their birthday (Sep 15 → $915). Hero images should be
           cutouts on transparent or cream backgrounds, roughly 4:5.
         </p>
       </section>
@@ -95,14 +96,15 @@ export default async function FriendsControlPage() {
       <section className="admin-section">
         <h2>Roster</h2>
         <p className="admin-muted">
-          Collection (the season you met), era, relationship, poem and visibility for everyone at once. Highlighted rows
-          still need a collection. Photos and the trait/memory copy live in each listing below.
+          Birthday (the price), collection (the season you met), era, relationship, poem and visibility for everyone at
+          once. Highlighted rows still need a birthday or a collection. Photos and the trait/memory copy live in each listing below.
         </p>
         <form action={rosterUpdateForm} className="admin-roster-form">
           <table className="admin-roster">
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Birthday</th>
                 <th>Collection</th>
                 <th>Era</th>
                 <th>Relationship</th>
@@ -114,11 +116,14 @@ export default async function FriendsControlPage() {
             </thead>
             <tbody>
               {friends.map((f) => (
-                <tr key={f.id} className={!f.collection ? "admin-roster-todo" : undefined}>
+                <tr key={f.id} className={!f.collection || !f.birthday ? "admin-roster-todo" : undefined}>
                   <td>
                     <input type="hidden" name="ids" value={f.id} />
                     <a href={`#${f.id}`}>{f.nickname}</a>
                     {f.productName ? <small> {f.productName}</small> : null}
+                  </td>
+                  <td>
+                    <BirthdaySelect name={`birthday-${f.id}`} defaultValue={f.birthday} />
                   </td>
                   <td>
                     <CollectionSelect name={`collection-${f.id}`} defaultValue={f.collection} />

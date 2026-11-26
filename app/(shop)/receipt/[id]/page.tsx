@@ -56,7 +56,7 @@ export default async function ReceiptPage({ params }: Props) {
                 1 × {item.nickname.toUpperCase()}
                 {item.productName ? <small>{item.productName}</small> : null}
               </span>
-              <span>{money(Number(item.price))}</span>
+              <span>{item.price ? money(Number(item.price)) : "P.O.R."}</span>
             </li>
           ))}
         </ul>
@@ -83,7 +83,7 @@ export default async function ReceiptPage({ params }: Props) {
         <p className="ff-receipt-rule">- - - - - - - - - - - - - - - -</p>
         <p className="ff-receipt-paid">AMOUNT CHARGED: 0.00</p>
         <p>YOU SAVED: 0.00 (NOTHING WAS FOR SALE)</p>
-        <p>EACH PRICE IS THE DATE WE MET.</p>
+        <p>EACH PRICE IS A DATE. YOU KNOW WHICH.</p>
         <p>*NOTHING SHIPS. THEY GO WHERE THEY LIKE.</p>
         <p>LOYALTY POINTS EARNED: ONE PER DAY, ONGOING</p>
         {receipt.note ? (

@@ -7,6 +7,7 @@ import {
   FRIEND_BADGES,
   MET_HOW,
   friendPrice,
+  isBirthday,
   isCollection,
   isFriendBadge,
   isFriendEra,
@@ -81,10 +82,6 @@ function colors(value: unknown): FriendColor[] {
     .slice(0, 4);
 }
 
-function dateOnly(value: unknown) {
-  const raw = String(value ?? "").trim().slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(raw) && !Number.isNaN(Date.parse(raw)) ? raw : null;
-}
 
 let ready: Promise<void> | null = null;
 function ensureTables() {
@@ -126,6 +123,8 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_poet TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_url TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS collection TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS birthday TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ALTER COLUMN met_on DROP NOT NULL`;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
           id TEXT PRIMARY KEY,
@@ -146,7 +145,6 @@ function ensureTables() {
 type Row = Record<string, unknown>;
 
 function toFriend(row: Row): Friend {
-  const metOn = row.met_on instanceof Date ? row.met_on.toISOString().slice(0, 10) : String(row.met_on).slice(0, 10);
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -154,7 +152,7 @@ function toFriend(row: Row): Friend {
     productName: String(row.product_name ?? ""),
     era: isFriendEra(row.era) ? row.era : "new-arrivals",
     badge: isFriendBadge(row.badge) ? row.badge : "none",
-    metOn,
+    birthday: isBirthday(row.birthday) ? row.birthday : "",
     collection: isCollection(row.collection) ? row.collection : "",
     metHow: String(row.met_how ?? ""),
     hometown: String(row.hometown ?? ""),
@@ -185,8 +183,8 @@ export async function listFriends({ all = false } = {}): Promise<Friend[]> {
   await ensureTables();
   const sql = db();
   const rows = all
-    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, met_on ASC, created_at ASC`
-    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, met_on ASC, created_at ASC`;
+    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, created_at ASC`
+    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, created_at ASC`;
   return (rows as Row[]).map(toFriend);
 }
 
@@ -211,7 +209,7 @@ export type FriendInput = {
   productName?: unknown;
   era?: unknown;
   badge?: unknown;
-  metOn?: unknown;
+  birthday?: unknown;
   collection?: unknown;
   metHow?: unknown;
   hometown?: unknown;
@@ -235,8 +233,6 @@ export type FriendInput = {
 function normalise(input: FriendInput) {
   const nickname = text(input.nickname, 60);
   if (!nickname) throw new Error("A nickname is required.");
-  const metOn = dateOnly(input.metOn);
-  if (!metOn) throw new Error("The date we met is required (YYYY-MM-DD).");
   const relationship = text(input.relationship, 40);
   const options = list(input.relationshipOptions, 6, 40);
   if (relationship && !options.includes(relationship)) options.unshift(relationship);
@@ -246,7 +242,7 @@ function normalise(input: FriendInput) {
     productName: text(input.productName, 80),
     era: isFriendEra(input.era) ? input.era : "new-arrivals",
     badge: isFriendBadge(input.badge) ? input.badge : "none",
-    metOn,
+    birthday: isBirthday(input.birthday) ? input.birthday : "",
     collection: isCollection(input.collection) ? input.collection : "",
     metHow: text(input.metHow, 60),
     hometown: text(input.hometown, 80),
@@ -276,9 +272,9 @@ export async function createFriend(input: FriendInput) {
   const taken = (await sql`SELECT 1 FROM friends WHERE slug = ${f.slug}`) as Row[];
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
-    INSERT INTO friends (id, slug, nickname, product_name, era, badge, met_on, collection, met_how, hometown, made_of, care,
+    INSERT INTO friends (id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown, made_of, care,
       description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, relationship, relationship_options, colors, pairs_with, visible, sort_order)
-    VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.metOn}, ${f.collection}, ${f.metHow},
+    VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.birthday}, ${f.collection}, ${f.metHow},
       ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
@@ -294,7 +290,7 @@ export async function updateFriend(id: string, input: FriendInput) {
   if (clash.length) throw new Error(`The slug "${f.slug}" is already taken.`);
   await sql`
     UPDATE friends SET slug = ${f.slug}, nickname = ${f.nickname}, product_name = ${f.productName}, era = ${f.era},
-      badge = ${f.badge}, met_on = ${f.metOn}, collection = ${f.collection}, met_how = ${f.metHow}, hometown = ${f.hometown},
+      badge = ${f.badge}, birthday = ${f.birthday}, collection = ${f.collection}, met_how = ${f.metHow}, hometown = ${f.hometown},
       made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
       favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
@@ -310,7 +306,7 @@ export async function updateFriend(id: string, input: FriendInput) {
 export async function updateFriendRoster(
   id: string,
   input: {
-    metOn?: unknown;
+    birthday?: unknown;
     collection?: unknown;
     era?: unknown;
     relationship?: unknown;
@@ -322,7 +318,7 @@ export async function updateFriendRoster(
 ) {
   await ensureTables();
   const sql = db();
-  const metOn = dateOnly(input.metOn);
+  const birthday = isBirthday(input.birthday) ? input.birthday : "";
   const era = isFriendEra(input.era) ? input.era : null;
   const collection = isCollection(input.collection) ? input.collection : "";
   const relationship = text(input.relationship, 40);
@@ -332,7 +328,7 @@ export async function updateFriendRoster(
       poem_title = ${text(input.poemTitle, 160)},
       poem_poet = ${text(input.poemPoet, 80)},
       poem_url = ${httpUrl(input.poemUrl)},
-      met_on = COALESCE(${metOn}::date, met_on),
+      birthday = ${birthday},
       collection = ${collection},
       era = COALESCE(${era}, era),
       relationship = CASE WHEN ${relationship} = '' THEN relationship ELSE ${relationship} END,
@@ -401,7 +397,7 @@ export async function createReceipt(slugs: string[], note: unknown, visitorHash:
       slug: f.slug,
       nickname: f.nickname,
       productName: f.productName,
-      price: friendPrice(f.metOn),
+      price: friendPrice(f.birthday),
       heroUrl: f.heroUrl,
     }));
   if (!items.length) throw new Error("Your bag is empty.");

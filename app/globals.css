@@ -6776,3 +6776,11 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   width: 100%;
   font-size: 12px;
 }
+
+.admin-birthday {
+  display: inline-flex;
+  gap: 4px;
+}
+.admin-birthday select:first-child {
+  min-width: 7.5em;
+}
