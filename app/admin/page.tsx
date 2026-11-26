@@ -49,6 +49,7 @@ const vaultPages = [
   { title: "Out Loud", href: "/controlroom/out-loud" },
   { title: "Ask Me Anything replies", href: "/controlroom/ask" },
   { title: "Voice Memos", href: "/controlroom/voice-memos" },
+  { title: "Friends & Family", href: "/controlroom/friends-and-family" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },
   { title: "Sunday Posties", href: "/controlroom/sunday-posties" },

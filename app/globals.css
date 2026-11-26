@@ -8179,3 +8179,112 @@ html:has(.voice-memos-page) .site-anchor {
     grid-row: auto;
   }
 }
+
+/* Friends & Family control room ------------------------------------- */
+
+.admin-friend-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem 0.9rem;
+  margin-top: 0.8rem;
+}
+
+.admin-friend-form label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.admin-friend-form label small {
+  color: rgba(22, 20, 18, 0.55);
+}
+
+.admin-friend-form input,
+.admin-friend-form select,
+.admin-friend-form textarea {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 0.35rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.admin-friend-form textarea {
+  resize: vertical;
+}
+
+.admin-friend-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-friend-check {
+  align-self: end;
+  display: flex !important;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-friend summary {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-friend summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-friend-thumb {
+  display: block;
+  width: 2.4rem;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background: #ece9e0;
+}
+
+.admin-friend-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-friend-images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 0.4rem;
+}
+
+.admin-friend-images img {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin: 0.3rem 0 0.5rem;
+  background: #ece9e0;
+}
+
+.admin-friend-upload {
+  display: inline-grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.admin-friend-upload input {
+  font-size: 0.8rem;
+}
+
+.admin-friend-upload em {
+  color: #a33;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .admin-friend-form,
+  .admin-friend-images {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
