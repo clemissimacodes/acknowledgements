@@ -27,6 +27,17 @@ export type FriendBadge = keyof typeof FRIEND_BADGES;
 
 export const MET_HOW = ["School", "Work", "Internet", "Mutuals", "Fate"] as const;
 
+/* "Made of": the composition label. Pick two or three per person. */
+export const MADE_OF = [
+  "Loyalty", "Warmth", "Mischief", "Dry wit", "Chaos", "Calm", "Curiosity", "Stubbornness",
+  "Generosity", "Nerve", "Patience", "Hustle", "Softness", "Grit", "Sunshine", "Deadpan",
+  "Earnestness", "Whimsy", "Steadiness", "Spontaneity", "Tenderness", "Ambition", "Honesty",
+  "Nonsense", "Restraint", "Backbone", "Gentleness", "Drama", "Competitiveness", "Wonder",
+  "Charm", "Brains", "Taste", "Volume", "Quiet", "Discipline", "Romance", "Skepticism",
+  "Optimism", "Appetite", "Courage", "Goofiness", "Precision", "Depth", "Swagger", "Kindness",
+] as const;
+export const MADE_OF_MAX = 3;
+
 /* The "sizes". One is in stock per friend, the rest read as sold out. */
 export const RELATIONSHIPS = ["Friend", "Family"] as const;
 
@@ -117,7 +128,15 @@ export type Receipt = {
 };
 
 export const FRIEND_IMAGE_MAX_BYTES = 12 * 1024 * 1024;
+/* What Blob is allowed to store. HEIC is accepted at the drop zone and converted to JPEG first. */
 export const IMAGE_CONTENT_TYPES = ["image/png", "image/jpeg", "image/webp", "image/avif"];
+export const HEIC_CONTENT_TYPES = ["image/heic", "image/heif", "image/heic-sequence", "image/heif-sequence"];
+export const IMAGE_ACCEPT = [...IMAGE_CONTENT_TYPES, ...HEIC_CONTENT_TYPES, ".heic", ".heif"].join(",");
+
+/* Browsers often leave `type` empty for HEIC, so the extension counts too. */
+export function isHeicFile(file: File) {
+  return HEIC_CONTENT_TYPES.includes(file.type) || /\.hei[cf]$/i.test(file.name);
+}
 
 export function isFriendEra(value: unknown): value is FriendEra {
   return FRIEND_ERAS.some((era) => era.handle === value);

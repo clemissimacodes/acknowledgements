@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { rosterUpdateForm } from "@/app/(shop)/actions";
 import { BirthdaySelect } from "@/components/friends/BirthdaySelect";
 import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import { FriendBrowser } from "@/components/friends/FriendBrowser";
 import { FriendForm } from "@/components/friends/FriendForm";
+import { RosterAutosave } from "@/components/friends/RosterAutosave";
 import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
 
@@ -45,7 +45,7 @@ export default async function FriendsControlPage() {
           Birthday (the price), collection (the season you met), era, relationship, poem and visibility for everyone at
           once. Highlighted rows still need a birthday or a collection. Photos and the trait/memory copy live in each listing below.
         </p>
-        <form action={rosterUpdateForm} className="admin-roster-form">
+        <RosterAutosave>
           <table className="admin-roster">
             <thead>
               <tr>
@@ -62,9 +62,8 @@ export default async function FriendsControlPage() {
             </thead>
             <tbody>
               {friends.map((f) => (
-                <tr key={f.id} className={!f.collection || !f.birthday ? "admin-roster-todo" : undefined}>
+                <tr key={f.id} data-id={f.id} data-name={f.nickname} className={!f.collection || !f.birthday ? "admin-roster-todo" : undefined}>
                   <td>
-                    <input type="hidden" name="ids" value={f.id} />
                     <a href={`#${f.id}`}>{f.nickname}</a>
                     {f.productName ? <small> {f.productName}</small> : null}
                   </td>
@@ -105,10 +104,7 @@ export default async function FriendsControlPage() {
               <option key={r} value={r} />
             ))}
           </datalist>
-          <div className="admin-roll-actions">
-            <button type="submit">Save roster</button>
-          </div>
-        </form>
+        </RosterAutosave>
       </section>
 
       <section className="admin-section">

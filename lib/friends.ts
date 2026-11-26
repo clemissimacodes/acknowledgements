@@ -296,7 +296,7 @@ export async function updateFriend(id: string, input: FriendInput) {
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
-      sort_order = ${f.sortOrder}, updated_at = NOW()
+      updated_at = NOW()
     WHERE id = ${id}
   `;
   return getFriendById(id);

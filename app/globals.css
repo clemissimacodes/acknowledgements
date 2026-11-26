@@ -7009,3 +7009,66 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
     max-height: 40vh;
   }
 }
+
+/* Autosave status + chips */
+.admin-autosave {
+  grid-column: 1 / -1;
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(22, 20, 18, 0.55);
+}
+.admin-autosave-saving { color: #8a6d1f; }
+.admin-autosave-dirty { color: rgba(22, 20, 18, 0.7); }
+.admin-autosave-saved { color: #2d7a4a; }
+.admin-autosave-error { color: #a33; }
+.admin-autosave-retry {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+}
+.admin-roster tr.is-saving td {
+  opacity: 0.6;
+}
+.admin-friend-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+.admin-friend-label small {
+  color: rgba(22, 20, 18, 0.55);
+}
+.admin-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
+}
+.admin-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.admin-chip.is-on {
+  background: #161412;
+  border-color: #161412;
+  color: #fff;
+}
+.admin-chip.is-off {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.admin-chips-count {
+  margin-left: 0.3rem;
+  font-size: 0.72rem;
+  color: rgba(22, 20, 18, 0.55);
+}

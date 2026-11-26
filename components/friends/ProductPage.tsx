@@ -19,7 +19,6 @@ type Props = { friend: Friend };
 export function ProductPage({ friend }: Props) {
   const bag = useBag();
   const [pick, setPick] = useState(friend.relationship);
-  const [swatch, setSwatch] = useState(0);
   const price = friendPrice(friend.birthday);
   const inBag = bag.has(friend.slug);
   const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
@@ -171,28 +170,6 @@ export function ProductPage({ friend }: Props) {
                         </button>
                       );
                     })}
-                  </div>
-                </dd>
-              </div>
-            ) : null}
-
-            {friend.colors.length ? (
-              <div>
-                <dt>Color</dt>
-                <dd>
-                  <p className="ff-color-name">{friend.colors[swatch]?.name.toUpperCase()}</p>
-                  <div className="ff-swatches">
-                    {friend.colors.map((color, index) => (
-                      <button
-                        key={color.hex + index}
-                        type="button"
-                        className={`ff-swatch${swatch === index ? " ff-swatch-on" : ""}`}
-                        style={{ ["--swatch" as string]: color.hex }}
-                        aria-label={color.name}
-                        aria-pressed={swatch === index}
-                        onClick={() => setSwatch(index)}
-                      />
-                    ))}
                   </div>
                 </dd>
               </div>

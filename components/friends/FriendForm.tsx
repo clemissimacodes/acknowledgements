@@ -1,6 +1,8 @@
 import { createFriendForm, updateFriendForm } from "@/app/(shop)/actions";
+import { AutoSaveForm } from "@/components/admin/AutoSaveForm";
 import { BirthdaySelect } from "@/components/friends/BirthdaySelect";
 import { CollectionSelect } from "@/components/friends/CollectionSelect";
+import { MadeOfPicker } from "@/components/friends/MadeOfPicker";
 import {
   FRIEND_BADGES,
   FRIEND_ERAS,
@@ -13,10 +15,8 @@ import {
 type Props = { friend?: Friend };
 
 export function FriendForm({ friend }: Props) {
-  const colors = friend?.colors.map((c) => `${c.name}: ${c.hex}`).join("\n") ?? "";
-  return (
-    <form action={friend ? updateFriendForm : createFriendForm} className="admin-friend-form">
-      {friend ? <input type="hidden" name="id" value={friend.id} /> : null}
+  const fields = (
+    <>
 
       <label>
         Nickname
@@ -109,10 +109,12 @@ export function FriendForm({ friend }: Props) {
         Backroom notes <small>(never shown in the shop)</small>
         <textarea name="notes" rows={3} defaultValue={friend?.notes ?? ""} />
       </label>
-      <label className="admin-friend-wide">
-        Made of <small>(optional, one per line)</small>
-        <textarea name="madeOf" rows={3} defaultValue={friend?.madeOf.join("\n") ?? ""} placeholder={"100% loyalty\nTrace amounts of chaos"} />
-      </label>
+      <div className="admin-friend-wide admin-friend-field">
+        <span className="admin-friend-label">
+          Made of <small>(pick two or three)</small>
+        </span>
+        <MadeOfPicker selected={friend?.madeOf ?? []} />
+      </div>
       <label className="admin-friend-wide">
         Care instructions <small>(optional)</small>
         <textarea name="care" rows={3} defaultValue={friend?.care ?? ""} placeholder="Do not text before 10am. Feed regularly. Handle with jokes." />
@@ -121,20 +123,29 @@ export function FriendForm({ friend }: Props) {
         Description <small>(optional)</small>
         <textarea name="description" rows={6} defaultValue={friend?.description ?? ""} />
       </label>
-      <label>
-        Colors <small>(name: #hex, one per line)</small>
-        <textarea name="colors" rows={3} defaultValue={colors} placeholder={"Washed olive: #7f8a63\nCream: #f1ead8"} />
-      </label>
-      <label>
-        Sort order
-        <input type="number" name="sortOrder" defaultValue={friend?.sortOrder ?? 0} />
-      </label>
       <label className="admin-friend-check">
         <input type="checkbox" name="visible" defaultChecked={friend?.visible ?? false} /> Visible in the shop
       </label>
 
+    </>
+  );
+
+  if (friend) {
+    return (
+      <AutoSaveForm action={updateFriendForm} className="admin-friend-form">
+        <input type="hidden" name="id" value={friend.id} />
+        {fields}
+        <div className="admin-roll-actions admin-friend-wide">
+          <button type="submit">Save now</button>
+        </div>
+      </AutoSaveForm>
+    );
+  }
+  return (
+    <form action={createFriendForm} className="admin-friend-form">
+      {fields}
       <div className="admin-roll-actions admin-friend-wide">
-        <button type="submit">{friend ? "Save" : "Add friend"}</button>
+        <button type="submit">Add friend</button>
       </div>
     </form>
   );

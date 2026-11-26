@@ -4,7 +4,15 @@ import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { attachFriendImage, clearFriendImageForm } from "@/app/(shop)/actions";
-import { FRIEND_IMAGE_MAX_BYTES, IMAGE_CONTENT_TYPES } from "@/lib/friend-types";
+import { FRIEND_IMAGE_MAX_BYTES, IMAGE_ACCEPT, IMAGE_CONTENT_TYPES, isHeicFile } from "@/lib/friend-types";
+
+/* Live Photos arrive as HEIC. Decode in the browser and store a JPEG. */
+async function heicToJpeg(file: File): Promise<File> {
+  const { heicTo } = await import("heic-to");
+  const jpeg = await heicTo({ blob: file, type: "image/jpeg", quality: 0.9 });
+  const name = file.name.replace(/\.hei[cf]$/i, "") || "photo";
+  return new File([jpeg], `${name}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
+}
 
 type Props = {
   id: string;
@@ -20,22 +28,36 @@ type Props = {
 export function ImageUploader({ id, which, label, hint, currentUrl, pasteTarget }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<false | "converting" | "uploading">(false);
   const [over, setOver] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
 
-  const onFile = async (file: File | undefined | null) => {
-    if (!file) return;
+  const onFile = async (picked: File | undefined | null) => {
+    if (!picked) return;
+    let file = picked;
+    if (isHeicFile(picked)) {
+      setBusy("converting");
+      setError("");
+      try {
+        file = await heicToJpeg(picked);
+      } catch {
+        setError("Couldn't read that HEIC. Try exporting it as JPEG.");
+        setBusy(false);
+        return;
+      }
+    }
     if (!IMAGE_CONTENT_TYPES.includes(file.type)) {
-      setError("PNG, JPEG, WebP or AVIF only.");
+      setError("PNG, JPEG, WebP, AVIF or HEIC only.");
+      setBusy(false);
       return;
     }
     if (file.size > FRIEND_IMAGE_MAX_BYTES) {
       setError("That image is over 12 MB.");
+      setBusy(false);
       return;
     }
-    setBusy(true);
+    setBusy("uploading");
     setError("");
     const local = URL.createObjectURL(file);
     setPreview(local);
@@ -109,15 +131,15 @@ export function ImageUploader({ id, which, label, hint, currentUrl, pasteTarget 
       >
         {shown ? <img src={shown} alt="" /> : <span className="admin-drop-empty">Drop image</span>}
         <span className="admin-drop-label">
-          <strong>{busy ? "Uploading…" : label}</strong>
+          <strong>{busy === "converting" ? "Converting…" : busy ? "Uploading…" : label}</strong>
           {hint ? <small>{hint}</small> : null}
           <small>{shown ? "Drop, click or paste to replace" : "Drop, click or paste"}</small>
         </span>
         <input
           ref={inputRef}
           type="file"
-          accept={IMAGE_CONTENT_TYPES.join(",")}
-          disabled={busy}
+          accept={IMAGE_ACCEPT}
+          disabled={Boolean(busy)}
           hidden
           onChange={(event) => void onFile(event.target.files?.[0])}
         />

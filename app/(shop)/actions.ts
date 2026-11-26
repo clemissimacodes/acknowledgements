@@ -36,7 +36,7 @@ function fromForm(form: FormData): FriendInput {
     collection: get("collection"),
     metHow: get("metHow"),
     hometown: get("hometown"),
-    madeOf: get("madeOf"),
+    madeOf: form.getAll("madeOf").map(String),
     care: get("care"),
     description: get("description"),
     favoriteMemory: get("favoriteMemory"),
@@ -47,10 +47,8 @@ function fromForm(form: FormData): FriendInput {
     poemUrl: get("poemUrl"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
-    colors: get("colors"),
     pairsWith: get("pairsWith"),
     visible: get("visible"),
-    sortOrder: get("sortOrder"),
   };
 }
 
