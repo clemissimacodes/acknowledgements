@@ -5,6 +5,7 @@ import { FriendForm } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
 import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
+import { POEM_PICKS } from "@/lib/friend-poems";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,7 @@ export default async function FriendsControlPage() {
                 <th>Date met</th>
                 <th>Era</th>
                 <th>Relationship</th>
+                <th>Poem</th>
                 <th>Hero</th>
                 <th>Visible</th>
                 <th>Notes</th>
@@ -132,6 +134,16 @@ export default async function FriendsControlPage() {
                   </td>
                   <td>
                     <input name={`relationship-${f.id}`} list="ff-relationships-roster" defaultValue={f.relationship} />
+                  </td>
+                  <td>
+                    <select name={`poem-${f.id}`} defaultValue={f.poem}>
+                      <option value="">—</option>
+                      {POEM_PICKS.map((p) => (
+                        <option key={p.key} value={p.key}>
+                          {p.title}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td>{f.heroUrl ? "yes" : "—"}</td>
                   <td>

@@ -7,6 +7,7 @@ import {
   type Friend,
   type FriendBadge,
 } from "@/lib/friend-types";
+import { POEM_PICKS } from "@/lib/friend-poems";
 
 type Props = { friend?: Friend };
 
@@ -75,6 +76,17 @@ export function FriendForm({ friend }: Props) {
             <option key={r} value={r} />
           ))}
         </datalist>
+      </label>
+      <label>
+        Poem
+        <select name="poem" defaultValue={friend?.poem ?? ""}>
+          <option value="">—</option>
+          {POEM_PICKS.map((p) => (
+            <option key={p.key} value={p.key}>
+              {p.title}{p.author ? ` — ${p.author}` : ""}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="admin-friend-wide">
         Favorite trait

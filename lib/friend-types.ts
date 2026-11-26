@@ -46,6 +46,7 @@ export type Friend = {
   favoriteMemory: string;
   favoriteTrait: string;
   notes: string; // backroom only
+  poem: string; // poem key, see lib/friend-poems
   relationship: string;
   relationshipOptions: string[];
   colors: FriendColor[];

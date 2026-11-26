@@ -41,6 +41,7 @@ function fromForm(form: FormData): FriendInput {
     favoriteMemory: get("favoriteMemory"),
     favoriteTrait: get("favoriteTrait"),
     notes: get("notes"),
+    poem: get("poem"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
     colors: get("colors"),
@@ -59,6 +60,7 @@ export async function rosterUpdateForm(form: FormData) {
       era: form.get(`era-${id}`) ?? undefined,
       relationship: form.get(`relationship-${id}`) ?? undefined,
       visible: form.get(`visible-${id}`) ?? undefined,
+      poem: form.get(`poem-${id}`) ?? undefined,
     });
   }
   refresh();
