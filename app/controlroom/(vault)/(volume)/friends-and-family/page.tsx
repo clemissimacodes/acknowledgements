@@ -19,31 +19,24 @@ export default async function FriendsControlPage() {
   const visible = friends.filter((f) => f.visible).length;
 
   return (
-    <main className="admin-page">
-      <section className="admin-section">
-        <div className="admin-section-heading">
+    <main className="admin-page admin-page-studio">
+      <section className="admin-section admin-section-studio">
+        <div className="admin-section-heading admin-studio-heading">
           <h2>Friends & Family</h2>
-          <Link href={`/collections/${SHOP_HANDLE}`}>Open the shop</Link>
-        </div>
-        <p className="admin-muted">
-          {friends.length} listed · {visible} visible. Price is their birthday (Sep 15 → $915). Hero images should be
-          cutouts on transparent or cream backgrounds, roughly 4:5.
-        </p>
-      </section>
-
-      <section className="admin-section">
-        <div className="admin-section-heading">
-          <h2>Listings</h2>
-          <span className="admin-muted">Drop or paste photos straight onto the frames.</span>
+          <span className="admin-muted">
+            {friends.length} listed · {visible} visible · everything saves on its own ·{" "}
+            <Link href={`/collections/${SHOP_HANDLE}`}>open the shop</Link>
+          </span>
         </div>
         {friends.length ? <FriendBrowser friends={friends} /> : <p className="admin-muted">No one yet.</p>}
       </section>
 
       <section className="admin-section">
-        <h2>Roster</h2>
+        <details className="admin-ask">
+          <summary>Everyone at once (table)</summary>
         <p className="admin-muted">
-          Birthday (the price), collection (the season you met), era, relationship, poem and visibility for everyone at
-          once. Highlighted rows still need a birthday or a collection. Photos and the trait/memory copy live in each listing below.
+          Birthday (the price), collection (the season you met), era, relationship, poem and visibility for everyone in
+          one scroll. Highlighted rows still need a birthday or a collection.
         </p>
         <RosterAutosave>
           <table className="admin-roster">
@@ -105,6 +98,7 @@ export default async function FriendsControlPage() {
             ))}
           </datalist>
         </RosterAutosave>
+        </details>
       </section>
 
       <section className="admin-section">
