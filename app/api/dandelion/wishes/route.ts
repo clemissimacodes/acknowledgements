@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   };
   const wish = cleanWish(String(payload.wish ?? ""));
   if (!wish) {
-    return NextResponse.json({ error: "Whisper a little more." }, { status: 400 });
+    return NextResponse.json({ error: "write a little more for your wish" }, { status: 400 });
   }
   const extras = cleanExtras({
     ...payload,

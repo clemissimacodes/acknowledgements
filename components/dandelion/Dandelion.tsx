@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Wish } from "@/lib/dandelion-types";
-import { WIND_MISS } from "@/lib/dandelion-types";
+import { DANDELION_WISH_MIN, WIND_MISS } from "@/lib/dandelion-types";
 
 type Seed = Wish & {
   x: number;
@@ -105,10 +105,14 @@ export function Dandelion() {
   async function blow() {
     if (busy || phase === "blowing") return;
     const wish = draft.trim();
-    if (wish.length < 2) {
+    if (wish.length < DANDELION_WISH_MIN) {
       setPhase("shiver");
       window.setTimeout(() => setPhase("still"), 420);
-      setError("");
+      setError(
+        wish.length < 2
+          ? ""
+          : `write a little more for your wish (${DANDELION_WISH_MIN - wish.length} more characters)`,
+      );
       return;
     }
     if (!gender || !age) {

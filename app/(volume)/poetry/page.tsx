@@ -11,7 +11,11 @@ export default function PoetryIndexPage() {
     <main className="photo-page poetry-index-page">
       <PhotoHeader current="poetry" />
       <h1 className="visually-hidden">Poetry</h1>
-      <p className="photo-lede">To read me is to know me. Read me with great care!</p>
+      <p className="photo-lede">
+        Select poems below are from years ago. I still write, but they are quite
+        personal so I will not be posting many. To read me is to know me. Read me
+        with great care!
+      </p>
       <HoverIndex
         labels={{
           a: { short: "P.", full: "Poem" },

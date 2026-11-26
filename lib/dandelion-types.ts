@@ -1,3 +1,6 @@
+/** Shorter wishes were mostly keyboard mashing. */
+export const DANDELION_WISH_MIN = 20;
+
 export const WIND_MISS =
   "the wind did not take your wish /: seems like ur dreams are out of reach my friend";
 

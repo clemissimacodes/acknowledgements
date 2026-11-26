@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { addNote } from "@/lib/recordings";
 import { visitorHash } from "@/lib/recording-visitor";
+import { viewerIsOwner } from "@/lib/recording-owner";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,10 @@ export async function POST(request: Request) {
       name: payload.name,
       body: payload.body,
       website: payload.website,
+      parentKind: payload.parentKind,
+      parentId: payload.parentId,
       visitorHash: await visitorHash({ create: true }),
+      byOwner: await viewerIsOwner(),
     });
     if (!note) return NextResponse.json({ note: null });
     revalidatePath("/voice-memos");

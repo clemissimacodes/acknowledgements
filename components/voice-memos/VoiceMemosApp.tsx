@@ -15,10 +15,13 @@ import {
   formatPlayhead,
   formatRecordingDate,
   formatRecordingTime,
+  isRecordingFolder,
   type Recording,
   type RecordingNote,
   type RecordingReply,
   type RecordingView,
+  type ResponseKind,
+  responseKey,
 } from "@/lib/recording-types";
 import {
   moveToTrash,
@@ -44,6 +47,7 @@ import {
   TrashIcon,
 } from "./Icons";
 import { ReplyRecorder } from "./ReplyRecorder";
+import { ResponseThread, type HeartResult } from "./ResponseThread";
 import { Overview, Waveform, type LoopRegion } from "./Waveforms";
 import styles from "./VoiceMemos.module.css";
 
@@ -52,6 +56,7 @@ type Props = {
   notes: RecordingNote[];
   replies: RecordingReply[];
   hearted: string[];
+  heartedResponses?: string[];
   initialSlug: string | null;
   isOwner: boolean;
 };
@@ -81,6 +86,7 @@ export function VoiceMemosApp({
   notes: initialNotes,
   replies: initialReplies,
   hearted: initialHearted,
+  heartedResponses: initialHeartedResponses = [],
   initialSlug,
   isOwner,
 }: Props) {
@@ -88,6 +94,9 @@ export function VoiceMemosApp({
   const [notes, setNotes] = useState(initialNotes);
   const [replies, setReplies] = useState(initialReplies);
   const [hearted, setHearted] = useState(() => new Set(initialHearted));
+  const [heartedResponses, setHeartedResponses] = useState(
+    () => new Set(initialHeartedResponses),
+  );
   const [view, setView] = useState<RecordingView>("all");
   const [pickingFolder, setPickingFolder] = useState(false);
   const [query, setQuery] = useState("");
@@ -125,9 +134,7 @@ export function VoiceMemosApp({
     const needle = query.trim().toLowerCase();
     return recordings.filter((item) => {
       if (view === "favorites" && !item.favorite) return false;
-      if ((view === "notes" || view === "singing") && item.folder !== view) {
-        return false;
-      }
+      if (isRecordingFolder(view) && item.folder !== view) return false;
       if (needle && !item.title.toLowerCase().includes(needle)) return false;
       return true;
     });
@@ -141,6 +148,7 @@ export function VoiceMemosApp({
       singing: recordings.filter((item) => item.folder === "singing").length,
       stories: recordings.filter((item) => item.folder === "stories").length,
       dreams: recordings.filter((item) => item.folder === "dreams").length,
+      poems: recordings.filter((item) => item.folder === "poems").length,
     }),
     [recordings],
   );
@@ -264,6 +272,49 @@ export function VoiceMemosApp({
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
   }, [playing, loop, skipSilence, silences]);
+
+  // A play counts once someone has actually listened to half the recording,
+  // so seeking past the middle doesn't count, and once per recording per visit.
+  const countedPlays = useRef(new Set<string>());
+  useEffect(() => {
+    const audio = audioRef.current;
+    const id = selected?.id;
+    if (!audio || !id || isOwner) return;
+    let listened = 0;
+    let last = audio.currentTime;
+    const onTime = () => {
+      const delta = audio.currentTime - last;
+      last = audio.currentTime;
+      if (audio.paused || delta <= 0 || delta > 2) return;
+      listened += delta;
+      const total = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : duration;
+      if (!total || listened < total / 2 || countedPlays.current.has(id)) return;
+      countedPlays.current.add(id);
+      void fetch("/api/voice-memos/plays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data: { plays?: number } | null) => {
+          if (typeof data?.plays !== "number") return;
+          const plays = data.plays;
+          setRecordings((current) =>
+            current.map((item) => (item.id === id ? { ...item, plays } : item)),
+          );
+        })
+        .catch(() => countedPlays.current.delete(id));
+    };
+    const onSeek = () => {
+      last = audio.currentTime;
+    };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("seeked", onSeek);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("seeked", onSeek);
+    };
+  }, [selected?.id, isOwner, duration]);
 
   // Decode on demand: waveform peaks when the row has none yet, silences when
   // Skip Silence is switched on.
@@ -553,14 +604,7 @@ export function VoiceMemosApp({
         setNoteError(data.error ?? "Try again.");
         return;
       }
-      if (data.note) {
-        setNotes((current) => [...current, data.note as RecordingNote]);
-        setRecordings((current) =>
-          current.map((item) =>
-            item.id === selected.id ? { ...item, noteCount: item.noteCount + 1 } : item,
-          ),
-        );
-      }
+      if (data.note) onNoteCreated(data.note);
       setNoteBody("");
       if (noteName.trim()) {
         window.localStorage.setItem("clemissima-note-name", noteName.trim());
@@ -583,14 +627,79 @@ export function VoiceMemosApp({
     );
   }
 
-  function deleteNoteLocal(id: string) {
-    setNotes((current) => current.filter((note) => note.id !== id));
-    startTransition(() => void removeNote(id).catch(() => flash("Could not delete")));
+  function onNoteCreated(note: RecordingNote) {
+    setNotes((current) => [...current, note]);
+    setRecordings((current) =>
+      current.map((item) =>
+        item.id === note.recordingId ? { ...item, noteCount: item.noteCount + 1 } : item,
+      ),
+    );
   }
 
-  function deleteReplyLocal(id: string) {
-    setReplies((current) => current.filter((reply) => reply.id !== id));
-    startTransition(() => void removeReply(id).catch(() => flash("Could not delete")));
+  /** Removes a response and everything nested under it, matching the server. */
+  function deleteResponseLocal(kind: ResponseKind, id: string) {
+    const doomed = new Set([responseKey(kind, id)]);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const item of [
+        ...notes.map((data) => ({ kind: "note" as const, data })),
+        ...replies.map((data) => ({ kind: "reply" as const, data })),
+      ]) {
+        const key = responseKey(item.kind, item.data.id);
+        const { parentKind, parentId } = item.data;
+        if (!doomed.has(key) && parentKind && parentId && doomed.has(responseKey(parentKind, parentId))) {
+          doomed.add(key);
+          grew = true;
+        }
+      }
+    }
+    const goneNotes = notes.filter((note) => doomed.has(responseKey("note", note.id)));
+    const goneReplies = replies.filter((reply) => doomed.has(responseKey("reply", reply.id)));
+    setNotes((current) => current.filter((note) => !doomed.has(responseKey("note", note.id))));
+    setReplies((current) => current.filter((reply) => !doomed.has(responseKey("reply", reply.id))));
+    setRecordings((current) =>
+      current.map((item) => ({
+        ...item,
+        noteCount: item.noteCount - goneNotes.filter((note) => note.recordingId === item.id).length,
+        replyCount:
+          item.replyCount - goneReplies.filter((reply) => reply.recordingId === item.id).length,
+      })),
+    );
+    startTransition(
+      () =>
+        void (kind === "note" ? removeNote(id) : removeReply(id)).catch(() =>
+          flash("Could not delete"),
+        ),
+    );
+  }
+
+  async function heartResponse(kind: ResponseKind, id: string) {
+    try {
+      const response = await fetch("/api/voice-memos/response-hearts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, id }),
+      });
+      if (!response.ok) return;
+      const result = (await response.json()) as HeartResult;
+      const apply = <T extends { id: string; hearts: number; ownerHearted: boolean }>(list: T[]) =>
+        list.map((item) =>
+          item.id === id ? { ...item, hearts: result.hearts, ownerHearted: result.ownerHearted } : item,
+        );
+      if (kind === "note") setNotes(apply);
+      else setReplies(apply);
+      if (!isOwner) {
+        setHeartedResponses((current) => {
+          const next = new Set(current);
+          if (result.hearted) next.add(responseKey(kind, id));
+          else next.delete(responseKey(kind, id));
+          return next;
+        });
+      }
+    } catch {
+      flash("Could not heart");
+    }
   }
 
   /* ---- render --------------------------------------------------------- */
@@ -633,7 +742,7 @@ export function VoiceMemosApp({
 
         {pickingFolder ? (
           <ul className={styles.folderList}>
-            {(["all", "favorites", "stories", "dreams", "notes", "singing"] as RecordingView[]).map(
+            {(["all", "favorites", "stories", "dreams", "poems", "notes", "singing"] as RecordingView[]).map(
               (item) => (
                 <li key={item}>
                   <button
@@ -852,6 +961,11 @@ export function VoiceMemosApp({
                   <span>{formatRecordingDate(selected.recordedAt)}</span>
                   <span>{formatRecordingTime(selected.recordedAt)}</span>
                   <span className={styles.headingFolder}>{FOLDER_LABELS[selected.folder]}</span>
+                  {isOwner ? (
+                    <span>
+                      {selected.plays} {selected.plays === 1 ? "play" : "plays"}
+                    </span>
+                  ) : null}
                 </p>
               </header>
 
@@ -925,7 +1039,7 @@ export function VoiceMemosApp({
                   <input
                     value={noteBody}
                     maxLength={500}
-                    placeholder="leave a note…"
+                    placeholder="leave a note"
                     aria-label="Leave a note"
                     className={styles.composeBody}
                     onChange={(event) => setNoteBody(event.target.value)}
@@ -943,7 +1057,7 @@ export function VoiceMemosApp({
                     className={styles.composePost}
                     disabled={noteBusy || noteBody.trim().length < 2}
                   >
-                    {noteBusy ? "…" : "Post"}
+                    {noteBusy ? "…" : "post"}
                   </button>
                 </form>
                 <ReplyRecorder
@@ -958,17 +1072,18 @@ export function VoiceMemosApp({
                     {noteError}
                   </p>
                 ) : null}
-                <button
-                  type="button"
-                  className={styles.composeCount}
-                  aria-expanded={panelOpen}
-                  onClick={() => setPanelOpen((value) => !value)}
-                >
-                  {selectedNotes.length + selectedReplies.length
-                    ? `${selectedNotes.length} note${selectedNotes.length === 1 ? "" : "s"} · ${selectedReplies.length} voice repl${selectedReplies.length === 1 ? "y" : "ies"}`
-                    : "no notes yet"}
-                  {panelOpen ? " — hide" : " — read"}
-                </button>
+                {selectedNotes.length + selectedReplies.length ? (
+                  <button
+                    type="button"
+                    className={styles.composeCount}
+                    aria-expanded={panelOpen}
+                    onClick={() => setPanelOpen((value) => !value)}
+                  >
+                    {panelOpen ? "hide replies" : "see replies"}
+                  </button>
+                ) : (
+                  <p className={styles.composeFirst}>be the first to reply!</p>
+                )}
               </div>
             </div>
 
@@ -989,60 +1104,19 @@ export function VoiceMemosApp({
                 </button>
               </header>
               <div className={styles.panelBody}>
-              <section className={styles.notes} aria-label="Notes">
-                <h3>
-                  Notes
-                  {selectedNotes.length ? <span>{selectedNotes.length}</span> : null}
-                </h3>
-                {selectedNotes.length ? (
-                  <ul className={styles.noteList}>
-                    {selectedNotes.map((note) => (
-                      <li key={note.id}>
-                        <p className={styles.noteMeta}>
-                          <strong>{note.name ?? "someone"}</strong>
-                          <span>{formatRecordingDate(note.createdAt)}</span>
-                          {isOwner ? (
-                            <button
-                              type="button"
-                              className={styles.remove}
-                              aria-label="Delete note"
-                              onClick={() => deleteNoteLocal(note.id)}
-                            >
-                              <CloseIcon size={11} />
-                            </button>
-                          ) : null}
-                        </p>
-                        <p className={styles.noteBody}>{note.body}</p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {!selectedNotes.length ? (
-                  <p className={styles.panelEmpty}>No notes yet — yours would be the first.</p>
-                ) : null}
-              </section>
-
-              <section className={styles.replies} aria-label="Voice replies">
-                <h3>
-                  Voice Replies
-                  {selectedReplies.length ? <span>{selectedReplies.length}</span> : null}
-                </h3>
-                {selectedReplies.length ? (
-                  <ul className={styles.replyList}>
-                    {selectedReplies.map((reply) => (
-                      <li key={reply.id}>
-                        <ReplyRow
-                          reply={reply}
-                          onDelete={isOwner ? () => deleteReplyLocal(reply.id) : undefined}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {!selectedReplies.length ? (
-                  <p className={styles.panelEmpty}>No voice replies yet.</p>
-                ) : null}
-              </section>
+              <ResponseThread
+                recordingId={selected.id}
+                notes={selectedNotes}
+                replies={selectedReplies}
+                isOwner={isOwner}
+                heartedKeys={heartedResponses}
+                name={noteName}
+                onNameChange={setNoteName}
+                onNoteCreated={onNoteCreated}
+                onReplyCreated={onReplyCreated}
+                onHeart={(kind, id) => void heartResponse(kind, id)}
+                onDelete={deleteResponseLocal}
+              />
               </div>
             </aside>
           </>
@@ -1057,70 +1131,6 @@ export function VoiceMemosApp({
         <div className={styles.toast} role="status">
           <CheckIcon /> {toast}
         </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ReplyRow({
-  reply,
-  onDelete,
-}: {
-  reply: RecordingReply;
-  onDelete?: () => void;
-}) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  function toggle() {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) void audio.play().catch(() => undefined);
-    else audio.pause();
-  }
-
-  return (
-    <div className={styles.reply}>
-      <audio
-        ref={audioRef}
-        src={reply.url}
-        preload="none"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => {
-          setPlaying(false);
-          setProgress(0);
-        }}
-        onTimeUpdate={(event) => {
-          const audio = event.currentTarget;
-          setProgress(audio.duration ? audio.currentTime / audio.duration : 0);
-        }}
-      />
-      <button
-        type="button"
-        className={styles.replyPlay}
-        aria-label={playing ? "Pause reply" : "Play reply"}
-        onClick={toggle}
-      >
-        {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
-      </button>
-      <span className={styles.replyBar} aria-hidden="true">
-        <span style={{ width: `${progress * 100}%` }} />
-      </span>
-      <span className={styles.replyMeta}>
-        <strong>{reply.name ?? "someone"}</strong>
-        <span>{formatClock(reply.durationMs)}</span>
-      </span>
-      {onDelete ? (
-        <button
-          type="button"
-          className={styles.remove}
-          aria-label="Delete reply"
-          onClick={onDelete}
-        >
-          <CloseIcon size={11} />
-        </button>
       ) : null}
     </div>
   );

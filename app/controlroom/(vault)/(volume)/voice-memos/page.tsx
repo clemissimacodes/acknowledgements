@@ -55,7 +55,7 @@ function RecordingCard({ item, trashed }: { item: Recording; trashed: boolean })
     <article className="admin-ask admin-recording" id={item.id}>
       <p className="admin-muted">
         {dateFormat.format(new Date(item.recordedAt))} · {formatClock(item.durationMs)} ·{" "}
-        {item.hearts} hearts · {item.noteCount} notes · {item.replyCount} replies
+        {item.plays} plays · {item.hearts} hearts · {item.noteCount} notes · {item.replyCount} replies
         {trashed ? null : (
           <>
             {" "}

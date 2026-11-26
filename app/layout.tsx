@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { EB_Garamond } from "next/font/google";
 import { PeelCursor } from "@/components/PeelCursor";
 import { SiteAnchor } from "@/components/SiteAnchor";
+import { SiteFooter } from "@/components/SiteFooter";
 import { VisitTracker } from "@/components/VisitTracker";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
@@ -50,6 +51,7 @@ export default function RootLayout({
           </header>
           <PeelCursor />
           {children}
+          <SiteFooter />
           <VisitTracker />
         </ClerkProvider>
       </body>

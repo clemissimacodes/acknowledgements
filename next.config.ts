@@ -1,6 +1,18 @@
+import { execSync } from "child_process";
 import type { NextConfig } from "next";
 
+function lastUpdated() {
+  try {
+    return execSync("git log -1 --format=%cI", { encoding: "utf8" }).trim();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
 const nextConfig: NextConfig = {
+  env: {
+    SITE_UPDATED_AT: lastUpdated(),
+  },
   async headers() {
     return [
       {
@@ -93,8 +105,6 @@ const nextConfig: NextConfig = {
       ...[
         "radar",
         "sunday-posties",
-        "out-loud",
-        "dont-try",
         "shop",
         "acknowledgements",
       ].flatMap((section) => [
@@ -112,8 +122,6 @@ const nextConfig: NextConfig = {
       // Anything under /secrets collapses to the challenge itself.
       { source: "/secrets/:path+", destination: "/secrets", permanent: false },
       { source: "/unlock", destination: "/secrets", permanent: false },
-      { source: "/cia", destination: "/secrets", permanent: true },
-      { source: "/cia/:path*", destination: "/secrets", permanent: true },
       {
         source: "/admin/:path*",
         destination: "/controlroom/:path*",

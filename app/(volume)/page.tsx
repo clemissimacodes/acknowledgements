@@ -1,166 +1,83 @@
 import Link from "next/link";
 import { Clemi } from "@/components/Clemi";
-import { MailLink } from "@/components/MailLink";
+import { RotatingWords } from "@/components/RotatingWords";
 
-const works = [
-  { title: "Teeny Tiny Things", href: "/teeny-tiny-things" },
-  {
-    title: "Modeling",
-    href: "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio",
-    external: true,
-  },
-  { title: "Poetry", href: "/poetry" },
-  { title: "Voice Memos", href: "/voice-memos" },
-  { title: "Ask Me Anything", href: "/ask" },
-  { title: "Blow on a Fat Dandelion", href: "/blow-on-a-fat-dandelion" },
-  { title: "Secrets", href: "/secrets" },
-];
+const friendThings = [
+  "wobble",
+  "blabber",
+  "go on very very very very very long walks",
+  "attempt healthy recipes",
+  "eat kbbq",
+  "dance to reggaeton",
+  "try martial arts",
+  "philosophize about love",
+  "be terrible and sad",
+  "hoop at the panhandle",
+  "scuttle around golden gate park",
+  "lift tiny weights at equinox",
+  "play pranks",
+  "watch san francisco’s clouds shapeshift",
+  "doodle strangers",
+  "ride the bart with no end destination in mind",
+  "study poetry",
+  "force myself to do yoga",
+] as const;
+
+const MODELING =
+  "https://www.lookmodelagency.com/divisions/new-faces/portfolios/clementine/portfolio";
+
+const updatedAt = new Date(process.env.SITE_UPDATED_AT ?? Date.now());
+
+function formatUpdated(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "America/Los_Angeles",
+  }).format(date);
+}
 
 export default function HomePage() {
   return (
     <main className="index">
       <h1 className="visually-hidden">Clementine Kay Shao</h1>
       <Clemi />
+      <time className="index-updated" dateTime={updatedAt.toISOString()}>
+        Updated {formatUpdated(updatedAt)}
+      </time>
       <p className="index-bio">
         I am a being of high happiness. Frank and Elaine hatched me into the
         world some time ago and I now frolic across the great greens of San
-        Francisco. I maintain my cardiovascular homeostasis from my eternal
-        pursuit of poetry, play, and friendship with the world.
+        Francisco and, when the wind is right, across{" "}
+        <Link href="/places">different countrysides around the planet</Link>. I
+        maintain my cardiovascular homeostasis from my eternal pursuit of{" "}
+        <Link href="/poetry">poetry</Link>,{" "}
+        <Link href="/teeny-tiny-things">play</Link>, and{" "}
+        <Link href="/ask">friendship with this wonderful world</Link>.
       </p>
-      <nav className="toc" aria-label="Contents">
-        <h2>Contents</h2>
-        <ol>
-          {works.map((work) => (
-            <li key={work.href}>
-              {work.external ? (
-                <a href={work.href} target="_blank" rel="noreferrer">
-                  {work.title}
-                </a>
-              ) : (
-                <Link href={work.href}>{work.title}</Link>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
-      <nav className="elsewhere" aria-label="Elsewhere">
-        <a
-          href="https://www.instagram.com/clemissima/"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Instagram"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <rect
-              x="3.4"
-              y="3.4"
-              width="17.2"
-              height="17.2"
-              rx="5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <circle
-              cx="12"
-              cy="12"
-              r="4.1"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <circle cx="17.15" cy="6.85" r="1.05" fill="currentColor" />
-          </svg>
+      <p className="index-bio">
+        I often think out loud and like to record{" "}
+        <Link href="/voice-memos">voice memos</Link> as a palimpsest of growth.
+        I also got randomly scouted to model this year, so I guess I do{" "}
+        <a href={MODELING} target="_blank" rel="noreferrer">
+          runways and brand shoots
         </a>
-        <a
-          href="https://x.com/clemissima"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Twitter"
-        >
-          <svg viewBox="0 0 24 24" width="17" height="18" aria-hidden="true">
-            <path
-              d="M4.2 4.2 10.9 12.3 4.4 19.8h3.2l5.2-6.1 5.3 6.1h3.1l-7-8.1 6.3-7.5h-3.2l-4.9 5.7L7.4 4.2H4.2z"
-              fill="currentColor"
-            />
-          </svg>
-        </a>
-        <a
-          href="https://open.spotify.com/user/au0r1e82mxbofd2on3lvztrkr?si=d00695766b5e4ed1"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Spotify"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <circle
-              cx="12"
-              cy="12"
-              r="9"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M7.2 9.2c3.7-1 7.4-.6 10.2.9M7.9 12.2c3-.8 6.2-.5 8.7.8M8.5 15.1c2.5-.6 5-.3 7 .6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.45"
-              strokeLinecap="round"
-            />
-          </svg>
-        </a>
-        <MailLink aria-label="Email Clementine">
-          <svg viewBox="0 0 24 24" width="19" height="18" aria-hidden="true">
-            <rect
-              x="3.2"
-              y="5.6"
-              width="17.6"
-              height="12.8"
-              rx="1.6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M4.4 7.2 12 13.1 19.6 7.2"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </MailLink>
-        <a
-          href="https://buymeacoffee.com/0xv2ILK6La"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Buy me a coffee"
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path
-              d="M4.6 8.4h11.2v6.2a4.2 4.2 0 0 1-4.2 4.2H8.8a4.2 4.2 0 0 1-4.2-4.2V8.4z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M15.8 10.2h1.6a2.3 2.3 0 0 1 0 4.6h-1.6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <path
-              d="M8.4 5.6c0-.9.8-1.1.8-1.9M11.6 5.6c0-.9.8-1.1.8-1.9"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
-          </svg>
-        </a>
-      </nav>
+        . I feel lucky to be living a dream of a life - it might have something
+        to do with my habit of{" "}
+        <Link href="/blow-on-a-fat-dandelion">
+          wishing on all the fat dandelions
+        </Link>{" "}
+        I come across. My secret to my life is{" "}
+        <Link href="/secrets">here</Link>.
+      </p>
+      <p className="index-bio">
+        You can message me{" "}
+        <a href="https://x.com/clemissima" target="_blank" rel="noreferrer">
+          @clemissima
+        </a>{" "}
+        everywhere - I’m always open to give advice or make new friends{" "}
+        <RotatingWords words={friendThings} prefix="to" suffix="with." />
+      </p>
     </main>
   );
 }

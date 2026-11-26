@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, randomUUID } from "crypto";
 import { neon } from "@neondatabase/serverless";
 
-// "Ask me anything": anonymous questions, thoughts and well wishes. No name,
+// "Leave a Note": anonymous questions, thoughts and well wishes. No name,
 // no email. Each one gets a page where the reply lives, and a small count of
 // how many times it has been opened.
 

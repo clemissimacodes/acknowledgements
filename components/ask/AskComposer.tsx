@@ -30,7 +30,7 @@ export function AskComposer({ maxLength }: { maxLength: number }) {
   return (
     <form ref={formRef} action={formAction} className="ask-composer">
       <label className="visually-hidden" htmlFor="ask-body">
-        Ask anything anonymously
+        Leave a note anonymously
       </label>
       <textarea
         id="ask-body"
@@ -40,7 +40,7 @@ export function AskComposer({ maxLength }: { maxLength: number }) {
         required
         minLength={2}
         maxLength={maxLength}
-        placeholder="ask anything anonymously"
+        placeholder="leave a note anonymously"
         disabled={pending}
         onInput={(event) => grow(event.currentTarget)}
         onKeyDown={(event) => {

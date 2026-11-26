@@ -18,31 +18,18 @@ type Section = "poetry" | "ask";
 
 const SECTIONS: Array<{ id: Section; href: string; label: string }> = [
   { id: "poetry", href: "/poetry", label: "Poetry" },
-  { id: "ask", href: "/ask", label: "Ask Me Anything" },
+  { id: "ask", href: "/ask", label: "Leave a Note" },
 ];
 
-// Section links, laid on the same four columns as the index so they sit
-// above the "P." column. The site anchor (top left) carries the name.
+// The section's name as the page's title, flush with the lede and index
+// below it. On a poem or note it leads back to the section.
 export function PhotoHeader({ current }: { current: Section }) {
+  const section = SECTIONS.find((item) => item.id === current) ?? SECTIONS[0];
   return (
-    <nav className="photo-header" aria-label="Sections">
-      <span className="photo-col-no" aria-hidden="true" />
-      <span className="photo-col-title" aria-hidden="true" />
-      <span className="photo-col-note">
-        {SECTIONS.map((section, index) => (
-          <span key={section.id}>
-            <Link
-              href={section.href}
-              className={section.id === current ? "is-current" : undefined}
-              aria-current={section.id === current ? "page" : undefined}
-            >
-              {section.label}
-              {index < SECTIONS.length - 1 ? "," : ""}
-            </Link>
-            {index < SECTIONS.length - 1 ? " " : ""}
-          </span>
-        ))}
-      </span>
+    <nav className="photo-header photo-section" aria-label="Section">
+      <Link href={section.href} className="is-current">
+        {section.label}
+      </Link>
     </nav>
   );
 }

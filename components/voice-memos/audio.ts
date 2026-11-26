@@ -1,12 +1,12 @@
 import { upload } from "@vercel/blob/client";
-import { extensionForAudio } from "@/components/out-loud/record";
+import { extensionForAudio } from "./record";
 import { PEAK_COUNT } from "@/lib/recording-types";
 
 export {
   fileFromRecording,
   pickRecorderMime,
   measureAudioDuration,
-} from "@/components/out-loud/record";
+} from "./record";
 
 export type Silence = { start: number; end: number };
 

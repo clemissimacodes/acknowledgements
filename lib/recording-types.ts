@@ -1,11 +1,12 @@
-export const RECORDING_FOLDERS = ["notes", "singing", "stories", "dreams"] as const;
+export const RECORDING_FOLDERS = ["notes", "singing", "stories", "dreams", "poems"] as const;
 export type RecordingFolder = (typeof RECORDING_FOLDERS)[number];
 
 export const FOLDER_LABELS: Record<RecordingFolder, string> = {
   notes: "Need to Remember This Stuff",
-  singing: "Part Clem, Part Hummingbird",
+  singing: "i’m half human half hummingbird",
   stories: "I’m So Rich",
   dreams: "My Dreams",
+  poems: "poems to memorize before i die so i can take them with me to my next life",
 };
 
 export type RecordingView = "all" | "favorites" | RecordingFolder;
@@ -17,6 +18,7 @@ export const VIEW_LABELS: Record<RecordingView, string> = {
   singing: FOLDER_LABELS.singing,
   stories: FOLDER_LABELS.stories,
   dreams: FOLDER_LABELS.dreams,
+  poems: FOLDER_LABELS.poems,
 };
 
 export const RECORDING_MAX_MS = 2 * 60 * 60_000;
@@ -37,26 +39,44 @@ export type Recording = {
   peaks: number[] | null;
   favorite: boolean;
   hearts: number;
+  /** Listens that reached at least half the recording. */
+  plays: number;
   noteCount: number;
   replyCount: number;
   deletedAt: string | null;
 };
 
-export type RecordingNote = {
+/** Notes are typed responses, replies are voice responses. Either can answer
+    the recording itself or another response. */
+export type ResponseKind = "note" | "reply";
+
+export function isResponseKind(value: unknown): value is ResponseKind {
+  return value === "note" || value === "reply";
+}
+
+export function responseKey(kind: ResponseKind, id: string) {
+  return `${kind}:${id}`;
+}
+
+type ResponseFields = {
   id: string;
   recordingId: string;
   name: string | null;
-  body: string;
   createdAt: string;
+  parentKind: ResponseKind | null;
+  parentId: string | null;
+  byOwner: boolean;
+  hearts: number;
+  ownerHearted: boolean;
 };
 
-export type RecordingReply = {
-  id: string;
-  recordingId: string;
-  name: string | null;
+export type RecordingNote = ResponseFields & {
+  body: string;
+};
+
+export type RecordingReply = ResponseFields & {
   durationMs: number;
   url: string;
-  createdAt: string;
 };
 
 export function isRecordingFolder(value: unknown): value is RecordingFolder {

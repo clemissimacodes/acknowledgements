@@ -3,29 +3,23 @@ import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
-import { OutLoudPublisher } from "@/components/admin/OutLoudPublisher";
+import { Notifications } from "@/components/admin/Notifications";
 import { ShortcutTokenManager } from "@/components/admin/ShortcutTokenManager";
 import { getAdminData, isAdminUser } from "@/lib/admin";
-import { CIA_PROJECTS, getCiaAdminEntries, type CiaStatus } from "@/lib/cia";
-import { formatVoiceDuration } from "@/lib/format";
+import { getNotifications } from "@/lib/notifications";
+import { visitorHash } from "@/lib/recording-visitor";
 import { getSecretsAttemptReport } from "@/lib/secrets-attempts";
 import { getTrackerAdminData } from "@/lib/tracker";
 import { getPendingAskCount } from "@/lib/ask";
-import { listAdminMemos } from "@/lib/voice-memos";
 import {
   changePlaceStatus,
   clearSecretsAttemptLog,
   emergencyGoDark,
-  moderateCiaRecord,
   removeAllVisits,
-  removeCiaRecord,
   removePlace,
   removeRadar,
   removeRecord,
-  removeVoiceMemo,
-  removeVoiceReply,
   revokeShortcutToken,
-  saveCiaRecord,
   savePlace,
   saveIntroductionRecord,
   savePostiesRecord,
@@ -44,45 +38,17 @@ function date(value: string) {
 }
 
 const vaultPages = [
-  { title: "Don’t Try", href: "/controlroom/dont-try" },
-  { title: "Don’t Try protocol", href: "/controlroom/dont-try/protocol" },
-  { title: "Out Loud", href: "/controlroom/out-loud" },
-  { title: "Ask Me Anything replies", href: "/controlroom/ask" },
+  { title: "Leave a Note replies", href: "/controlroom/ask" },
   { title: "Voice Memos", href: "/controlroom/voice-memos" },
   { title: "Friends & Family", href: "/controlroom/friends-and-family" },
+  { title: "Places", href: "/controlroom/places" },
   { title: "Clemi Radar", href: "/controlroom/radar" },
   { title: "Clemi Store", href: "/controlroom/shop" },
   { title: "Sunday Posties", href: "/controlroom/sunday-posties" },
   { title: "Acknowledgements", href: "/controlroom/acknowledgements" },
-  { title: "SaaS Inflation Index", href: "/controlroom/saas-inflation" },
-  { title: "Startup Graveyard", href: "/controlroom/startup-graveyard" },
-  { title: "Founder Apology Archive", href: "/controlroom/founder-apologies" },
-  { title: "Quality Control Bureau", href: "/controlroom/quality-control" },
 ] as const;
 
-const statusActions: Partial<Record<CiaStatus, Array<[CiaStatus, string]>>> = {
-  draft: [
-    ["approved", "Approve revision"],
-    ["rejected", "Reject"],
-  ],
-  approved: [
-    ["published", "Publish"],
-    ["rejected", "Reject"],
-  ],
-  published: [
-    ["corrected", "Mark corrected"],
-    ["withdrawn", "Withdraw"],
-  ],
-  rejected: [["draft", "Return to draft"]],
-  corrected: [["withdrawn", "Withdraw"]],
-  withdrawn: [["draft", "Reopen as draft"]],
-};
-
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ ciaProject?: string }>;
-}) {
+export default async function AdminPage() {
   const user = await currentUser();
 
   if (!user) {
@@ -103,25 +69,23 @@ export default async function AdminPage({
   const [
     data,
     tracker,
-    ciaEntries,
-    voiceMemos,
     breakIns,
     pendingAsks,
+    news,
   ] =
     await Promise.all([
       getAdminData(),
       getTrackerAdminData(),
-      getCiaAdminEntries(),
-      listAdminMemos().catch(() => []),
       getSecretsAttemptReport(),
       getPendingAskCount().catch(() => 0),
+      // Her own hearts are left out of the feed by her visitor cookie.
+      visitorHash()
+        .then(getNotifications)
+        .catch((error) => {
+          console.error("Notifications could not be loaded.", error);
+          return null;
+        }),
     ]);
-  const ciaProject = (await searchParams)?.ciaProject;
-  const visibleCiaEntries = CIA_PROJECTS.includes(
-    ciaProject as (typeof CIA_PROJECTS)[number],
-  )
-    ? ciaEntries.filter((entry) => entry.project === ciaProject)
-    : ciaEntries;
   const uniqueVisitors = new Set(
     data.visits.map((visit) => visit.ipHash).filter(Boolean),
   ).size;
@@ -135,6 +99,8 @@ export default async function AdminPage({
         </div>
         <UserButton />
       </header>
+
+      <Notifications data={news} />
 
       <nav className="admin-vault" aria-label="Vault">
         <p className="admin-eyebrow">the vault · formerly secrets</p>
@@ -479,253 +445,7 @@ export default async function AdminPage({
         </div>
       </section>
 
-      <section className="admin-section" id="cia" hidden>
-        <h2>CIA publication desk</h2>
-        <p className="admin-private">
-          Private drafts and discovery candidates stay here. Editing creates a
-          new draft revision; approved and published revisions remain
-          immutable.
-        </p>
-        <nav className="admin-cia-filters" aria-label="Filter CIA records">
-          <Link href="/controlroom#cia">All</Link>
-          {CIA_PROJECTS.map((project) => (
-            <Link
-              href={`/controlroom?ciaProject=${project}#cia`}
-              key={project}
-            >
-              {project}
-            </Link>
-          ))}
-        </nav>
-        <details className="admin-add-place">
-          <summary>Add sourced draft</summary>
-          <form className="admin-edit-form admin-cia-form" action={saveCiaRecord}>
-            <label>
-              Project
-              <select name="project" required>
-                {CIA_PROJECTS.map((project) => (
-                  <option value={project} key={project}>
-                    {project}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Title
-              <input name="title" maxLength={180} required />
-            </label>
-            <label>
-              Slug
-              <input
-                name="slug"
-                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                placeholder="lowercase-hyphenated"
-                required
-              />
-            </label>
-            <label>
-              Neutral summary
-              <textarea name="summary" maxLength={3000} required />
-            </label>
-            <label>
-              Event or observation date
-              <input name="occurredOn" type="date" />
-            </label>
-            <label>
-              Confidence label
-              <input name="confidence" defaultValue="unreviewed" required />
-            </label>
-            <label>
-              Official or credible source URL
-              <input name="sourceUrl" type="url" required />
-            </label>
-            <label>
-              Source label
-              <input name="sourceLabel" defaultValue="Original source" required />
-            </label>
-            <label>
-              Publisher
-              <input name="publisher" required />
-            </label>
-            <label>
-              Source type
-              <select name="sourceType" defaultValue="official">
-                <option value="official">Official</option>
-                <option value="credible-public">Credible public source</option>
-                <option value="owner-authored">Owner-authored</option>
-              </select>
-            </label>
-            <label>
-              Project details (JSON object)
-              <textarea name="metadata" defaultValue="{}" spellCheck={false} />
-            </label>
-            <label>
-              Draft note
-              <textarea name="moderationRationale" />
-            </label>
-            <button type="submit">Create private draft</button>
-          </form>
-        </details>
-        <div className="admin-cards">
-          {visibleCiaEntries.map((entry) => {
-            const source = entry.sources[0];
-            return (
-              <article className="admin-card admin-cia-card" key={entry.id}>
-                <div className="admin-card-head">
-                  <h3>{entry.title}</h3>
-                  <span className={`admin-place-status is-${entry.status}`}>
-                    {entry.status}
-                  </span>
-                </div>
-                <p className="admin-record-status">
-                  {entry.project} · revision {entry.revisionNumber} ·{" "}
-                  {entry.confidence}
-                </p>
-                <p>{entry.summary}</p>
-                {source ? (
-                  <p className="admin-cia-source">
-                    <a href={source.url} target="_blank" rel="noreferrer">
-                      {source.label}
-                    </a>{" "}
-                    · {source.publisher} · retrieved{" "}
-                    {source.retrievedAt.slice(0, 10)}
-                  </p>
-                ) : (
-                  <p className="admin-private">Missing source — do not approve.</p>
-                )}
-                <div className="admin-record-actions">
-                  {(statusActions[entry.status] ?? []).map(([status, label]) => (
-                    <form action={moderateCiaRecord} key={status}>
-                      <input type="hidden" name="id" value={entry.id} />
-                      <input type="hidden" name="project" value={entry.project} />
-                      <input type="hidden" name="status" value={status} />
-                      <label className="admin-cia-rationale">
-                        Rationale
-                        <input name="rationale" minLength={3} required />
-                      </label>
-                      <button type="submit">{label}</button>
-                    </form>
-                  ))}
-                  {entry.status !== "approved" && entry.status !== "published" ? (
-                    <details>
-                      <summary>Create revised draft</summary>
-                      <form
-                        className="admin-edit-form admin-cia-form"
-                        action={saveCiaRecord}
-                      >
-                      <input type="hidden" name="id" value={entry.id} />
-                      <label>
-                        Project
-                        <select name="project" defaultValue={entry.project}>
-                          {CIA_PROJECTS.map((project) => (
-                            <option value={project} key={project}>
-                              {project}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Title
-                        <input name="title" defaultValue={entry.title} required />
-                      </label>
-                      <label>
-                        Slug
-                        <input name="slug" defaultValue={entry.slug} required />
-                      </label>
-                      <label>
-                        Neutral summary
-                        <textarea
-                          name="summary"
-                          defaultValue={entry.summary}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Event or observation date
-                        <input
-                          name="occurredOn"
-                          type="date"
-                          defaultValue={entry.occurredOn ?? ""}
-                        />
-                      </label>
-                      <label>
-                        Confidence
-                        <input
-                          name="confidence"
-                          defaultValue={entry.confidence}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Source URL
-                        <input
-                          name="sourceUrl"
-                          type="url"
-                          defaultValue={source?.url ?? ""}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Source label
-                        <input
-                          name="sourceLabel"
-                          defaultValue={source?.label ?? ""}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Publisher
-                        <input
-                          name="publisher"
-                          defaultValue={source?.publisher ?? ""}
-                          required
-                        />
-                      </label>
-                      <input
-                        type="hidden"
-                        name="sourceType"
-                        value={source?.sourceType ?? "official"}
-                      />
-                      <label>
-                        Project details (JSON object)
-                        <textarea
-                          name="metadata"
-                          defaultValue={JSON.stringify(entry.metadata, null, 2)}
-                          spellCheck={false}
-                        />
-                      </label>
-                      <label>
-                        Revision rationale
-                        <textarea name="moderationRationale" required />
-                      </label>
-                        <button type="submit">Save as new draft revision</button>
-                      </form>
-                    </details>
-                  ) : null}
-                  {entry.status === "draft" || entry.status === "rejected" ? (
-                    <form action={removeCiaRecord}>
-                      <input type="hidden" name="id" value={entry.id} />
-                      <input type="hidden" name="project" value={entry.project} />
-                      <ConfirmButton
-                        className="admin-danger"
-                        message={`Permanently delete ${entry.title} and every revision?`}
-                      >
-                        Delete
-                      </ConfirmButton>
-                    </form>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-          {visibleCiaEntries.length === 0 ? <p>No CIA records in this view.</p> : null}
-        </div>
-      </section>
-
       <nav className="admin-counts" aria-label="Database counts">
-        <a href="#out-loud">
-          <strong>{voiceMemos.length}</strong> Out Loud
-        </a>
         <a href="#posties"><strong>{data.posties.length}</strong> Posties</a>
         <a href="#wishes"><strong>{data.wishes.length}</strong> wishes</a>
         <a href="#secrets-attempts">
@@ -735,78 +455,6 @@ export default async function AdminPage({
           <strong>{data.visits.length}</strong> visits / {uniqueVisitors} visitors
         </a>
       </nav>
-
-      <section className="admin-section" id="out-loud">
-        <div className="admin-section-heading">
-          <div>
-            <h2>Out Loud</h2>
-            <p className="admin-private">
-              Record or upload a memo. Visitor voice replies go live immediately.
-            </p>
-          </div>
-          <Link href="/controlroom/out-loud">View the archive →</Link>
-        </div>
-        <OutLoudPublisher />
-        <div className="admin-cards">
-          {voiceMemos.map((memo) => (
-            <article className="admin-card" key={memo.id}>
-              <div className="admin-card-head">
-                <h3>
-                  {memo.kind === "person" && memo.title
-                    ? `for ${memo.title}`
-                    : memo.title || "untitled thought"}
-                </h3>
-                <span
-                  className={`admin-place-status is-${
-                    memo.published ? "published" : "draft"
-                  }`}
-                >
-                  {memo.published ? "published" : "draft"}
-                </span>
-              </div>
-              <p className="admin-record-status">
-                {memo.kind} · {date(memo.recordedAt)} ·{" "}
-                {formatVoiceDuration(memo.durationMs)} · {memo.replyCount}{" "}
-                {memo.replyCount === 1 ? "reply" : "replies"}
-              </p>
-              <p>
-                <Link href={`/controlroom/out-loud/${memo.slug}`}>{memo.slug}</Link>
-              </p>
-              {memo.replies.length ? (
-                <ol className="admin-out-loud-replies">
-                  {memo.replies.map((reply) => (
-                    <li key={reply.id}>
-                      <span>
-                        {reply.name || "internet human"} ·{" "}
-                        {formatVoiceDuration(reply.durationMs)}
-                      </span>
-                      <form action={removeVoiceReply}>
-                        <input type="hidden" name="id" value={reply.id} />
-                        <ConfirmButton
-                          className="admin-danger"
-                          message="Permanently delete this voice reply?"
-                        >
-                          Delete reply
-                        </ConfirmButton>
-                      </form>
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
-              <form action={removeVoiceMemo}>
-                <input type="hidden" name="id" value={memo.id} />
-                <ConfirmButton
-                  className="admin-danger"
-                  message="Permanently delete this memo and every reply?"
-                >
-                  Delete memo
-                </ConfirmButton>
-              </form>
-            </article>
-          ))}
-          {voiceMemos.length === 0 ? <p>No memos yet.</p> : null}
-        </div>
-      </section>
 
       <section className="admin-section" id="posties">
         <h2>Sunday Posties</h2>

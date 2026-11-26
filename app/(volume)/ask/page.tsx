@@ -7,7 +7,7 @@ import { formatRollTime } from "@/lib/photography-format";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Ask Me Anything",
+  title: "Leave a Note",
   description: "i welcome all questions, thoughts, & well wishes — anonymously.",
 };
 
@@ -22,7 +22,7 @@ export default async function AskIndexPage() {
   return (
     <main className="photo-page ask-page">
       <PhotoHeader current="ask" />
-      <h1 className="visually-hidden">Ask Me Anything</h1>
+      <h1 className="visually-hidden">Leave a Note</h1>
       <p className="photo-lede">i welcome all questions, thoughts, &amp; well wishes</p>
       <AskComposer maxLength={ASK_MAX_LENGTH} />
       {questions.length ? (
