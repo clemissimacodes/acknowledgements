@@ -183,8 +183,8 @@ export async function listFriends({ all = false } = {}): Promise<Friend[]> {
   await ensureTables();
   const sql = db();
   const rows = all
-    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, created_at ASC`
-    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, created_at ASC`;
+    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`
+    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
   return (rows as Row[]).map(toFriend);
 }
 
