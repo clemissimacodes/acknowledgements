@@ -273,6 +273,28 @@ export async function updateFriend(id: string, input: FriendInput) {
   return getFriendById(id);
 }
 
+/* Quick roster edits: the handful of fields needed before a friend can go live. */
+export async function updateFriendRoster(
+  id: string,
+  input: { metOn?: unknown; era?: unknown; relationship?: unknown; visible?: unknown },
+) {
+  await ensureTables();
+  const sql = db();
+  const metOn = dateOnly(input.metOn);
+  const era = isFriendEra(input.era) ? input.era : null;
+  const relationship = text(input.relationship, 40);
+  const visible = input.visible === true || input.visible === "on" || input.visible === "true";
+  await sql`
+    UPDATE friends SET
+      met_on = COALESCE(${metOn}::date, met_on),
+      era = COALESCE(${era}, era),
+      relationship = CASE WHEN ${relationship} = '' THEN relationship ELSE ${relationship} END,
+      visible = ${visible},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+}
+
 export async function setFriendImage(
   id: string,
   which: "hero" | "alt",

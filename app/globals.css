@@ -6714,3 +6714,47 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   overflow: hidden;
   background: var(--places-ground);
 }
+
+.admin-roster {
+  width: 100%;
+  margin-top: 0.8rem;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.admin-roster th,
+.admin-roster td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-roster th {
+  font-weight: 500;
+  color: rgba(22, 20, 18, 0.6);
+}
+
+.admin-roster td small {
+  color: rgba(22, 20, 18, 0.5);
+}
+
+.admin-roster input:not([type="checkbox"]),
+.admin-roster select {
+  width: 100%;
+  min-width: 7rem;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.3rem;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.admin-roster-todo td:first-child a {
+  color: #a33;
+}
+
+.admin-roster-form {
+  overflow-x: auto;
+}

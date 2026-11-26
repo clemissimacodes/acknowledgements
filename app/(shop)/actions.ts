@@ -9,6 +9,7 @@ import {
   setFriendImage,
   setFriendVisible,
   updateFriend,
+  updateFriendRoster,
   type FriendInput,
 } from "@/lib/friends";
 
@@ -46,6 +47,20 @@ function fromForm(form: FormData): FriendInput {
     visible: get("visible"),
     sortOrder: get("sortOrder"),
   };
+}
+
+export async function rosterUpdateForm(form: FormData) {
+  await requireOwner();
+  const ids = form.getAll("ids").map(String);
+  for (const id of ids) {
+    await updateFriendRoster(id, {
+      metOn: form.get(`metOn-${id}`) ?? undefined,
+      era: form.get(`era-${id}`) ?? undefined,
+      relationship: form.get(`relationship-${id}`) ?? undefined,
+      visible: form.get(`visible-${id}`) ?? undefined,
+    });
+  }
+  refresh();
 }
 
 export async function createFriendForm(form: FormData) {

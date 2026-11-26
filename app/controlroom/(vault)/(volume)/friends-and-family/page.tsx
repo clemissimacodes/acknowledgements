@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { clearFriendImageForm, deleteFriendForm, toggleVisibleForm } from "@/app/(shop)/actions";
+import { clearFriendImageForm, deleteFriendForm, rosterUpdateForm, toggleVisibleForm } from "@/app/(shop)/actions";
 import { ConfirmButton } from "@/components/admin/ConfirmButton";
 import { FriendForm } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
-import { SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
+import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
@@ -89,6 +89,66 @@ export default async function FriendsControlPage() {
           {friends.length} listed · {visible} visible. Price is the date you met (Sep 15 → $915). Hero images should be
           cutouts on transparent or cream backgrounds, roughly 4:5.
         </p>
+      </section>
+
+      <section className="admin-section">
+        <h2>Roster</h2>
+        <p className="admin-muted">
+          Date, era, relationship and visibility for everyone at once. Jan 1, 2026 means the date is still a placeholder.
+          Photos and the trait/memory copy live in each listing below.
+        </p>
+        <form action={rosterUpdateForm} className="admin-roster-form">
+          <table className="admin-roster">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Date met</th>
+                <th>Era</th>
+                <th>Relationship</th>
+                <th>Hero</th>
+                <th>Visible</th>
+              </tr>
+            </thead>
+            <tbody>
+              {friends.map((f) => (
+                <tr key={f.id} className={f.metOn === "2026-01-01" ? "admin-roster-todo" : undefined}>
+                  <td>
+                    <input type="hidden" name="ids" value={f.id} />
+                    <a href={`#${f.id}`}>{f.nickname}</a>
+                    {f.productName ? <small> {f.productName}</small> : null}
+                  </td>
+                  <td>
+                    <input type="date" name={`metOn-${f.id}`} defaultValue={f.metOn} />
+                  </td>
+                  <td>
+                    <select name={`era-${f.id}`} defaultValue={f.era}>
+                      {FRIEND_ERAS.map((era) => (
+                        <option key={era.handle} value={era.handle}>
+                          {era.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input name={`relationship-${f.id}`} list="ff-relationships-roster" defaultValue={f.relationship} />
+                  </td>
+                  <td>{f.heroUrl ? "yes" : "—"}</td>
+                  <td>
+                    <input type="checkbox" name={`visible-${f.id}`} defaultChecked={f.visible} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <datalist id="ff-relationships-roster">
+            {RELATIONSHIPS.map((r) => (
+              <option key={r} value={r} />
+            ))}
+          </datalist>
+          <div className="admin-roll-actions">
+            <button type="submit">Save roster</button>
+          </div>
+        </form>
       </section>
 
       <section className="admin-section">
