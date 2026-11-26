@@ -5,12 +5,9 @@ import { useState } from "react";
 import {
   FRIEND_BADGES,
   SHOP_HANDLE,
-  daysKnown,
-  daysToFriendiversary,
   formatMetOn,
   friendPrice,
   formatPrice,
-  friendiversaryLabel,
   RELATIONSHIPS,
   type Friend,
 } from "@/lib/friend-types";
@@ -24,8 +21,6 @@ export function ProductPage({ friend }: Props) {
   const [swatch, setSwatch] = useState(0);
   const price = friendPrice(friend.metOn);
   const inBag = bag.has(friend.slug);
-  const days = daysKnown(friend.metOn);
-  const until = daysToFriendiversary(friend.metOn);
   const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
     ? [friend.relationship, ...RELATIONSHIPS]
     : [...RELATIONSHIPS];
@@ -148,15 +143,7 @@ export function ProductPage({ friend }: Props) {
             <div>
               <dt>Known since</dt>
               <dd className="ff-desc">
-                <p>
-                  {formatMetOn(friend.metOn)}. Loyalty points: {days.toLocaleString()}, earned one per day.
-                  They never expire and can&rsquo;t be transferred.
-                </p>
-                <p>
-                  {until === 0
-                    ? "Friendiversary: today. Everything is still full price."
-                    : `Friendiversary ${friendiversaryLabel(friend.metOn)}, in ${until} day${until === 1 ? "" : "s"}. No anniversary sale is planned.`}
-                </p>
+                <p>{formatMetOn(friend.metOn)}</p>
               </dd>
             </div>
 
