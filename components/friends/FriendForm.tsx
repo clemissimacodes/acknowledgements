@@ -3,6 +3,7 @@ import { AutoSaveForm, type SaveStatus } from "@/components/admin/AutoSaveForm";
 import { BirthdaySelect } from "@/components/friends/BirthdaySelect";
 import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import { MadeOfPicker } from "@/components/friends/MadeOfPicker";
+import { PoemFields } from "@/components/friends/PoemFields";
 import {
   FRIEND_BADGES,
   FRIEND_ERAS,
@@ -151,23 +152,7 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
 
       <section className="admin-ff-section" hidden={!show("poem")}>
         {all ? <h4>Poem</h4> : null}
-        <div className="admin-ff-grid admin-ff-grid-2">
-          <label>
-            Poem title
-            <input name="poemTitle" defaultValue={friend?.poemTitle ?? ""} placeholder="The Orange" />
-          </label>
-          <label>
-            Poet
-            <input name="poemPoet" defaultValue={friend?.poemPoet ?? ""} placeholder="Wendy Cope" />
-          </label>
-        </div>
-        <label className="admin-ff-block">
-          Poem link{" "}
-          <a href="https://www.poetryfoundation.org/poems" target="_blank" rel="noreferrer">
-            (browse Poetry Foundation)
-          </a>
-          <input name="poemUrl" type="url" defaultValue={friend?.poemUrl ?? ""} placeholder="https://www.poetryfoundation.org/poems/…" />
-        </label>
+        <PoemFields title={friend?.poemTitle ?? ""} poet={friend?.poemPoet ?? ""} url={friend?.poemUrl ?? ""} />
       </section>
 
       <section className="admin-ff-section" hidden={!show("madeOf")}>

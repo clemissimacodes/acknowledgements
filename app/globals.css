@@ -6994,6 +6994,11 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
 .admin-ff-block small {
   color: rgba(22, 20, 18, 0.55);
 }
+.admin-poem-status {
+  display: block;
+  margin-top: 0.25rem;
+  color: rgba(22, 20, 18, 0.55);
+}
 .admin-studio .admin-chip {
   padding: 0.4rem 0.8rem;
   font-size: 0.86rem;

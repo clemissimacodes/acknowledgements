@@ -516,7 +516,7 @@ p.ff-anthem-whisper {
   display: block;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  background: var(--paper-2);
+  background: var(--paper);
 }
 
 .ff-card-hero,
@@ -525,11 +525,15 @@ p.ff-anthem-whisper {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   object-position: center bottom;
 }
 
+.ff-card-hero {
+  object-fit: contain; /* floating Clemi cutouts */
+}
+
 .ff-card-alt {
+  object-fit: cover; /* real photos */
   opacity: 0;
   transition: opacity 240ms ease;
 }
@@ -673,13 +677,13 @@ p.ff-anthem-whisper {
 .ff-hero {
   position: relative;
   margin: 0;
-  background: var(--paper-2);
+  background: var(--paper);
 }
 
 .ff-hero img {
   width: 100%;
   aspect-ratio: 4 / 5;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center bottom;
 }
 

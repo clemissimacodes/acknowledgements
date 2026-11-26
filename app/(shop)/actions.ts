@@ -166,3 +166,10 @@ export async function clearFriendVoiceForm(form: FormData) {
   await setFriendVoice(String(form.get("id") ?? ""), null);
   refresh();
 }
+
+/* Paste a Poetry Foundation URL → title + poet for the poem fields. */
+export async function lookupPoemMetaAction(url: string) {
+  await requireOwner();
+  const { lookupPoemMeta } = await import("@/lib/poem-meta");
+  return lookupPoemMeta(String(url ?? "").trim());
+}
