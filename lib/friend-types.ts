@@ -33,22 +33,7 @@ export const MET_HOW = [
 ] as const;
 
 /* The "sizes". One is in stock per friend, the rest read as sold out. */
-export const RELATIONSHIPS = [
-  "Friend",
-  "Good Friend",
-  "Best Friend",
-  "Acquaintance",
-  "Coworker",
-  "Roommate",
-  "Neighbor",
-  "Family",
-  "Emergency Contact",
-  "Plus One",
-  "Mutual",
-  "Former Enemy",
-  "Pen Pal",
-  "Ex",
-] as const;
+export const RELATIONSHIPS = ["Friend", "Family"] as const;
 
 export type FriendColor = { name: string; hex: string };
 
