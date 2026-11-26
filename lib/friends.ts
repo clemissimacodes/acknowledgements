@@ -3,7 +3,6 @@ import "server-only";
 import { randomBytes, randomUUID } from "crypto";
 import { del } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
-import { isPoemKey } from "@/lib/friend-poems";
 import {
   FRIEND_BADGES,
   MET_HOW,
@@ -27,6 +26,17 @@ function db() {
 
 function iso(value: unknown) {
   return value instanceof Date ? value.toISOString() : new Date(String(value)).toISOString();
+}
+
+function httpUrl(value: unknown) {
+  const raw = text(value, 400);
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
 }
 
 function text(value: unknown, max: number) {
@@ -111,7 +121,9 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS favorite_memory TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS favorite_trait TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS notes TEXT NOT NULL DEFAULT ''`;
-      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_title TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_poet TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS poem_url TEXT NOT NULL DEFAULT ''`;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
           id TEXT PRIMARY KEY,
@@ -149,7 +161,9 @@ function toFriend(row: Row): Friend {
     favoriteMemory: String(row.favorite_memory ?? ""),
     favoriteTrait: String(row.favorite_trait ?? ""),
     notes: String(row.notes ?? ""),
-    poem: String(row.poem ?? ""),
+    poemTitle: String(row.poem_title ?? ""),
+    poemPoet: String(row.poem_poet ?? ""),
+    poemUrl: String(row.poem_url ?? ""),
     relationship: String(row.relationship ?? ""),
     relationshipOptions: Array.isArray(row.relationship_options) ? (row.relationship_options as string[]) : [],
     colors: Array.isArray(row.colors) ? (row.colors as FriendColor[]) : [],
@@ -203,7 +217,9 @@ export type FriendInput = {
   favoriteMemory?: unknown;
   favoriteTrait?: unknown;
   notes?: unknown;
-  poem?: unknown;
+  poemTitle?: unknown;
+  poemPoet?: unknown;
+  poemUrl?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
   colors?: unknown;
@@ -235,7 +251,9 @@ function normalise(input: FriendInput) {
     favoriteMemory: text(input.favoriteMemory, 1600),
     favoriteTrait: text(input.favoriteTrait, 600),
     notes: text(input.notes, 1200),
-    poem: isPoemKey(input.poem) ? input.poem : "",
+    poemTitle: text(input.poemTitle, 160),
+    poemPoet: text(input.poemPoet, 80),
+    poemUrl: httpUrl(input.poemUrl),
     relationship,
     relationshipOptions: options,
     colors: colors(input.colors),
@@ -254,9 +272,9 @@ export async function createFriend(input: FriendInput) {
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
     INSERT INTO friends (id, slug, nickname, product_name, era, badge, met_on, met_how, hometown, made_of, care,
-      description, favorite_memory, favorite_trait, notes, poem, relationship, relationship_options, colors, pairs_with, visible, sort_order)
+      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.metOn}, ${f.metHow},
-      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poem}, ${f.relationship},
+      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -273,7 +291,8 @@ export async function updateFriend(id: string, input: FriendInput) {
     UPDATE friends SET slug = ${f.slug}, nickname = ${f.nickname}, product_name = ${f.productName}, era = ${f.era},
       badge = ${f.badge}, met_on = ${f.metOn}, met_how = ${f.metHow}, hometown = ${f.hometown},
       made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
-      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes}, poem = ${f.poem},
+      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
+      poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       sort_order = ${f.sortOrder}, updated_at = NOW()
@@ -285,7 +304,15 @@ export async function updateFriend(id: string, input: FriendInput) {
 /* Quick roster edits: the handful of fields needed before a friend can go live. */
 export async function updateFriendRoster(
   id: string,
-  input: { metOn?: unknown; era?: unknown; relationship?: unknown; visible?: unknown; poem?: unknown },
+  input: {
+    metOn?: unknown;
+    era?: unknown;
+    relationship?: unknown;
+    visible?: unknown;
+    poemTitle?: unknown;
+    poemPoet?: unknown;
+    poemUrl?: unknown;
+  },
 ) {
   await ensureTables();
   const sql = db();
@@ -293,10 +320,11 @@ export async function updateFriendRoster(
   const era = isFriendEra(input.era) ? input.era : null;
   const relationship = text(input.relationship, 40);
   const visible = input.visible === true || input.visible === "on" || input.visible === "true";
-  const poem = isPoemKey(input.poem) ? input.poem : input.poem === "" ? "" : null;
   await sql`
     UPDATE friends SET
-      poem = COALESCE(${poem}, poem),
+      poem_title = ${text(input.poemTitle, 160)},
+      poem_poet = ${text(input.poemPoet, 80)},
+      poem_url = ${httpUrl(input.poemUrl)},
       met_on = COALESCE(${metOn}::date, met_on),
       era = COALESCE(${era}, era),
       relationship = CASE WHEN ${relationship} = '' THEN relationship ELSE ${relationship} END,

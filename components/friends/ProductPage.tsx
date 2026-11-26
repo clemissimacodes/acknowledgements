@@ -15,7 +15,6 @@ import {
   RELATIONSHIPS,
   type Friend,
 } from "@/lib/friend-types";
-import { getPoemPick } from "@/lib/friend-poems";
 import { useBag } from "./bag";
 
 type Props = { friend: Friend };
@@ -28,7 +27,6 @@ export function ProductPage({ friend }: Props) {
   const inBag = bag.has(friend.slug);
   const days = daysKnown(friend.metOn);
   const until = daysToFriendiversary(friend.metOn);
-  const poem = friend.poem ? getPoemPick(friend.poem) : undefined;
   const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
     ? [friend.relationship, ...RELATIONSHIPS]
     : [...RELATIONSHIPS];
@@ -133,19 +131,19 @@ export function ProductPage({ friend }: Props) {
               </div>
             ) : null}
 
-            {poem ? (
+            {friend.poemTitle ? (
               <div>
                 <dt>Poem</dt>
                 <dd className="ff-poem">
-                  {poem.href.startsWith("/") ? (
-                    <Link href={poem.href} className="ff-poem-title">{poem.title}</Link>
+                  {friend.poemUrl ? (
+                    <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
+                      {friend.poemTitle}
+                    </a>
                   ) : (
-                    <a href={poem.href} className="ff-poem-title" target="_blank" rel="noreferrer">{poem.title}</a>
+                    <span className="ff-poem-title">{friend.poemTitle}</span>
                   )}
-                  {poem.author ? <p className="ff-poem-by">{poem.author}</p> : null}
-                  {poem.lines.map((line, index) => (
-                    <p key={index} className="ff-poem-line">{line}</p>
-                  ))}
+                  {friend.poemPoet ? <p className="ff-poem-by">{friend.poemPoet}</p> : null}
+                  <p className="ff-poem-note">Reminds me of them.</p>
                 </dd>
               </div>
             ) : null}

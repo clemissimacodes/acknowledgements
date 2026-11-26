@@ -1363,10 +1363,7 @@ html.ff-locked {
   color: var(--ink-2);
 }
 
-.ff-poem-line {
+.ff-poem-note {
   margin: 0;
-  font-family: var(--serif);
-  font-size: 13px;
-  line-height: 1.4;
   color: var(--ink-2);
 }

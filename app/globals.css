@@ -6765,3 +6765,14 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   line-height: 1.3;
   color: rgba(22, 20, 18, 0.65);
 }
+
+.admin-roster-poem {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.admin-roster-poem input {
+  width: 100%;
+  font-size: 12px;
+}

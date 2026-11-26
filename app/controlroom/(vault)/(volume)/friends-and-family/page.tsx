@@ -5,7 +5,6 @@ import { FriendForm } from "@/components/friends/FriendForm";
 import { ImageUploader } from "@/components/friends/ImageUploader";
 import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE, eraLabel, friendPrice, type Friend } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
-import { POEM_PICKS } from "@/lib/friend-poems";
 
 export const dynamic = "force-dynamic";
 
@@ -135,15 +134,10 @@ export default async function FriendsControlPage() {
                   <td>
                     <input name={`relationship-${f.id}`} list="ff-relationships-roster" defaultValue={f.relationship} />
                   </td>
-                  <td>
-                    <select name={`poem-${f.id}`} defaultValue={f.poem}>
-                      <option value="">—</option>
-                      {POEM_PICKS.map((p) => (
-                        <option key={p.key} value={p.key}>
-                          {p.title}
-                        </option>
-                      ))}
-                    </select>
+                  <td className="admin-roster-poem">
+                    <input name={`poemTitle-${f.id}`} defaultValue={f.poemTitle} placeholder="Title" />
+                    <input name={`poemPoet-${f.id}`} defaultValue={f.poemPoet} placeholder="Poet" />
+                    <input name={`poemUrl-${f.id}`} type="url" defaultValue={f.poemUrl} placeholder="poetryfoundation.org/…" />
                   </td>
                   <td>{f.heroUrl ? "yes" : "—"}</td>
                   <td>
