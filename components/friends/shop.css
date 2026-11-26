@@ -653,8 +653,14 @@ p.ff-anthem-whisper {
   display: block;
 }
 
+.ff-alt-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
 .ff-alt {
-  margin: 4px 0 0;
+  margin: 0;
 }
 
 .ff-alt img {

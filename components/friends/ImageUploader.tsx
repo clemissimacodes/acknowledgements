@@ -17,7 +17,7 @@ async function heicToJpeg(file: File): Promise<File> {
 
 type Props = {
   id: string;
-  which: "hero" | "alt";
+  which: "hero" | "alt" | "extra";
   label: string;
   hint?: string;
   currentUrl: string | null;

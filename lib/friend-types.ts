@@ -154,6 +154,8 @@ export type Friend = {
   heroPathname: string | null;
   altUrl: string | null;
   altPathname: string | null;
+  extraUrl: string | null; // third photo
+  extraPathname: string | null;
   pairsWith: string[];
   visible: boolean;
   sortOrder: number;
@@ -184,6 +186,7 @@ export const FRIEND_IMAGE_MAX_BYTES = 12 * 1024 * 1024;
 export const IMAGE_SLOTS = {
   hero: { width: 1200, height: 1500, anchor: "bottom" },
   alt: { width: 1200, height: 1500, anchor: "center" },
+  extra: { width: 1200, height: 1500, anchor: "center" },
 } as const satisfies Record<string, { width: number; height: number; anchor: "bottom" | "center" }>;
 export type ImageSlot = keyof typeof IMAGE_SLOTS;
 /* What Blob is allowed to store. HEIC is accepted at the drop zone and converted to JPEG first. */

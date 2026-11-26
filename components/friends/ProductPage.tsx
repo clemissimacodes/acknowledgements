@@ -74,10 +74,19 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </div>
               ) : null}
             </dl>
-            {friend.altUrl ? (
-              <figure className="ff-alt">
-                <img src={friend.altUrl} alt={`${friend.nickname}, detail`} />
-              </figure>
+            {friend.altUrl || friend.extraUrl ? (
+              <div className="ff-alt-stack">
+                {friend.altUrl ? (
+                  <figure className="ff-alt">
+                    <img src={friend.altUrl} alt={`${friend.nickname}, photo 2`} />
+                  </figure>
+                ) : null}
+                {friend.extraUrl ? (
+                  <figure className="ff-alt">
+                    <img src={friend.extraUrl} alt={`${friend.nickname}, photo 3`} />
+                  </figure>
+                ) : null}
+              </div>
             ) : null}
           </aside>
 

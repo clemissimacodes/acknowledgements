@@ -14,6 +14,7 @@ import { FRIEND_ERAS, collectionLabel, eraLabel, formatBirthday, priceLabel, typ
 const CHECKS = [
   { key: "hero", label: "Hero photo", tab: "photos", test: (f: Friend) => Boolean(f.heroUrl) },
   { key: "alt", label: "Second photo", tab: "photos", test: (f: Friend) => Boolean(f.altUrl) },
+  { key: "extra", label: "Third photo", tab: "photos", test: (f: Friend) => Boolean(f.extraUrl) },
   { key: "birthday", label: "Birthday", tab: "details", test: (f: Friend) => Boolean(f.birthday) },
   { key: "collection", label: "Collection", tab: "details", test: (f: Friend) => Boolean(f.collection) },
   { key: "hometown", label: "Hometown", tab: "details", test: (f: Friend) => Boolean(f.hometown) },
@@ -328,8 +329,15 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
             id={friend.id}
             which="alt"
             label={friend.altUrl ? "Second image" : "Second image (none yet)"}
-            hint="Auto-cropped to 4:5, centred. Shows on hover."
+            hint="Auto-cropped to 4:5, centred. Shows on hover / as photo 2."
             currentUrl={friend.altUrl}
+          />
+          <ImageUploader
+            id={friend.id}
+            which="extra"
+            label={friend.extraUrl ? "Third image" : "Third image (none yet)"}
+            hint="Auto-cropped to 4:5, centred. Photo 3 on the product page."
+            currentUrl={friend.extraUrl}
           />
           <VoiceUploader
             id={friend.id}

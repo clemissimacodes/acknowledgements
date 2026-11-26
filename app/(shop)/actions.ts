@@ -6,6 +6,7 @@ import { isAdminUser } from "@/lib/admin";
 import {
   createFriend,
   deleteFriend,
+  installCaricatureHero,
   setFriendImage,
   setFriendVisible,
   setFriendVoice,
@@ -111,7 +112,7 @@ export async function deleteFriendForm(form: FormData) {
 
 export async function attachFriendImage(input: {
   id: string;
-  which: "hero" | "alt";
+  which: "hero" | "alt" | "extra";
   url: string;
   pathname: string;
 }) {
@@ -125,8 +126,21 @@ export async function attachFriendImage(input: {
 export async function clearFriendImageForm(form: FormData) {
   await requireOwner();
   const id = String(form.get("id") ?? "");
-  const which = form.get("which") === "alt" ? "alt" : "hero";
+  const whichRaw = String(form.get("which") ?? "hero");
+  const which = whichRaw === "alt" ? "alt" : whichRaw === "extra" ? "extra" : "hero";
   await setFriendImage(id, which, null);
+  refresh();
+}
+
+export async function attachCaricatureHero(input: {
+  id: string;
+  url: string;
+  pathname: string;
+}) {
+  await requireOwner();
+  if (!/^[a-f0-9-]{36}$/.test(input.id)) throw new Error("Bad id.");
+  if (!input.pathname.startsWith("friends-and-family/")) throw new Error("Bad path.");
+  await installCaricatureHero(input.id, { url: input.url, pathname: input.pathname });
   refresh();
 }
 

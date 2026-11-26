@@ -130,6 +130,8 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_url TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_pathname TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_duration_ms INTEGER`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_url TEXT`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_pathname TEXT`;
       await sql`ALTER TABLE friends ALTER COLUMN met_on DROP NOT NULL`;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
@@ -186,6 +188,8 @@ function toFriend(row: Row): Friend {
     heroPathname: (row.hero_pathname as string | null) ?? null,
     altUrl: (row.alt_url as string | null) ?? null,
     altPathname: (row.alt_pathname as string | null) ?? null,
+    extraUrl: (row.extra_url as string | null) ?? null,
+    extraPathname: (row.extra_pathname as string | null) ?? null,
     pairsWith: Array.isArray(row.pairs_with) ? (row.pairs_with as string[]) : [],
     visible: Boolean(row.visible),
     sortOrder: Number(row.sort_order ?? 0),
@@ -372,21 +376,57 @@ export async function updateFriendRoster(
 
 export async function setFriendImage(
   id: string,
-  which: "hero" | "alt",
+  which: "hero" | "alt" | "extra",
   image: { url: string; pathname: string } | null,
 ) {
   await ensureTables();
   const sql = db();
   const current = await getFriendById(id);
   if (!current) throw new Error("Friend not found.");
-  const oldPath = which === "hero" ? current.heroPathname : current.altPathname;
+  const oldPath =
+    which === "hero" ? current.heroPathname : which === "alt" ? current.altPathname : current.extraPathname;
   if (which === "hero") {
     await sql`UPDATE friends SET hero_url = ${image?.url ?? null}, hero_pathname = ${image?.pathname ?? null}, updated_at = NOW() WHERE id = ${id}`;
-  } else {
+  } else if (which === "alt") {
     await sql`UPDATE friends SET alt_url = ${image?.url ?? null}, alt_pathname = ${image?.pathname ?? null}, updated_at = NOW() WHERE id = ${id}`;
+  } else {
+    await sql`UPDATE friends SET extra_url = ${image?.url ?? null}, extra_pathname = ${image?.pathname ?? null}, updated_at = NOW() WHERE id = ${id}`;
   }
   if (oldPath && oldPath !== image?.pathname && process.env.BLOB_READ_WRITE_TOKEN) {
     await del(oldPath).catch(() => undefined);
+  }
+}
+
+/* Install a Clemi caricature as hero; shift existing photos to 2nd (alt) and 3rd (extra). */
+export async function installCaricatureHero(
+  id: string,
+  caricature: { url: string; pathname: string },
+) {
+  await ensureTables();
+  const sql = db();
+  const current = await getFriendById(id);
+  if (!current) throw new Error("Friend not found.");
+  const oldHeroPath = current.heroPathname;
+  await sql`
+    UPDATE friends SET
+      extra_url = COALESCE(${current.altUrl}, extra_url),
+      extra_pathname = COALESCE(${current.altPathname}, extra_pathname),
+      alt_url = COALESCE(${current.heroUrl}, alt_url),
+      alt_pathname = COALESCE(${current.heroPathname}, alt_pathname),
+      hero_url = ${caricature.url},
+      hero_pathname = ${caricature.pathname},
+      updated_at = NOW()
+    WHERE id = ${id}
+  `;
+  /* Only delete the previous hero blob if it was already a caricature path we are replacing;
+     real photos are retained via the shift above. */
+  if (
+    oldHeroPath &&
+    oldHeroPath !== caricature.pathname &&
+    oldHeroPath.includes("/caricature.") &&
+    process.env.BLOB_READ_WRITE_TOKEN
+  ) {
+    await del(oldHeroPath).catch(() => undefined);
   }
 }
 
@@ -427,7 +467,7 @@ export async function deleteFriend(id: string) {
   if (!current) return;
   await db()`DELETE FROM friends WHERE id = ${id}`;
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    for (const path of [current.heroPathname, current.altPathname, current.voicePathname]) {
+    for (const path of [current.heroPathname, current.altPathname, current.extraPathname, current.voicePathname]) {
       if (path) await del(path).catch(() => undefined);
     }
   }
