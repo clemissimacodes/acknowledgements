@@ -23,15 +23,7 @@ export const FRIEND_BADGES = {
 } as const;
 export type FriendBadge = keyof typeof FRIEND_BADGES;
 
-export const MET_HOW = [
-  "School",
-  "Work",
-  "The Internet",
-  "Through a Friend",
-  "Family",
-  "Pure Chance",
-  "Fate",
-] as const;
+export const MET_HOW = ["School", "Work", "Internet", "Mutuals", "Fate"] as const;
 
 /* The "sizes". One is in stock per friend, the rest read as sold out. */
 export const RELATIONSHIPS = ["Friend", "Family"] as const;
