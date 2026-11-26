@@ -44,7 +44,7 @@ export function FriendForm({ friend }: Props) {
       </label>
       <label>
         Badge
-        <select name="badge" defaultValue={friend?.badge ?? "one-of-one"}>
+        <select name="badge" defaultValue={friend?.badge ?? "none"}>
           {(Object.keys(FRIEND_BADGES) as FriendBadge[]).map((key) => (
             <option key={key} value={key}>
               {FRIEND_BADGES[key] || "None"}

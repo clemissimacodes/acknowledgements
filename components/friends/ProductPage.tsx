@@ -7,7 +7,6 @@ import {
   SHOP_HANDLE,
   daysKnown,
   daysToFriendiversary,
-  eraLabel,
   formatMetOn,
   friendPrice,
   formatPrice,
@@ -66,7 +65,7 @@ export function ProductPage({ friend }: Props) {
             ) : null}
             {friend.metHow ? (
               <div>
-                <dt>Sourced</dt>
+                <dt>How we met</dt>
                 <dd>{friend.metHow}</dd>
               </div>
             ) : null}
@@ -94,7 +93,6 @@ export function ProductPage({ friend }: Props) {
               <dd>
                 <h1 className="ff-title">{friend.nickname}</h1>
                 {friend.productName ? <p className="ff-subtitle">{friend.productName}</p> : null}
-                <p className="ff-sku">SKU {friend.metOn.replace(/-/g, "")} · {eraLabel(friend.era)}</p>
               </dd>
             </div>
 
@@ -133,7 +131,7 @@ export function ProductPage({ friend }: Props) {
 
             {friend.poemTitle ? (
               <div>
-                <dt>Poem</dt>
+                <dt>Pairs well with</dt>
                 <dd className="ff-poem">
                   {friend.poemUrl ? (
                     <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
@@ -143,19 +141,21 @@ export function ProductPage({ friend }: Props) {
                     <span className="ff-poem-title">{friend.poemTitle}</span>
                   )}
                   {friend.poemPoet ? <p className="ff-poem-by">{friend.poemPoet}</p> : null}
-                  <p className="ff-poem-note">Reminds me of them.</p>
                 </dd>
               </div>
             ) : null}
 
             <div>
-              <dt>Provenance</dt>
+              <dt>Known since</dt>
               <dd className="ff-desc">
-                <p className="ff-note">
-                  In my possession since {formatMetOn(friend.metOn)} — {days.toLocaleString()} days.
+                <p>
+                  {formatMetOn(friend.metOn)}. Loyalty points: {days.toLocaleString()}, earned one per day.
+                  They never expire and can&rsquo;t be transferred.
+                </p>
+                <p>
                   {until === 0
-                    ? " Friendiversary is today."
-                    : ` Friendiversary ${friendiversaryLabel(friend.metOn)}, ${until} day${until === 1 ? "" : "s"} away.`}
+                    ? "Friendiversary: today. Everything is still full price."
+                    : `Friendiversary ${friendiversaryLabel(friend.metOn)}, in ${until} day${until === 1 ? "" : "s"}. No anniversary sale is planned.`}
                 </p>
               </dd>
             </div>
@@ -217,7 +217,8 @@ export function ProductPage({ friend }: Props) {
                   <span className="ff-price-cur">USD</span>
                 </p>
                 <p className="ff-price-fine">
-                  The day we met. Was $0 before that. Not eligible for discounts, ever.
+                  Every price here is the date we met, read as dollars: {formatMetOn(friend.metOn).replace(/,\s*\d{4}$/, "")} is $
+                  {formatPrice(price)}. Price history: unchanged since {friend.metOn.slice(0, 4)}. Has never been on sale.
                 </p>
               </dd>
             </div>
@@ -225,6 +226,7 @@ export function ProductPage({ friend }: Props) {
             <div className="ff-buy-cta">
               <dt aria-hidden="true" />
               <dd>
+                <p className="ff-stock">In stock: 1. There is only the one.</p>
                 <button
                   type="button"
                   className="ff-pill ff-pill-dark ff-add"
@@ -240,7 +242,7 @@ export function ProductPage({ friend }: Props) {
                         })
                   }
                 >
-                  {inBag ? "In your bag — view" : "Add to cart"}
+                  {inBag ? "In your bag — view" : "Add to bag"}
                 </button>
               </dd>
             </div>
@@ -249,16 +251,34 @@ export function ProductPage({ friend }: Props) {
               <dt>Details</dt>
               <dd>
                 <details className="ff-acc">
-                  <summary>Size &amp; Fit</summary>
+                  <summary>Fit guide</summary>
                   <p>
-                    {friend.relationship
-                      ? `Comes in one size: ${friend.relationship}. Other fits sold out.`
-                      : "Comes in one size. True to life."}
+                    Friend: I will pick you up from the airport. Family: I will pick you up from the airport at
+                    5 a.m. and not bring it up again. Each listing comes in exactly one of these, and it is not
+                    adjustable.
                   </p>
                 </details>
                 <details className="ff-acc">
-                  <summary>Shipping &amp; Returns</summary>
-                  <p>Ships never. Available for pickup in person, with notice. No returns, no exchanges, no restocks.</p>
+                  <summary>What happens at checkout</summary>
+                  <p>
+                    Nothing is charged and nothing ships. Checking out makes a receipt for the people in your
+                    bag that you can share. All sales are final because this one already was.
+                  </p>
+                </details>
+                <details className="ff-acc">
+                  <summary>Shipping &amp; returns</summary>
+                  <p>
+                    Shipping is free, in the sense that nothing ships; they go where they like. Returns are not
+                    possible because nothing was bought. Exchanges are not offered. I wouldn&rsquo;t anyway.
+                  </p>
+                </details>
+                <details className="ff-acc">
+                  <summary>Why there is a price</summary>
+                  <p>
+                    Good Company is a Black Friday sale where every product is a real person in my life. The
+                    price is the date we met. It has never been discounted and never will be.{" "}
+                    <Link href="/pages/about-the-sale">The whole premise.</Link>
+                  </p>
                 </details>
               </dd>
             </div>

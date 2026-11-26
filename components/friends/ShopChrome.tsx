@@ -75,7 +75,7 @@ export function ShopHeader() {
             </ul>
           </li>
           <li>
-            <Link href="/pages/about-the-sale">Fine Print</Link>
+            <Link href="/pages/about-the-sale">The Premise</Link>
           </li>
           <li>
             <Link href="/pages/apply">Apply</Link>
@@ -178,7 +178,7 @@ export function BagDrawer() {
                 <div className="ff-drawer-meta">
                   <p className="ff-drawer-name">{item.nickname}</p>
                   {item.productName ? <p className="ff-drawer-sub">{item.productName}</p> : null}
-                  <p className="ff-drawer-sub">One of One · Final Sale</p>
+                  <p className="ff-drawer-sub">Qty 1 · the only one</p>
                   <button type="button" onClick={() => bag.remove(item.slug)}>
                     Remove
                   </button>
@@ -202,7 +202,7 @@ export function BagDrawer() {
                 value={note}
                 maxLength={280}
                 rows={2}
-                placeholder="say something nice, it goes on the receipt"
+                placeholder="printed on the receipt"
                 onChange={(event) => setNote(event.target.value)}
               />
             </label>
@@ -210,8 +210,16 @@ export function BagDrawer() {
               <span>Subtotal</span>
               <span>$ {formatPrice(sumPrices(bag.items))} USD</span>
             </div>
+            <div className="ff-drawer-total ff-drawer-total-sub">
+              <span>Shipping</span>
+              <span>Free (nothing ships)</span>
+            </div>
+            <div className="ff-drawer-total ff-drawer-total-sub">
+              <span>Due today</span>
+              <span>$ 0 USD</span>
+            </div>
             <p className="ff-drawer-fine">
-              Discounts: none. Shipping: none. Taxes: emotional. All sales final.
+              Nothing is charged and nothing ships. Checkout makes a receipt you can share.
             </p>
             {error ? <p className="ff-error">{error}</p> : null}
             <button type="button" className="ff-pill ff-pill-dark" disabled={busy} onClick={checkout}>
@@ -230,19 +238,23 @@ export function ShopFooter() {
       <div className="ff-footer-cols">
         <div>
           <p className="ff-footer-head">{SHOP_NAME}</p>
-          <p>A shop where every item is a person and nothing is for sale. You're in good company.</p>
+          <p>
+            A Black Friday sale where every product is a real person in my life: my friends and my family,
+            listed the way a store lists clothes. Nothing is for sale. You're in good company.
+          </p>
+        </div>
+        <div>
+          <p className="ff-footer-head">How it works</p>
+          <p>The price is the date we met, read as dollars. September 15 is $915.</p>
+          <p>Add people to your bag and check out. You get a receipt to share. No one is charged; nothing ships.</p>
+          <p>Gift cards are not available. You cannot give someone a person.</p>
         </div>
         <div>
           <p className="ff-footer-head">Customer Care</p>
-          <Link href="/pages/about-the-sale">About the Sale</Link>
+          <Link href="/pages/about-the-sale">The Premise</Link>
           <Link href="/pages/apply">Apply to Be Listed</Link>
           <Link href="/ask">Chat With Us</Link>
           <Link href="/admin">Staff Only</Link>
-        </div>
-        <div>
-          <p className="ff-footer-head">Policies</p>
-          <p>No returns. No exchanges. No restocks.</p>
-          <p>Prices reflect the day we met.</p>
         </div>
         <div>
           <p className="ff-footer-head">Elsewhere</p>
@@ -260,11 +272,11 @@ export function ShopFooter() {
 
 export function ChatPill() {
   return (
-    <Link href="/pages/apply" className="ff-chat">
+    <Link href="/pages/about-the-sale" className="ff-chat">
       <span className="ff-chat-dot" aria-hidden="true">
-        ♡
+        ?
       </span>
-      Think you belong here?
+      What is this?
     </Link>
   );
 }

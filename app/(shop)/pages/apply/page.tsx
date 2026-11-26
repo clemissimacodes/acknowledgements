@@ -15,15 +15,14 @@ export default function Apply() {
       <h1 className="ff-title">Apply to Be Listed</h1>
       <div className="ff-prose">
         <p>
-          We are always sourcing. Listing requirements: we have met at least once, you have made me laugh at
-          least twice, and you are comfortable being described as “100% loyalty, trace amounts of chaos.”
+          Every listing in this store is a real friend or family member of mine. The only requirement is
+          that we have actually met, because the price is the date we did.
         </p>
         <p>
-          To apply, or to request that your listing be edited or taken down (we honor these immediately, no
-          questions), send a note through the{" "}
-          <Link href="/ask">Ask Me Anything</Link> page or text me — you have my number if you belong here.
+          To apply, or to ask that your listing be edited or taken down (done immediately, no questions),
+          send a note through the <Link href="/ask">Ask Me Anything</Link> page, or text me. If you belong
+          here, you have my number.
         </p>
-        <p>Applications are reviewed on a rolling basis. Decisions are final but friendly.</p>
       </div>
     </main>
   );

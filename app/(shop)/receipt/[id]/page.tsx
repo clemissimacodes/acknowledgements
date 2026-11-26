@@ -40,12 +40,12 @@ export default async function ReceiptPage({ params }: Props) {
       <article className="ff-receipt" aria-label={`Receipt ${receipt.id}`}>
         <header>
           <p className="ff-receipt-brand">{SHOP_NAME.toUpperCase()}</p>
-          <p>BY CLEMISSIMA</p>
-          <p>190 N 10TH ST OF MY HEART</p>
-          <p>EVERYWHERE, USA</p>
+          <p>FRIENDS &amp; FAMILY SALE</p>
           <p className="ff-receipt-rule">* * * * * * * * * * * * * * * *</p>
-          <p>ORDER NO. FF-{receipt.id}</p>
+          <p>ORDER NO. GC-{receipt.id}</p>
           <p>{when.toUpperCase()}</p>
+          <p>CASHIER: CLEMENTINE · REGISTER 01</p>
+          <p>ITEMS: {receipt.items.length} · PEOPLE: {receipt.items.length}</p>
           <p className="ff-receipt-rule">- - - - - - - - - - - - - - - -</p>
         </header>
 
@@ -55,7 +55,6 @@ export default async function ReceiptPage({ params }: Props) {
               <span>
                 1 × {item.nickname.toUpperCase()}
                 {item.productName ? <small>{item.productName}</small> : null}
-                <small>ONE OF ONE · FINAL SALE</small>
               </span>
               <span>{money(Number(item.price))}</span>
             </li>
@@ -73,11 +72,7 @@ export default async function ReceiptPage({ params }: Props) {
           </div>
           <div>
             <dt>SHIPPING</dt>
-            <dd>N/A</dd>
-          </div>
-          <div>
-            <dt>TAX</dt>
-            <dd>EMOTIONAL</dd>
+            <dd>FREE*</dd>
           </div>
           <div className="ff-receipt-grand">
             <dt>TOTAL</dt>
@@ -86,9 +81,11 @@ export default async function ReceiptPage({ params }: Props) {
         </dl>
 
         <p className="ff-receipt-rule">- - - - - - - - - - - - - - - -</p>
-        <p className="ff-receipt-paid">PAID IN FULL — IN TIME</p>
-        <p>TENDER: YEARS</p>
-        <p>CHANGE DUE: NONE, KEEP IT</p>
+        <p className="ff-receipt-paid">AMOUNT CHARGED: 0.00</p>
+        <p>YOU SAVED: 0.00 (NOTHING WAS FOR SALE)</p>
+        <p>EACH PRICE IS THE DATE WE MET.</p>
+        <p>*NOTHING SHIPS. THEY GO WHERE THEY LIKE.</p>
+        <p>LOYALTY POINTS EARNED: ONE PER DAY, ONGOING</p>
         {receipt.note ? (
           <>
             <p className="ff-receipt-rule">- - - - - - - - - - - - - - - -</p>
@@ -96,8 +93,8 @@ export default async function ReceiptPage({ params }: Props) {
           </>
         ) : null}
         <p className="ff-receipt-rule">* * * * * * * * * * * * * * * *</p>
-        <p>THANK YOU FOR SHOPPING</p>
-        <p>NO RETURNS. NO EXCHANGES. NO RESTOCKS.</p>
+        <p>THANK YOU FOR SHOPPING GOOD COMPANY</p>
+        <p>THESE ARE REAL PEOPLE. BE NICE TO THEM.</p>
         <p className="ff-receipt-barcode" aria-hidden="true">
           ▌║█║▌│║▌║▌█║▌│║█║▌║▌│█║▌║█
         </p>
