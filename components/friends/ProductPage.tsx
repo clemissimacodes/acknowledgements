@@ -187,14 +187,17 @@ export function ProductPage({ friend }: Props) {
                 ) : (
                   <p className="ff-price ff-price-por">Price upon request</p>
                 )}
-                <p className="ff-price-fine">Has never been on sale. Never will be.</p>
               </dd>
             </div>
 
             <div className="ff-buy-cta">
               <dt aria-hidden="true" />
               <dd>
-                <p className="ff-stock">In stock: 1. There is only the one.</p>
+                <p className="ff-stock">
+                  <strong>Not for Sale</strong>
+                  <br />
+                  In stock: 1 (on hold by Clementine Shao)
+                </p>
                 <button
                   type="button"
                   className="ff-pill ff-pill-dark ff-add"
