@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createReceipt } from "@/lib/friends";
+import { recordCheckoutEvents } from "@/lib/good-company-analytics";
 import { visitorHash } from "@/lib/recording-visitor";
 import { canSeeShop } from "@/lib/shop-access";
 
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
   type CheckoutLine = { slug: string; colorName?: string; colorHex?: string };
-  const lines: Array<string | CheckoutLine> = Array.isArray(body.items)
+  const lines: CheckoutLine[] = Array.isArray(body.items)
     ? body.items
         .flatMap((entry): CheckoutLine[] => {
           if (!entry || typeof entry !== "object") return [];
@@ -27,11 +28,19 @@ export async function POST(request: Request) {
         })
         .slice(0, 24)
     : Array.isArray(body.slugs)
-      ? body.slugs.filter((s): s is string => typeof s === "string").slice(0, 24)
+      ? body.slugs
+          .filter((s): s is string => typeof s === "string")
+          .slice(0, 24)
+          .map((slug) => ({ slug }))
       : [];
   try {
     const hash = await visitorHash({ create: true });
     const id = await createReceipt(lines, body.note, hash);
+    try {
+      await recordCheckoutEvents(request, lines, id);
+    } catch {
+      // Analytics must never fail checkout.
+    }
     return NextResponse.json({ id });
   } catch (error) {
     return NextResponse.json(

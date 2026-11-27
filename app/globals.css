@@ -7375,3 +7375,58 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   font-size: 0.72rem;
   color: rgba(22, 20, 18, 0.55);
 }
+
+/* Good Company shop analytics (control room) */
+.admin-gc-totals {
+  margin: 0 0 1.1rem;
+  font-size: 0.95rem;
+  color: rgba(22, 20, 18, 0.72);
+}
+.admin-gc-totals strong {
+  color: #161412;
+  font-weight: 500;
+}
+.admin-gc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
+}
+.admin-gc-subhead {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(22, 20, 18, 0.55);
+}
+.admin-gc-table th:nth-child(n + 3),
+.admin-gc-table td:nth-child(n + 3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.admin-gc-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 28rem;
+  overflow: auto;
+}
+.admin-gc-feed li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.08);
+  font-size: 0.92rem;
+}
+.admin-gc-feed em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: rgba(22, 20, 18, 0.5);
+}
+@media (max-width: 900px) {
+  .admin-gc-grid {
+    grid-template-columns: 1fr;
+  }
+}

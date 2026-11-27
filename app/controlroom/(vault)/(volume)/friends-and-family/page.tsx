@@ -4,7 +4,9 @@ import { CollectionSelect } from "@/components/friends/CollectionSelect";
 import { FriendBrowser } from "@/components/friends/FriendBrowser";
 import { FriendForm } from "@/components/friends/FriendForm";
 import { RosterAutosave } from "@/components/friends/RosterAutosave";
+import { ShopAnalyticsPanel } from "@/components/friends/ShopAnalytics";
 import { FRIEND_ERAS, RELATIONSHIPS, SHOP_HANDLE } from "@/lib/friend-types";
+import { getShopAnalytics } from "@/lib/good-company-analytics";
 import { listFriends } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +17,12 @@ export const metadata = {
 };
 
 export default async function FriendsControlPage() {
-  const friends = await listFriends({ all: true }).catch(() => []);
+  const [friends, analytics] = await Promise.all([
+    listFriends({ all: true }).catch(() => []),
+    getShopAnalytics({ days: 30 }).catch(() => null),
+  ]);
   const visible = friends.filter((f) => f.visible).length;
+  const nicknameBySlug = new Map(friends.map((f) => [f.slug, f.nickname]));
 
   return (
     <main className="admin-page admin-page-studio">
@@ -26,10 +32,21 @@ export default async function FriendsControlPage() {
           <span className="admin-muted">
             {friends.length} listed · {visible} visible · everything saves on its own ·{" "}
             <Link href={`/collections/${SHOP_HANDLE}`}>open the shop</Link>
+            {" · "}
+            <a href="#good-company-analytics">activity</a>
           </span>
         </div>
         {friends.length ? <FriendBrowser friends={friends} /> : <p className="admin-muted">No one yet.</p>}
       </section>
+
+      {analytics ? (
+        <ShopAnalyticsPanel data={analytics} nicknameBySlug={nicknameBySlug} />
+      ) : (
+        <section className="admin-section" id="good-company-analytics">
+          <h2>Good Company activity</h2>
+          <p className="admin-muted">Analytics unavailable right now.</p>
+        </section>
+      )}
 
       <section className="admin-section">
         <details className="admin-ask">

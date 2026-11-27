@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { trackShopEvent } from "@/components/friends/ShopTracker";
 
 export type BagItem = {
   slug: string;
@@ -58,13 +59,21 @@ export function BagProvider({ children }: { children: ReactNode }) {
   }, [items, hydrated]);
 
   const add = useCallback((item: BagItem) => {
-    setItems((current) =>
-      current.some((entry) => entry.slug === item.slug) ? current : [...current, item],
-    );
+    setItems((current) => {
+      if (current.some((entry) => entry.slug === item.slug)) return current;
+      trackShopEvent("add_to_bag", item.slug, {
+        colorName: item.colorName ?? "",
+      });
+      return [...current, item];
+    });
     setOpen(true);
   }, []);
   const remove = useCallback((slug: string) => {
-    setItems((current) => current.filter((entry) => entry.slug !== slug));
+    setItems((current) => {
+      if (!current.some((entry) => entry.slug === slug)) return current;
+      trackShopEvent("remove_from_bag", slug);
+      return current.filter((entry) => entry.slug !== slug);
+    });
   }, []);
   const clear = useCallback(() => setItems([]), []);
   const has = useCallback((slug: string) => items.some((entry) => entry.slug === slug), [items]);
