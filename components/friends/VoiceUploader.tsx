@@ -30,7 +30,7 @@ type Draft = {
 };
 
 function formatDuration(ms: number | null) {
-  if (!ms || ms <= 0) return "";
+  if (!ms || ms <= 0) return "0:00";
   const total = Math.round(ms / 1000);
   const m = Math.floor(total / 60);
   const s = total % 60;
@@ -43,11 +43,10 @@ function prepareVoiceFile(file: File) {
   if (file.size > FRIEND_VOICE_MAX_BYTES) return "too-large" as const;
   const ext = extensionForAudio(type, file.name);
   const base = file.name.replace(/\.[^.]+$/, "") || "voice";
-  // Always rebuild so codec suffixes like `;codecs=opus` never reach Blob.
   return new File([file], `${base}.${ext}`, { type });
 }
 
-/* Record on the spot — script beside the mic, uploads as soon as you stop. */
+/* Big on-the-spot recorder — never buried inside an image drop zone. */
 export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +61,7 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);
 
   const script = voiceNoteScript(nickname);
   const hint = voiceNoteScriptHint(nickname);
@@ -152,9 +152,11 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
 
   const startRecording = async () => {
     setError("");
+    setMicBlocked(false);
     clearDraft();
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError("This browser can’t record audio — upload a file instead.");
+      setMicBlocked(true);
+      setError("This browser can’t record — use Upload file, or open in Chrome / Safari.");
       return;
     }
     try {
@@ -181,7 +183,8 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
       setRecording(true);
     } catch {
       stopStream();
-      setError("Microphone permission denied — upload a file instead.");
+      setMicBlocked(true);
+      setError("Microphone blocked — allow mic access in the browser bar, then try again. Or upload a file.");
     }
   };
 
@@ -206,7 +209,26 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
   };
 
   return (
-    <div className="admin-drop-wrap admin-voice-wrap">
+    <div className="admin-voice-studio">
+      <header className="admin-voice-studio-head">
+        <div>
+          <strong>Voice memo for {nickname}</strong>
+          <p>
+            {currentUrl
+              ? `Live on their page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}.`
+              : "Nothing live yet — record one now."}
+          </p>
+        </div>
+        {currentUrl && !busy && !recording && !draft ? (
+          <form action={clearFriendVoiceForm}>
+            <input type="hidden" name="id" value={id} />
+            <button type="submit" className="admin-voice-remove">
+              Remove
+            </button>
+          </form>
+        ) : null}
+      </header>
+
       <div className="admin-voice-script">
         <div className="admin-voice-script-head">
           <strong>Light script</strong>
@@ -219,20 +241,20 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
       </div>
 
       {draft && !recording ? (
-        <div className={`admin-drop admin-voice-drop${busy ? " is-busy" : ""}`}>
-          <span className="admin-drop-label">
+        <div className="admin-voice-panel">
+          <p className="admin-voice-status">
             <strong>{busy ? "Saving…" : "Take ready"}</strong>
-            <small>
+            <span>
               {busy
                 ? "Uploading — they’ll unwrap it like a present…"
-                : `Held here${draft.durationMs ? ` · ${formatDuration(draft.durationMs)}` : ""}. Retry if upload fails — you won’t lose it.`}
-            </small>
-          </span>
+                : `Held here · ${formatDuration(draft.durationMs)}. Retry if upload fails.`}
+            </span>
+          </p>
           <audio controls src={draft.url} preload="metadata" />
           <div className="admin-voice-actions">
             <button
               type="button"
-              className="admin-voice-confirm"
+              className="admin-voice-record"
               disabled={busy}
               onClick={() => void publish(draft)}
             >
@@ -244,43 +266,41 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
           </div>
         </div>
       ) : (
-        <div className={`admin-drop admin-voice-drop${busy || recording ? " is-busy" : ""}`}>
-          <span className="admin-drop-label">
+        <div className={`admin-voice-panel${recording ? " is-recording" : ""}`}>
+          <p className="admin-voice-status">
             <strong>
               {recording
                 ? `Recording… ${formatDuration(elapsedMs)}`
                 : busy
                   ? "Saving…"
-                  : currentUrl
-                    ? `Voice note for ${nickname}`
-                    : `Record for ${nickname}`}
+                  : "Ready when you are"}
             </strong>
-            <small>
+            <span>
               {recording
                 ? "Tap stop when you’re done — it uploads right away."
                 : busy
                   ? "Uploading to their product page…"
-                  : currentUrl
-                    ? `Live as a gift on their page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}. Record again to replace.`
-                    : "One tap to record. Stop when you’re done — saves and goes live."}
-            </small>
-          </span>
+                  : "One tap. Allow the mic if asked. That’s it."}
+            </span>
+          </p>
+
           {currentUrl && !recording && !busy ? (
             <audio controls src={currentUrl} preload="metadata" />
           ) : null}
+
           <div className="admin-voice-actions">
             {recording ? (
-              <button type="button" className="admin-voice-confirm admin-voice-record" onClick={stopRecording}>
+              <button type="button" className="admin-voice-record is-stop" onClick={stopRecording}>
                 Stop &amp; save
               </button>
             ) : (
               <button
                 type="button"
-                className="admin-voice-confirm admin-voice-record"
+                className="admin-voice-record"
                 disabled={busy}
                 onClick={() => void startRecording()}
               >
-                {currentUrl ? "Record again" : "Record now"}
+                {currentUrl ? "Record again" : "● Record now"}
               </button>
             )}
             <button
@@ -291,6 +311,7 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
               Upload file
             </button>
           </div>
+
           <input
             ref={inputRef}
             type="file"
@@ -304,13 +325,13 @@ export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: P
           />
         </div>
       )}
-      {error ? <em className="admin-drop-error">{error}</em> : null}
-      {currentUrl && !busy && !recording && !draft ? (
-        <form action={clearFriendVoiceForm} className="admin-drop-remove">
-          <input type="hidden" name="id" value={id} />
-          <button type="submit">Remove</button>
-        </form>
+
+      {micBlocked ? (
+        <p className="admin-voice-hint">
+          Tip: click the lock / site settings in the address bar → Microphone → Allow, then hit Record again.
+        </p>
       ) : null}
+      {error ? <em className="admin-drop-error">{error}</em> : null}
     </div>
   );
 }
