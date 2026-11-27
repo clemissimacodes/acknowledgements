@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DIARY_PATH, FRIEND_ERAS, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
-import { HeaderVoiceStrip } from "./FriendVoice";
 import { sumPrices, useBag } from "./bag";
 
 const MARQUEE =
@@ -36,7 +35,6 @@ export function ShopHeader() {
 
   return (
     <header className="ff-header">
-      <HeaderVoiceStrip />
       <Link href={DIARY_PATH} className="ff-marquee" aria-label="About the sale">
         <span className="ff-marquee-track" aria-hidden="true">
           <span>{MARQUEE} →</span>

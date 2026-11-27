@@ -13,7 +13,7 @@ import {
 } from "@/lib/friend-types";
 import { colorsForFriend } from "@/lib/friend-colors";
 import { AlsoLike } from "./AlsoLike";
-import { FriendVoiceBridge } from "./FriendVoice";
+import { VoiceGift } from "./VoiceGift";
 import { useBag } from "./bag";
 import { PhotoRail } from "./PhotoRail";
 
@@ -33,11 +33,6 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
 
   return (
     <main className="ff-product">
-      <FriendVoiceBridge
-        url={friend.voiceUrl}
-        durationMs={friend.voiceDurationMs}
-        label={`Voice memo about ${friend.nickname}`}
-      />
       <p className="ff-crumbs">
         <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
         <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
@@ -264,6 +259,20 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                   </button>
                 </dd>
               </div>
+
+              {friend.voiceUrl ? (
+                <div className="ff-buy-voice">
+                  <dt>A note</dt>
+                  <dd>
+                    <VoiceGift
+                      url={friend.voiceUrl}
+                      durationMs={friend.voiceDurationMs}
+                      nickname={friend.nickname}
+                      slug={friend.slug}
+                    />
+                  </dd>
+                </div>
+              ) : null}
 
               <div>
                 <dt>Details</dt>

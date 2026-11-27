@@ -8,6 +8,7 @@ import {
   FRIEND_VOICE_MAX_BYTES,
   normalizeVoiceContentType,
 } from "@/lib/friend-types";
+import { voiceNoteScript, voiceNoteScriptHint } from "@/lib/voice-note-script";
 import {
   extensionForAudio,
   fileFromRecording,
@@ -17,6 +18,7 @@ import {
 
 type Props = {
   id: string;
+  nickname: string;
   currentUrl: string | null;
   currentDurationMs: number | null;
 };
@@ -45,9 +47,8 @@ function prepareVoiceFile(file: File) {
   return new File([file], `${base}.${ext}`, { type });
 }
 
-/* Record or drop a file — uploads and goes live as soon as you stop / choose.
-   If upload fails, the take stays so you can retry without re-recording. */
-export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
+/* Record on the spot — script beside the mic, uploads as soon as you stop. */
+export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
@@ -60,6 +61,10 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const script = voiceNoteScript(nickname);
+  const hint = voiceNoteScriptHint(nickname);
 
   useEffect(() => {
     if (!recording) return;
@@ -190,16 +195,37 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
     recorder.stop();
   };
 
+  const copyScript = async () => {
+    try {
+      await navigator.clipboard.writeText(script);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setError("Couldn’t copy — read it from the card.");
+    }
+  };
+
   return (
     <div className="admin-drop-wrap admin-voice-wrap">
+      <div className="admin-voice-script">
+        <div className="admin-voice-script-head">
+          <strong>Light script</strong>
+          <button type="button" onClick={() => void copyScript()}>
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <p className="admin-voice-script-hint">{hint}</p>
+        <pre className="admin-voice-script-body">{script}</pre>
+      </div>
+
       {draft && !recording ? (
         <div className={`admin-drop admin-voice-drop${busy ? " is-busy" : ""}`}>
           <span className="admin-drop-label">
             <strong>{busy ? "Saving…" : "Take ready"}</strong>
             <small>
               {busy
-                ? "Uploading to the product page…"
-                : `Your recording is held here${draft.durationMs ? ` · ${formatDuration(draft.durationMs)}` : ""}. Retry if upload fails — you won’t lose it.`}
+                ? "Uploading — they’ll unwrap it like a present…"
+                : `Held here${draft.durationMs ? ` · ${formatDuration(draft.durationMs)}` : ""}. Retry if upload fails — you won’t lose it.`}
             </small>
           </span>
           <audio controls src={draft.url} preload="metadata" />
@@ -210,7 +236,7 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
               disabled={busy}
               onClick={() => void publish(draft)}
             >
-              {busy ? "Saving…" : error ? "Retry upload" : "Save"}
+              {busy ? "Saving…" : error ? "Retry upload" : "Save to their page"}
             </button>
             <button type="button" disabled={busy} onClick={clearDraft}>
               Discard
@@ -226,17 +252,17 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
                 : busy
                   ? "Saving…"
                   : currentUrl
-                    ? "Voice note"
-                    : "Voice note (none yet)"}
+                    ? `Voice note for ${nickname}`
+                    : `Record for ${nickname}`}
             </strong>
             <small>
               {recording
-                ? "Tap save when you’re done — it uploads right away."
+                ? "Tap stop when you’re done — it uploads right away."
                 : busy
-                  ? "Uploading to the product page…"
+                  ? "Uploading to their product page…"
                   : currentUrl
-                    ? `Live on the product page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}. Record or upload to replace.`
-                    : "Record or drop an m4a / mp3 / wav — saves and uploads immediately."}
+                    ? `Live as a gift on their page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}. Record again to replace.`
+                    : "One tap to record. Stop when you’re done — saves and goes live."}
             </small>
           </span>
           {currentUrl && !recording && !busy ? (
@@ -244,12 +270,17 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
           ) : null}
           <div className="admin-voice-actions">
             {recording ? (
-              <button type="button" className="admin-voice-confirm" onClick={stopRecording}>
-                Save
+              <button type="button" className="admin-voice-confirm admin-voice-record" onClick={stopRecording}>
+                Stop &amp; save
               </button>
             ) : (
-              <button type="button" disabled={busy} onClick={() => void startRecording()}>
-                Record
+              <button
+                type="button"
+                className="admin-voice-confirm admin-voice-record"
+                disabled={busy}
+                onClick={() => void startRecording()}
+              >
+                {currentUrl ? "Record again" : "Record now"}
               </button>
             )}
             <button

@@ -140,6 +140,12 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_url TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_pathname TEXT`;
       await sql`ALTER TABLE friends ALTER COLUMN met_on DROP NOT NULL`;
+      /* Trait + description retired from the shop — wipe any leftover copy. */
+      await sql`
+        UPDATE friends
+        SET description = '', favorite_trait = ''
+        WHERE COALESCE(description, '') <> '' OR COALESCE(favorite_trait, '') <> ''
+      `;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
           id TEXT PRIMARY KEY,

@@ -405,42 +405,228 @@ html.ff-locked {
   font-style: italic;
 }
 
-/* ---- Header voice memo (very top) ---------------------------------- */
+/* ---- Voice gift (present on the product page) ---------------------- */
 
-.ff-head-voice {
+.ff-voice-gift {
+  margin: 6px 0 4px;
+}
+
+.ff-voice-gift-seal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background:
+    radial-gradient(120% 80% at 10% 0%, color-mix(in srgb, #c45c48 10%, transparent), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--paper-2) 80%, #fff), var(--paper));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.ff-voice-gift-seal:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+  transform: translateY(-1px);
+}
+
+.ff-voice-gift-seal:disabled {
+  cursor: wait;
+}
+
+.ff-voice-gift-parcel {
+  position: relative;
+  width: 52px;
+  height: 42px;
+  flex: none;
+}
+
+.ff-voice-gift-body,
+.ff-voice-gift-lid {
+  position: absolute;
+  inset: 10px 4px 2px;
+  background: color-mix(in srgb, #d9c4a5 70%, #fff);
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 2px;
+}
+
+.ff-voice-gift-lid {
+  inset: 2px 2px auto;
+  height: 14px;
+  background: color-mix(in srgb, #cbb089 75%, #fff);
+  transform-origin: top center;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.45s ease;
+}
+
+.ff-voice-gift-ribbon-v,
+.ff-voice-gift-ribbon-h {
+  position: absolute;
+  background: #b94a3a;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+}
+
+.ff-voice-gift-ribbon-v {
+  top: 2px;
+  bottom: 2px;
+  left: 50%;
+  width: 5px;
+  margin-left: -2.5px;
+}
+
+.ff-voice-gift-ribbon-h {
+  top: 50%;
+  left: 4px;
+  right: 4px;
+  height: 5px;
+  margin-top: -2.5px;
+}
+
+.ff-voice-gift-bow {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 14px;
+  height: 10px;
+  margin-left: -7px;
+  background: #b94a3a;
+  border-radius: 50% 50% 40% 40%;
+  box-shadow: -8px 2px 0 #b94a3a, 8px 2px 0 #b94a3a;
+  animation: ff-voice-bow-breathe 2.4s ease-in-out infinite;
+  transition: opacity 0.35s ease, transform 0.55s ease;
+}
+
+@keyframes ff-voice-bow-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.ff-voice-gift.is-unwrapping .ff-voice-gift-lid {
+  transform: rotateX(-72deg) translateY(-4px);
+  opacity: 0.35;
+}
+
+.ff-voice-gift.is-unwrapping .ff-voice-gift-ribbon-v {
+  transform: translateY(-18px);
+  opacity: 0;
+}
+
+.ff-voice-gift.is-unwrapping .ff-voice-gift-ribbon-h {
+  transform: translateX(22px);
+  opacity: 0;
+}
+
+.ff-voice-gift.is-unwrapping .ff-voice-gift-bow {
+  transform: scale(0.6) translateY(-10px);
+  opacity: 0;
+  animation: none;
+}
+
+.ff-voice-gift-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ff-voice-gift-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ff-voice-gift-copy em {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.ff-voice-gift-open {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background:
+    radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, #c45c48 8%, transparent), transparent 50%),
+    linear-gradient(180deg, color-mix(in srgb, var(--paper-2) 55%, #fff), var(--paper));
+  animation: ff-voice-open-in 0.55s ease both;
+}
+
+@keyframes ff-voice-open-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ff-voice-gift-label {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.ff-voice-gift-label strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ff-voice-gift-label span {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.ff-voice-gift-player {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 36px;
-  padding: 0 28px;
-  border-bottom: 1px solid var(--rule);
-  background: color-mix(in srgb, var(--paper-2) 70%, var(--paper));
 }
 
-.ff-head-voice-play {
+.ff-voice-gift-play {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 0;
-  background: none;
-  color: var(--ink);
-  font-size: 10px;
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11px;
   line-height: 1;
   cursor: pointer;
+  animation: ff-voice-play-pulse 2.8s ease-in-out 1;
 }
 
-.ff-head-voice-wave {
+@keyframes ff-voice-play-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ink) 0%, transparent);
+  }
+  40% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+}
+
+.ff-voice-gift-wave {
   flex: 1 1 auto;
   min-width: 0;
-  height: 22px;
+  height: 28px;
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
 }
 
-.ff-head-voice-bars {
+.ff-voice-gift-bars {
   display: flex;
   align-items: center;
   gap: 2px;
@@ -448,20 +634,20 @@ html.ff-locked {
   height: 100%;
 }
 
-.ff-head-voice-bars i {
+.ff-voice-gift-bars i {
   flex: 1 1 0;
   min-width: 1px;
   max-width: 3px;
   align-self: center;
   border-radius: 1px;
-  background: color-mix(in srgb, var(--ink) 28%, transparent);
+  background: color-mix(in srgb, var(--ink) 24%, transparent);
 }
 
-.ff-head-voice-bars i.is-on {
+.ff-voice-gift-bars i.is-on {
   background: var(--ink);
 }
 
-.ff-head-voice-time {
+.ff-voice-gift-time {
   flex: none;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
@@ -470,10 +656,9 @@ html.ff-locked {
 }
 
 @media (max-width: 760px) {
-  .ff-head-voice {
-    gap: 10px;
-    height: 34px;
-    padding: 0 14px;
+  .ff-voice-gift-seal,
+  .ff-voice-gift-open {
+    padding: 12px 14px;
   }
 }
 

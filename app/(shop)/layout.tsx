@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { Albert_Sans, Caveat, Instrument_Serif } from "next/font/google";
 import { BagProvider } from "@/components/friends/bag";
-import { FriendVoiceProvider } from "@/components/friends/FriendVoice";
 import { BagDrawer, ChatPill, ShopFooter, ShopHeader } from "@/components/friends/ShopChrome";
 import { ShopTracker } from "@/components/friends/ShopTracker";
 import { SHOP_LIVE, SHOP_NAME } from "@/lib/friend-types";
@@ -49,14 +48,12 @@ export default async function ShopLayout({ children }: Readonly<{ children: Reac
   return (
     <div className={`ff ${grotesk.variable} ${editorial.variable} ${scrawl.variable}`}>
       <BagProvider>
-        <FriendVoiceProvider>
-          <ShopTracker />
-          <ShopHeader />
-          {children}
-          <ShopFooter />
-          <ChatPill />
-          <BagDrawer />
-        </FriendVoiceProvider>
+        <ShopTracker />
+        <ShopHeader />
+        {children}
+        <ShopFooter />
+        <ChatPill />
+        <BagDrawer />
       </BagProvider>
     </div>
   );

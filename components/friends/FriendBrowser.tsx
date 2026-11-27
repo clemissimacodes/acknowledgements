@@ -339,6 +339,7 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
           />
           <VoiceUploader
             id={friend.id}
+            nickname={friend.nickname}
             currentUrl={friend.voiceUrl}
             currentDurationMs={friend.voiceDurationMs}
           />
