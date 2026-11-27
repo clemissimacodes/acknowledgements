@@ -1,9 +1,10 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { isAdminUser } from "@/lib/admin";
 import {
+  FRIENDS_CACHE_TAG,
   createFriend,
   deleteFriend,
   installCaricatureHero,
@@ -21,6 +22,7 @@ async function requireOwner() {
 }
 
 function refresh() {
+  revalidateTag(FRIENDS_CACHE_TAG);
   revalidatePath("/collections/[handle]", "page");
   revalidatePath("/products/[slug]", "page");
   revalidatePath("/controlroom/friends-and-family");

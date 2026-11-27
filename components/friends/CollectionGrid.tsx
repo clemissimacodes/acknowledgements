@@ -9,7 +9,7 @@ import {
   SHOP_HANDLE,
   collectionOrder,
   priceLabel,
-  type Friend,
+  type FriendCard,
 } from "@/lib/friend-types";
 
 type Sort = "featured" | "longest" | "newest" | "family" | "hometown" | "az" | "fate";
@@ -34,7 +34,7 @@ function fateOrder(seed: number) {
 }
 
 type Props = {
-  friends: Friend[];
+  friends: FriendCard[];
   era: string | null;
   query: string;
 };
@@ -74,7 +74,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
           f.hometown.toLowerCase().includes(q)),
     );
     /* Collection order ("Fall 2024"); unknowns last, then by name so it is stable. */
-    const byDate = (a: Friend, b: Friend) =>
+    const byDate = (a: FriendCard, b: FriendCard) =>
       collectionOrder(a.collection) - collectionOrder(b.collection) || a.nickname.localeCompare(b.nickname);
     switch (sort) {
       case "longest":

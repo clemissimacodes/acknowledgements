@@ -1,6 +1,8 @@
 import "server-only";
 
 import { randomBytes, randomUUID } from "crypto";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { del } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
 import {
@@ -14,12 +16,14 @@ import {
   slugifyFriend,
   spotifyTrackId,
   type Friend,
+  type FriendCard,
   type FriendColor,
   type Receipt,
   type ReceiptItem,
 } from "@/lib/friend-types";
 
 export const FRIEND_BLOB_PREFIX = "friends-and-family/";
+export const FRIENDS_CACHE_TAG = "good-company-friends";
 
 function db() {
   const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
@@ -197,22 +201,78 @@ function toFriend(row: Row): Friend {
   };
 }
 
-export async function listFriends({ all = false } = {}): Promise<Friend[]> {
-  await ensureTables();
-  const sql = db();
-  const rows = all
-    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`
-    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
-  return (rows as Row[]).map(toFriend);
+function toFriendCard(row: Row): FriendCard {
+  return {
+    id: String(row.id),
+    slug: String(row.slug),
+    nickname: String(row.nickname),
+    productName: String(row.product_name ?? ""),
+    era: isFriendEra(row.era) ? row.era : "new-arrivals",
+    badge: isFriendBadge(row.badge) ? row.badge : "none",
+    birthday: isBirthday(row.birthday) ? row.birthday : "",
+    collection: isCollection(row.collection) ? row.collection : "",
+    metHow: String(row.met_how ?? ""),
+    hometown: String(row.hometown ?? ""),
+    madeOf: Array.isArray(row.made_of) ? (row.made_of as string[]) : [],
+    relationship: String(row.relationship ?? ""),
+    heroUrl: (row.hero_url as string | null) ?? null,
+    altUrl: (row.alt_url as string | null) ?? null,
+    visible: Boolean(row.visible),
+    sortOrder: Number(row.sort_order ?? 0),
+    createdAt: iso(row.created_at),
+  };
 }
 
-export async function getFriendBySlug(slug: string, { all = false } = {}): Promise<Friend | null> {
-  await ensureTables();
+const cachedVisibleCards = unstable_cache(
+  async () => {
+    const sql = db();
+    const rows = await sql`
+      SELECT id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown,
+        made_of, relationship, hero_url, alt_url, visible, sort_order, created_at
+      FROM friends
+      WHERE visible
+      ORDER BY sort_order ASC, lower(nickname) ASC
+    `;
+    return (rows as Row[]).map(toFriendCard);
+  },
+  ["good-company-visible-cards-v3"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
+
+const cachedFriendBySlug = unstable_cache(
+  async (slug: string) => {
+    const sql = db();
+    const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
+    return rows[0] ? toFriend(rows[0]) : null;
+  },
+  ["good-company-friend-by-slug-v3"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
+
+export const listFriendCards = cache(async (): Promise<FriendCard[]> => cachedVisibleCards());
+
+export const listFriends = cache(async ({ all = false } = {}): Promise<Friend[]> => {
+  if (all) {
+    await ensureTables();
+    const sql = db();
+    const rows = await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`;
+    return (rows as Row[]).map(toFriend);
+  }
   const sql = db();
-  const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
-  const friend = rows[0] ? toFriend(rows[0]) : null;
-  return friend && (all || friend.visible) ? friend : null;
-}
+  const rows = await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
+  return (rows as Row[]).map(toFriend);
+});
+
+export const getFriendBySlug = cache(async (slug: string, { all = false } = {}): Promise<Friend | null> => {
+  if (all) {
+    await ensureTables();
+    const sql = db();
+    const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
+    return rows[0] ? toFriend(rows[0]) : null;
+  }
+  const friend = await cachedFriendBySlug(slug);
+  return friend?.visible ? friend : null;
+});
 
 export async function getFriendById(id: string): Promise<Friend | null> {
   await ensureTables();
@@ -519,7 +579,6 @@ export async function createReceipt(slugs: string[], note: unknown, visitorHash:
 }
 
 export async function getReceipt(id: string): Promise<Receipt | null> {
-  await ensureTables();
   const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
   if (!clean) return null;
   const rows = (await db()`SELECT * FROM friend_receipts WHERE id = ${clean} LIMIT 1`) as Row[];

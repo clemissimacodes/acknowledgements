@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { priceLabel, type Friend } from "@/lib/friend-types";
+import { priceLabel, type FriendCard } from "@/lib/friend-types";
 
-type Props = { friends: Friend[] };
+type Props = { friends: FriendCard[] };
 
 export function AlsoLike({ friends }: Props) {
   if (!friends.length) return null;

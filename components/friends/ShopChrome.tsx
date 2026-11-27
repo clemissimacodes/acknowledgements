@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DIARY_PATH, FRIEND_ERAS, SALE_NAME, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
+import { HeaderVoiceStrip } from "./FriendVoice";
 import { sumPrices, useBag } from "./bag";
 
 const MARQUEE = `${SALE_NAME} ♡ 0% off everything ♡ Buy one, get nothing ♡ Prices only go up ♡ Nothing ships ♡ Doorbusters unavailable, we don't have a door`;
@@ -31,6 +32,7 @@ export function ShopHeader() {
 
   return (
     <header className="ff-header">
+      <HeaderVoiceStrip />
       <Link href={DIARY_PATH} className="ff-marquee" aria-label="About the sale">
         <span className="ff-marquee-track" aria-hidden="true">
           <span>{MARQUEE} →</span>
@@ -87,9 +89,41 @@ export function ShopHeader() {
           <button type="button" className="ff-bag-link" onClick={() => bag.setOpen(true)}>
             Bag {String(bag.items.length).padStart(2, "0")}
           </button>
+          <SearchForm />
         </div>
       </nav>
     </header>
+  );
+}
+
+function SearchForm() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  return (
+    <form
+      className="ff-search"
+      role="search"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const query = q.trim();
+        router.push(
+          query
+            ? `/collections/${SHOP_HANDLE}?q=${encodeURIComponent(query)}`
+            : `/collections/${SHOP_HANDLE}`,
+        );
+      }}
+    >
+      <input
+        type="search"
+        name="q"
+        value={q}
+        onChange={(event) => setQ(event.target.value)}
+        placeholder="SEARCH"
+        aria-label="Search friends"
+        autoComplete="off"
+      />
+      <button type="submit">Enter</button>
+    </form>
   );
 }
 

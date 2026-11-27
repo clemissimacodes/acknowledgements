@@ -14,10 +14,12 @@ import {
   type Friend,
 } from "@/lib/friend-types";
 import { AlsoLike } from "./AlsoLike";
+import { FriendVoiceBridge } from "./FriendVoice";
 import { useBag } from "./bag";
 import { ProductSoundtrack } from "./ProductSoundtrack";
+import type { FriendCard } from "@/lib/friend-types";
 
-type Props = { friend: Friend; alsoLike?: Friend[] };
+type Props = { friend: Friend; alsoLike?: FriendCard[] };
 
 export function ProductPage({ friend, alsoLike = [] }: Props) {
   const bag = useBag();
@@ -31,11 +33,12 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
 
   return (
     <main className="ff-product">
-      <ProductSoundtrack
-        voiceUrl={friend.voiceUrl}
-        voiceDurationMs={friend.voiceDurationMs}
-        trackId={trackId}
-      >
+      <FriendVoiceBridge
+        url={friend.voiceUrl}
+        durationMs={friend.voiceDurationMs}
+        label={`Voice memo about ${friend.nickname}`}
+      />
+      <ProductSoundtrack trackId={trackId}>
         <p className="ff-crumbs">
           <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
           <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>

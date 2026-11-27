@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SHOP_HANDLE, SHOP_NAME } from "@/lib/friend-types";
-import { listFriends } from "@/lib/friends";
-
-export const dynamic = "force-dynamic";
+import { listFriendCards } from "@/lib/friends";
 
 export const metadata: Metadata = {
   title: "Studio Diary: Good Company",
@@ -56,7 +54,7 @@ const QA: QA[] = [
 ];
 
 export default async function GoodCompanyDiary() {
-  const friends = await listFriends();
+  const friends = await listFriendCards();
   const count = friends.length;
   const family = friends.filter((f) => f.relationship === "Family").length;
   const hometowns = new Set(friends.map((f) => f.hometown).filter(Boolean)).size;
