@@ -10,6 +10,17 @@ html:has(.ff) body {
   background: #fcfbf5;
 }
 
+/* Site peel cursor fights the shop chrome and steals main-thread time. */
+html:has(.ff) .peel-cursor,
+html:has(.ff) .peel-cursor-trail {
+  display: none !important;
+}
+
+html:has(.ff).peel-cursor-enabled,
+html:has(.ff).peel-cursor-enabled * {
+  cursor: auto !important;
+}
+
 html.ff-locked {
   overflow: hidden;
 }
@@ -120,14 +131,16 @@ html.ff-locked {
 }
 
 /* ---- Nav ----------------------------------------------------------- */
+/* Orseund-style: logo left, bag + search pill right. */
 
 .ff-nav {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  height: 60px;
-  padding: 0 24px;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 72px;
+  padding: 18px 28px;
 }
 
 .ff-nav ul {
@@ -136,10 +149,15 @@ html.ff-locked {
   list-style: none;
 }
 
-.ff-nav-left {
+.ff-nav-brand {
   display: flex;
-  gap: 36px;
+  gap: 18px;
   align-items: center;
+  min-width: 0;
+}
+
+.ff-nav-left {
+  display: none;
 }
 
 .ff-nav-left > li > a,
@@ -154,6 +172,21 @@ html.ff-locked {
 
 .ff-nav-item {
   position: relative;
+}
+
+.ff-nav-shop-btn {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .ff-dropdown {
@@ -191,44 +224,51 @@ html.ff-locked {
 .ff-logo {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   line-height: 1;
 }
 
 .ff-logo-mark {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
 }
 
 .ff-logo-sub {
-  margin-top: 4px;
-  font-size: 6.5px;
+  margin-top: 5px;
+  font-size: 7px;
   font-weight: 400;
-  letter-spacing: 0.32em;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
 }
 
 .ff-nav-right {
   display: flex;
-  gap: 28px;
+  gap: 22px;
   align-items: center;
   justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .ff-bag-link {
   padding: 6px 0;
   border: 0;
   background: none;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .ff-search {
   display: flex;
   align-items: center;
-  width: 150px;
-  height: 28px;
-  padding: 0 12px;
+  width: min(240px, 36vw);
+  height: 30px;
+  padding: 0 14px;
   border: 1px solid var(--ink);
   border-radius: 999px;
 }
@@ -240,22 +280,27 @@ html.ff-locked {
   background: none;
   color: var(--ink);
   font: inherit;
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   outline: none;
 }
 
 .ff-search input::placeholder {
   color: var(--ink);
+  opacity: 1;
 }
 
 .ff-search button {
   padding: 0;
   border: 0;
   background: none;
-  font-size: 9px;
-  letter-spacing: 0.08em;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .ff-nav-burger {
@@ -360,65 +405,76 @@ html.ff-locked {
   font-style: italic;
 }
 
-/* ---- Founder voice (hairline) -------------------------------------- */
+/* ---- Header voice memo (very top) ---------------------------------- */
 
-.ff-voice {
-  margin: 0;
-  padding: 14px 50px 0;
+.ff-head-voice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper-2) 70%, var(--paper));
 }
 
-.ff-voice-btn {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  margin: 0;
-  padding: 0 0 8px;
+.ff-head-voice-play {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   border: 0;
   background: none;
-  color: inherit;
-  text-align: left;
+  color: var(--ink);
+  font-size: 10px;
+  line-height: 1;
   cursor: pointer;
-  font: inherit;
 }
 
-.ff-voice-icon {
-  flex: none;
-  width: 1.2em;
-  font-size: 11px;
-  letter-spacing: 0;
-  color: var(--ink-2);
-}
-
-.ff-voice-label {
-  flex: 1;
+.ff-head-voice-wave {
+  flex: 1 1 auto;
   min-width: 0;
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: var(--ink-2);
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
-.ff-voice-time {
+.ff-head-voice-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.ff-head-voice-bars i {
+  flex: 1 1 0;
+  min-width: 1px;
+  max-width: 3px;
+  align-self: center;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.ff-head-voice-bars i.is-on {
+  background: var(--ink);
+}
+
+.ff-head-voice-time {
   flex: none;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   color: var(--ink-2);
 }
 
-.ff-voice-line {
-  height: 2px;
-  background: color-mix(in srgb, var(--ink) 12%, transparent);
-  overflow: hidden;
-}
-
-.ff-voice-line i {
-  display: block;
-  height: 100%;
-  width: 100%;
-  background: var(--ink);
-  transform-origin: left center;
-  transform: scaleX(0);
-  transition: transform 80ms linear;
+@media (max-width: 760px) {
+  .ff-head-voice {
+    gap: 10px;
+    height: 34px;
+    padding: 0 14px;
+  }
 }
 
 /* ---- Anthem (Spotify) ---------------------------------------------- */
@@ -476,11 +532,11 @@ p.ff-anthem-whisper {
 
 .ff-also {
   margin: 0;
-  padding: 48px 50px 64px;
+  padding: 28px 50px 48px;
 }
 
 .ff-also-title {
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   font-family: var(--serif);
   font-size: 18px;
   font-weight: 400;
@@ -509,6 +565,21 @@ p.ff-anthem-whisper {
 
 .ff-card a {
   display: block;
+}
+
+.ff-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+.ff-also-grid .ff-card-hero {
+  /* Keep also-like tiles on one baseline whether cutout or photo. */
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .ff-card-media {
@@ -610,24 +681,61 @@ p.ff-anthem-whisper {
 
 .ff-product-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px 24px;
   align-items: start;
-  padding: 50px 50px 90px;
+  padding: 40px 50px 36px;
 }
 
-.ff-specs,
+.ff-product-grid-gallery {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 4px 18px;
+}
+
+.ff-product-left,
 .ff-buy {
   position: sticky;
   top: 100px;
+  align-self: start;
+}
+
+.ff-product-left {
+  display: grid;
+  gap: 28px;
+  padding-right: 12px;
 }
 
 .ff-specs {
-  padding-right: 50px;
+  padding-right: 0;
 }
 
 .ff-buy {
-  padding-left: 60px;
+  padding-left: 28px;
+}
+
+.ff-photo-rail {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ff-parallax-frame {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: var(--paper-2);
+  aspect-ratio: 4 / 5;
+}
+
+.ff-parallax-frame img {
+  position: absolute;
+  inset: -12% 0;
+  width: 100%;
+  height: 124%;
+  object-fit: cover;
+  object-position: center;
+  will-change: transform;
+  transform: translate3d(0, var(--ff-parallax-y, 0%), 0);
 }
 
 .ff-specs dl,
@@ -640,7 +748,8 @@ p.ff-anthem-whisper {
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);
   gap: 0 26px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  align-items: start;
 }
 
 .ff-specs dt,
@@ -664,23 +773,6 @@ p.ff-anthem-whisper {
   display: block;
 }
 
-.ff-alt-stack {
-  display: grid;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.ff-alt {
-  margin: 0;
-}
-
-.ff-alt img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  background: var(--paper-2);
-}
-
 .ff-hero {
   position: relative;
   margin: 0;
@@ -700,6 +792,32 @@ p.ff-anthem-whisper {
   position: relative;
   display: block;
   aspect-ratio: 4 / 5;
+}
+
+@supports (animation-timeline: view()) {
+  .ff-parallax-frame img {
+    animation: ff-photo-parallax linear both;
+    animation-timeline: view();
+    animation-range: cover;
+  }
+
+  @keyframes ff-photo-parallax {
+    from {
+      transform: translate3d(0, -10%, 0);
+    }
+    to {
+      transform: translate3d(0, 10%, 0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-parallax-frame img {
+    inset: 0;
+    height: 100%;
+    animation: none;
+    transform: none;
+  }
 }
 
 .ff-title {
@@ -737,71 +855,132 @@ p.ff-anthem-whisper {
   font-style: italic;
 }
 
-.ff-sizes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 3px;
-}
-
-.ff .ff-size {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 31px;
-  height: 31px;
-  padding: 0 10px;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  background: none;
+.ff-size-one {
+  margin: 0;
+  padding-top: 2px;
   font-size: 12px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.ff-size[aria-checked="true"] {
-  box-shadow: inset 0 0 0 1px var(--ink);
-}
-
-.ff .ff-size-out {
-  color: var(--ink-2);
-  border-color: var(--rule);
-  text-decoration: line-through;
-  cursor: not-allowed;
+  line-height: 1.5;
 }
 
 .ff .ff-color-name {
-  margin: 0 0 10px;
-  font-size: 12px;
-  letter-spacing: 0;
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ff-swatch-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .ff-swatches {
   display: flex;
-  gap: 10px;
+  gap: 16px;
+  align-items: center;
+  padding: 4px 2px 2px;
 }
 
 .ff-swatch {
   position: relative;
-  width: 38px;
-  height: 16px;
+  width: 54px;
+  height: 26px;
   padding: 0;
   border: 0;
-  border-radius: 46% 54% 48% 52% / 60% 40% 60% 40%;
-  background: var(--swatch);
-  transform: rotate(-3deg);
+  background: transparent;
+  cursor: pointer;
 }
 
+.ff-swatch-stroke {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      ellipse 70% 90% at 28% 45%,
+      color-mix(in srgb, #fff 22%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 80% at 72% 60%,
+      color-mix(in srgb, #000 16%, transparent),
+      transparent 50%
+    ),
+    repeating-linear-gradient(
+      96deg,
+      color-mix(in srgb, var(--swatch) 78%, #1a1410) 0 1px,
+      var(--swatch) 1px 2px,
+      color-mix(in srgb, var(--swatch) 70%, #fff) 2px 3px
+    ),
+    var(--swatch);
+  border-radius: 46% 54% 48% 52% / 62% 48% 58% 42%;
+  filter: url(#ff-crayon) contrast(1.08) saturate(0.92);
+  opacity: 0.94;
+  transform: rotate(-3deg) scaleY(0.92);
+  -webkit-mask-image:
+    radial-gradient(ellipse 96% 78% at 50% 50%, #000 8%, #000 42%, transparent 74%),
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  mask-image:
+    radial-gradient(ellipse 96% 78% at 50% 50%, #000 8%, #000 42%, transparent 74%),
+    linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.ff-swatch:nth-child(2) .ff-swatch-stroke {
+  transform: rotate(2deg) scaleY(0.9);
+  border-radius: 52% 48% 55% 45% / 50% 58% 44% 60%;
+}
+
+.ff-swatch:nth-child(3) .ff-swatch-stroke {
+  transform: rotate(-5deg) scaleY(0.94);
+  border-radius: 44% 56% 50% 50% / 58% 42% 62% 48%;
+}
+
+/* Orseund-style circle around the smear center */
 .ff-swatch::after {
   content: "";
   position: absolute;
-  inset: -4px -5px;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
   border: 1px solid transparent;
-  border-radius: inherit;
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .ff-swatch-on::after {
   border-color: var(--ink);
+}
+
+.ff-pairs {
+  display: grid;
+  gap: 6px;
+  padding: 6px 0 2px;
+}
+
+.ff-pairs p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ff-pairs-label {
+  display: inline-block;
+  min-width: 3.2rem;
+  margin-right: 8px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.ff-pairs-by {
+  color: var(--ink-2);
 }
 
 .ff-price {
@@ -881,7 +1060,7 @@ p.ff-anthem-whisper {
 }
 
 .ff-acc {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .ff-acc summary {
@@ -916,11 +1095,7 @@ p.ff-anthem-whisper {
 }
 
 .ff-acc p {
-  margin: 6px 0 10px;
-}
-
-.ff-pairs {
-  padding: 0 0 40px;
+  margin: 4px 0 6px;
 }
 
 .ff-pairs h2 {
@@ -1119,9 +1294,17 @@ p.ff-anthem-whisper {
 }
 
 .ff-receipt {
+  --receipt-accent: #c2a27a;
   width: min(340px, 100%);
   padding: 32px 26px 36px;
-  background: #fffdf7;
+  border-top: 6px solid var(--receipt-accent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--receipt-accent) 16%, transparent),
+      transparent 88px
+    ),
+    #fffdf7;
   box-shadow: 0 18px 40px rgba(36, 30, 22, 0.14);
   font-family: var(--mono);
   font-size: 11px;
@@ -1159,6 +1342,20 @@ p.ff-anthem-whisper {
   justify-content: space-between;
   gap: 12px;
   padding: 6px 0;
+}
+
+.ff-receipt-color {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
+.ff-receipt-color i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 40% 60% 45% 55%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .ff-receipt-items small {
@@ -1352,36 +1549,50 @@ p.ff-anthem-whisper {
 }
 
 @media (max-width: 900px) {
-  .ff-voice,
   .ff-anthem,
   .ff-also {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 20px 20px 36px;
   }
 
   .ff-also-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .ff-product-grid {
+  .ff-product-grid,
+  .ff-product-grid-gallery {
     grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-    padding: 20px 20px 48px;
+    gap: 22px;
+    padding: 20px 20px 28px;
+  }
+
+  .ff-product-left {
+    position: static;
+    padding: 0;
+    gap: 20px;
+    order: -1;
   }
 
   .ff-hero {
-    order: -1;
     margin: 0 -20px;
   }
 
-  .ff-specs,
+  .ff-photo-rail {
+    order: 2;
+    margin: 0 -20px;
+  }
+
+  .ff-parallax-frame {
+    aspect-ratio: 5 / 6;
+  }
+
   .ff-buy {
     position: static;
     padding: 0;
+    order: 1;
   }
 
   .ff-specs {
-    order: 3;
+    order: unset;
   }
 
   .ff-footer-cols {
@@ -1391,9 +1602,9 @@ p.ff-anthem-whisper {
 
 @media (max-width: 760px) {
   .ff-nav {
-    grid-template-columns: 44px 1fr 44px;
-    height: 54px;
-    padding: 0 14px;
+    gap: 12px;
+    min-height: 58px;
+    padding: 12px 14px;
   }
 
   .ff-nav-burger {
@@ -1409,6 +1620,10 @@ p.ff-anthem-whisper {
     display: block;
     height: 1px;
     background: var(--ink);
+  }
+
+  .ff-nav-shop {
+    display: none;
   }
 
   .ff-nav-left {
@@ -1452,12 +1667,22 @@ p.ff-anthem-whisper {
     font-size: 12px;
   }
 
+  .ff-logo-sub {
+    font-size: 6px;
+  }
+
   .ff-nav-right {
-    gap: 0;
+    gap: 12px;
+  }
+
+  .ff-bag-link {
+    font-size: 10px;
   }
 
   .ff-search {
-    display: none;
+    width: min(148px, 42vw);
+    height: 28px;
+    padding: 0 10px;
   }
 
   .ff-filterbar {
@@ -1662,108 +1887,188 @@ p.ff-anthem-whisper {
 }
 
 .ff-diary-body {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 40px 50px 100px;
+  max-width: none;
+  margin: 0;
+  padding: 0 0 100px;
   font-family: var(--garamond);
   font-size: 15px;
   line-height: 1.6;
+  background:
+    linear-gradient(180deg, #f7f4ec 0%, var(--paper, #fcfbf5) 180px);
+}
+
+.ff-diary-mast {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 48px 28px;
+  text-align: center;
 }
 
 .ff-diary-tagline {
   margin: 0;
-  font-size: 20px;
-  text-align: center;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
 }
 
 .ff-diary-h1 {
-  margin: 4px 0 18px;
+  margin: 10px 0 8px;
   font-family: var(--script);
-  font-size: clamp(56px, 7vw, 92px);
+  font-size: clamp(64px, 9vw, 110px);
   font-weight: 400;
-  line-height: 1.2;
-  text-align: center;
+  line-height: 0.95;
 }
 
-.ff-diary-rule {
-  height: 1px;
-  margin: 0 0 28px;
-  border: 0;
-  background: var(--ink);
+.ff-diary-index {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--ink-2);
+  text-transform: uppercase;
 }
 
-.ff-diary-lede,
-.ff-diary-p {
-  margin: 0 0 36px;
+.ff-diary-letter {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.ff-diary-plate {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: min(72vh, 720px);
+  padding: clamp(48px, 8vw, 96px) clamp(24px, 6vw, 80px);
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.ff-diary-plate:nth-child(even) {
+  background: color-mix(in srgb, #ece9df 70%, transparent);
+}
+
+.ff-diary-plate-num {
+  position: absolute;
+  top: 50%;
+  font-family: var(--didone);
+  font-size: clamp(180px, 28vw, 340px);
+  font-weight: 400;
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--ink) 7%, transparent);
+  pointer-events: none;
+  transform: translateY(-52%);
+  user-select: none;
+}
+
+.ff-diary-plate-left .ff-diary-plate-num {
+  right: 4%;
+}
+
+.ff-diary-plate-right .ff-diary-plate-num {
+  left: 2%;
+}
+
+.ff-diary-plate-copy {
+  position: relative;
+  z-index: 1;
+  width: min(34rem, 100%);
+}
+
+.ff-diary-plate-left .ff-diary-plate-copy {
+  justify-self: start;
+}
+
+.ff-diary-plate-right .ff-diary-plate-copy {
+  justify-self: end;
+  text-align: left;
+}
+
+.ff-diary-plate-meta {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 22px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.ff-diary-plate-p {
+  margin: 0;
+  font-size: clamp(16px, 1.35vw, 19px);
+  line-height: 1.7;
+}
+
+.ff-diary-person {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.ff-diary-person:hover {
+  text-decoration-thickness: 1.5px;
 }
 
 .ff-diary-dropcap {
   float: left;
-  margin: 6px 14px 0 0;
+  margin: 4px 12px 0 0;
   font-family: var(--didone);
-  font-size: 92px;
-  line-height: 0.75;
+  font-size: 86px;
+  line-height: 0.78;
 }
 
-.ff-diary-qa-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin: 0 0 48px;
+.ff-diary-plate-pull {
+  margin: 28px 0 0;
+  padding: 22px 0 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  font-family: var(--serif);
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
 }
 
-.ff-diary-qa {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 18px;
-  align-items: start;
+.ff-diary-plate-close {
+  min-height: min(58vh, 560px);
+  text-align: center;
 }
 
-.ff-diary-num {
-  font-family: var(--didone);
-  font-size: 150px;
-  line-height: 0.8;
-  margin-top: -6px;
+.ff-diary-plate-close .ff-diary-plate-copy {
+  justify-self: center;
+  width: min(28rem, 100%);
+  text-align: center;
 }
 
-.ff-diary-qa-text {
-  padding-top: 6px;
+.ff-diary-plate-close .ff-diary-plate-meta {
+  justify-content: center;
 }
 
-.ff-diary-q {
-  margin: 0 0 8px;
-  font-weight: 500;
-}
-
-.ff-diary-a {
-  margin: 0;
-}
-
-.ff-diary-colophon {
-  margin: 20px 0 36px;
-}
-
-.ff-diary-colophon div {
-  display: flex;
-  gap: 6px;
-}
-
-.ff-diary-colophon dt,
-.ff-diary-colophon dd {
-  margin: 0;
-}
-
-.ff-diary-colophon a,
-.ff-diary-cta a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.ff-diary-plate-p-close {
+  font-family: var(--serif);
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-style: italic;
+  line-height: 1.45;
 }
 
 .ff-diary-cta {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  padding: 36px 24px 0;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-align: center;
   text-transform: uppercase;
+}
+
+.ff-diary-cta a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 @media (max-width: 900px) {
@@ -1812,17 +2117,28 @@ p.ff-anthem-whisper {
     text-align: left;
   }
 
-  .ff-diary-body {
-    padding: 28px 20px 72px;
+  .ff-diary-mast {
+    padding: 36px 20px 18px;
   }
 
-  .ff-diary-qa-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+  .ff-diary-plate {
+    min-height: 0;
+    padding: 48px 20px;
   }
 
-  .ff-diary-num {
-    font-size: 96px;
+  .ff-diary-plate-num {
+    font-size: 160px;
+    opacity: 0.9;
+  }
+
+  .ff-diary-plate-left .ff-diary-plate-num,
+  .ff-diary-plate-right .ff-diary-plate-num {
+    right: -4%;
+    left: auto;
+  }
+
+  .ff-diary-dropcap {
+    font-size: 68px;
   }
 }
 

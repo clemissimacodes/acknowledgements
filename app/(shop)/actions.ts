@@ -1,9 +1,10 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { isAdminUser } from "@/lib/admin";
 import {
+  FRIENDS_CACHE_TAG,
   createFriend,
   deleteFriend,
   installCaricatureHero,
@@ -21,9 +22,11 @@ async function requireOwner() {
 }
 
 function refresh() {
+  revalidateTag(FRIENDS_CACHE_TAG);
   revalidatePath("/collections/[handle]", "page");
   revalidatePath("/products/[slug]", "page");
   revalidatePath("/controlroom/friends-and-family");
+  revalidatePath("/blogs/studio-diary/good-company");
 }
 
 function fromForm(form: FormData): FriendInput {
@@ -40,15 +43,12 @@ function fromForm(form: FormData): FriendInput {
     hometown: get("hometown"),
     madeOf: form.getAll("madeOf").map(String),
     care: get("care"),
-    description: get("description"),
     favoriteMemory: get("favoriteMemory"),
-    favoriteTrait: get("favoriteTrait"),
     notes: get("notes"),
     poemTitle: get("poemTitle"),
     poemPoet: get("poemPoet"),
     poemUrl: get("poemUrl"),
     anthemUrl: get("anthemUrl"),
-    review: get("review"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
     pairsWith: get("pairsWith"),

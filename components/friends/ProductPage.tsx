@@ -1,103 +1,114 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import {
-  DIARY_PATH,
   FRIEND_BADGES,
   SHOP_HANDLE,
   collectionLabel,
   friendPrice,
   formatPrice,
-  RELATIONSHIPS,
-  spotifyTrackId,
   type Friend,
+  type FriendColor,
 } from "@/lib/friend-types";
+import { colorsForFriend } from "@/lib/friend-colors";
 import { AlsoLike } from "./AlsoLike";
+import { FriendVoiceBridge } from "./FriendVoice";
 import { useBag } from "./bag";
-import { ProductSoundtrack } from "./ProductSoundtrack";
+import { PhotoRail } from "./PhotoRail";
 
 type Props = { friend: Friend; alsoLike?: Friend[] };
 
 export function ProductPage({ friend, alsoLike = [] }: Props) {
   const bag = useBag();
-  const [pick, setPick] = useState(friend.relationship);
+  const colors = useMemo<FriendColor[]>(() => {
+    if (friend.colors.length) return friend.colors.slice(0, 3);
+    return colorsForFriend(friend.slug, friend.madeOf);
+  }, [friend.colors, friend.slug, friend.madeOf]);
+  const [color, setColor] = useState<FriendColor>(colors[0] ?? { name: "Bone White", hex: "#efe6d8" });
   const price = friendPrice(friend.birthday);
   const inBag = bag.has(friend.slug);
-  const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
-    ? [friend.relationship, ...RELATIONSHIPS]
-    : [...RELATIONSHIPS];
-  const trackId = spotifyTrackId(friend.anthemUrl);
+  const songTitle = friend.anthemTitle || (friend.anthemUrl ? "Their song" : "");
+  const hasPairs = Boolean(friend.poemTitle || friend.anthemUrl);
 
   return (
     <main className="ff-product">
-      <ProductSoundtrack
-        voiceUrl={friend.voiceUrl}
-        voiceDurationMs={friend.voiceDurationMs}
-        trackId={trackId}
-      >
-        <p className="ff-crumbs">
-          <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
-          <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
-          <em>{friend.nickname}</em>
-        </p>
+      <FriendVoiceBridge
+        url={friend.voiceUrl}
+        durationMs={friend.voiceDurationMs}
+        label={`Voice memo about ${friend.nickname}`}
+      />
+      <p className="ff-crumbs">
+        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
+        <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
+        <em>{friend.nickname}</em>
+      </p>
 
-        <div className="ff-product-grid">
-          <aside className="ff-specs">
-            <dl>
-              {friend.madeOf.length ? (
-                <div>
-                  <dt>Made of</dt>
-                  <dd>
-                    {friend.madeOf.map((item) => (
-                      <span key={item}>{item}</span>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-              {friend.care ? (
-                <div>
-                  <dt>Care</dt>
-                  <dd>{friend.care}</dd>
-                </div>
-              ) : null}
-              {friend.hometown ? (
-                <div>
-                  <dt>Made in</dt>
-                  <dd>{friend.hometown}</dd>
-                </div>
-              ) : null}
-              {friend.metHow ? (
-                <div>
-                  <dt>How we met</dt>
-                  <dd>{friend.metHow}</dd>
-                </div>
-              ) : null}
-            </dl>
-            {friend.altUrl || friend.extraUrl ? (
-              <div className="ff-alt-stack">
-                {friend.altUrl ? (
-                  <figure className="ff-alt">
-                    <img src={friend.altUrl} alt={`${friend.nickname}, photo 2`} />
-                  </figure>
+        <div
+          className={`ff-product-grid${friend.altUrl || friend.extraUrl ? " ff-product-grid-gallery" : ""}`}
+        >
+          <div className="ff-product-left">
+            <aside className="ff-specs">
+              <dl>
+                {friend.madeOf.length ? (
+                  <div>
+                    <dt>Made of</dt>
+                    <dd>
+                      {friend.madeOf.map((item) => (
+                        <span key={item}>{item}</span>
+                      ))}
+                    </dd>
+                  </div>
                 ) : null}
-                {friend.extraUrl ? (
-                  <figure className="ff-alt">
-                    <img src={friend.extraUrl} alt={`${friend.nickname}, photo 3`} />
-                  </figure>
+                {friend.care ? (
+                  <div>
+                    <dt>Care</dt>
+                    <dd>{friend.care}</dd>
+                  </div>
                 ) : null}
-              </div>
-            ) : null}
-          </aside>
+                {friend.hometown ? (
+                  <div>
+                    <dt>Made in</dt>
+                    <dd>{friend.hometown}</dd>
+                  </div>
+                ) : null}
+                {friend.metHow ? (
+                  <div>
+                    <dt>How we met</dt>
+                    <dd>{friend.metHow}</dd>
+                  </div>
+                ) : null}
+              </dl>
+            </aside>
 
-          <figure className="ff-hero">
-            {friend.heroUrl ? (
-              <img src={friend.heroUrl} alt={friend.nickname} />
-            ) : (
-              <span className="ff-card-blank" aria-hidden="true" />
-            )}
-            {friend.badge !== "none" ? <span className="ff-badge">{FRIEND_BADGES[friend.badge]}</span> : null}
-          </figure>
+            <figure className="ff-hero">
+              {friend.heroUrl ? (
+                <img
+                  src={friend.heroUrl}
+                  alt={friend.nickname}
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              ) : (
+                <span className="ff-card-blank" aria-hidden="true" />
+              )}
+              {friend.badge !== "none" ? (
+                <span className="ff-badge">{FRIEND_BADGES[friend.badge]}</span>
+              ) : null}
+            </figure>
+          </div>
+
+          <PhotoRail
+            label={`${friend.nickname} photos`}
+            shots={[
+              ...(friend.altUrl
+                ? [{ src: friend.altUrl, alt: `${friend.nickname}, photo 2` }]
+                : []),
+              ...(friend.extraUrl
+                ? [{ src: friend.extraUrl, alt: `${friend.nickname}, photo 3` }]
+                : []),
+            ]}
+          />
 
           <section className="ff-buy" aria-label="Details">
             <dl className="ff-buy-rows">
@@ -109,17 +120,6 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </dd>
               </div>
 
-              {friend.favoriteTrait ? (
-                <div>
-                  <dt>Favorite trait</dt>
-                  <dd className="ff-desc">
-                    {friend.favoriteTrait.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-
               {friend.favoriteMemory ? (
                 <div>
                   <dt>Favorite memory</dt>
@@ -127,45 +127,6 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                     {friend.favoriteMemory.split(/\n\n+/).map((para, index) => (
                       <p key={index}>{para}</p>
                     ))}
-                  </dd>
-                </div>
-              ) : null}
-
-              {friend.review ? (
-                <div>
-                  <dt>Review</dt>
-                  <dd className="ff-desc ff-review">
-                    {friend.review.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                    <p className="ff-review-by">— Clementine Shao, founder</p>
-                  </dd>
-                </div>
-              ) : null}
-
-              {friend.description ? (
-                <div>
-                  <dt>Description</dt>
-                  <dd className="ff-desc">
-                    {friend.description.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-
-              {friend.poemTitle ? (
-                <div>
-                  <dt>Pairs well with</dt>
-                  <dd className="ff-poem">
-                    {friend.poemUrl ? (
-                      <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
-                        {friend.poemTitle}
-                      </a>
-                    ) : (
-                      <span className="ff-poem-title">{friend.poemTitle}</span>
-                    )}
-                    {friend.poemPoet ? <p className="ff-poem-by">{friend.poemPoet}</p> : null}
                   </dd>
                 </div>
               ) : null}
@@ -179,24 +140,78 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </div>
               ) : null}
 
-              {options.length ? (
+              <div>
+                <dt>Size</dt>
+                <dd>
+                  <p className="ff-size-one">One size fits all</p>
+                </dd>
+              </div>
+
+              {colors.length ? (
                 <div>
-                  <dt>Relationship</dt>
+                  <dt>Color</dt>
                   <dd>
-                    <div className="ff-sizes" role="radiogroup" aria-label="Relationship">
-                      {options.map((option) => {
-                        const stocked = option === friend.relationship || !friend.relationship;
+                    <p className="ff-color-name">{color.name}</p>
+                    <svg className="ff-swatch-defs" aria-hidden="true" width="0" height="0">
+                      <defs>
+                        <filter
+                          id="ff-crayon"
+                          x="-40%"
+                          y="-60%"
+                          width="180%"
+                          height="220%"
+                          colorInterpolationFilters="sRGB"
+                        >
+                          <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="1.15 0.32"
+                            numOctaves="4"
+                            seed="4"
+                            stitchTiles="stitch"
+                            result="grain"
+                          />
+                          <feDisplacementMap
+                            in="SourceGraphic"
+                            in2="grain"
+                            scale="3.2"
+                            xChannelSelector="R"
+                            yChannelSelector="G"
+                            result="warped"
+                          />
+                          <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="1.6 0.45"
+                            numOctaves="3"
+                            seed="11"
+                            stitchTiles="stitch"
+                            result="speckle"
+                          />
+                          <feColorMatrix
+                            in="speckle"
+                            type="matrix"
+                            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 -0.18"
+                            result="speckleAlpha"
+                          />
+                          <feComposite in="warped" in2="speckleAlpha" operator="in" result="chalk" />
+                          <feGaussianBlur in="chalk" stdDeviation="0.35" />
+                        </filter>
+                      </defs>
+                    </svg>
+                    <div className="ff-swatches" role="radiogroup" aria-label="Color">
+                      {colors.map((swatch) => {
+                        const on = color.hex === swatch.hex;
                         return (
                           <button
-                            key={option}
+                            key={swatch.hex}
                             type="button"
                             role="radio"
-                            aria-checked={pick === option}
-                            className={`ff-size${!stocked ? " ff-size-out" : ""}`}
-                            onClick={() => stocked && setPick(option)}
-                            title={stocked ? undefined : "Sold out"}
+                            aria-checked={on}
+                            aria-label={swatch.name}
+                            className={`ff-swatch${on ? " ff-swatch-on" : ""}`}
+                            style={{ "--swatch": swatch.hex } as CSSProperties}
+                            onClick={() => setColor(swatch)}
                           >
-                            {option}
+                            <span className="ff-swatch-stroke" aria-hidden="true" />
                           </button>
                         );
                       })}
@@ -226,7 +241,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                   <p className="ff-stock">
                     <strong>Not for Sale</strong>
                     <br />
-                    In stock: 1 (on hold by Clementine Shao)
+                    In stock: 1 of 1, original
                   </p>
                   <button
                     type="button"
@@ -240,6 +255,8 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                             productName: friend.productName,
                             price,
                             heroUrl: friend.heroUrl,
+                            colorName: color.name,
+                            colorHex: color.hex,
                           })
                     }
                   >
@@ -251,34 +268,43 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
               <div>
                 <dt>Details</dt>
                 <dd>
+                  {hasPairs ? (
+                    <details className="ff-acc">
+                      <summary>Pairs well with</summary>
+                      <div className="ff-pairs">
+                        {friend.poemTitle ? (
+                          <p>
+                            <span className="ff-pairs-label">Poem</span>
+                            {friend.poemUrl ? (
+                              <a href={friend.poemUrl} target="_blank" rel="noreferrer">
+                                {friend.poemTitle}
+                              </a>
+                            ) : (
+                              <span>{friend.poemTitle}</span>
+                            )}
+                            {friend.poemPoet ? (
+                              <span className="ff-pairs-by"> · {friend.poemPoet}</span>
+                            ) : null}
+                          </p>
+                        ) : null}
+                        {friend.anthemUrl ? (
+                          <p>
+                            <span className="ff-pairs-label">Song</span>
+                            <a href={friend.anthemUrl} target="_blank" rel="noreferrer">
+                              {songTitle}
+                            </a>
+                            {friend.anthemArtist ? (
+                              <span className="ff-pairs-by"> · {friend.anthemArtist}</span>
+                            ) : null}
+                          </p>
+                        ) : null}
+                      </div>
+                    </details>
+                  ) : null}
                   <details className="ff-acc">
-                    <summary>Fit guide</summary>
+                    <summary>Shipping &amp; Returns</summary>
                     <p>
-                      Friend: I will pick you up from the airport. Family: I will pick you up from the airport at
-                      5 a.m. and not bring it up again. Each listing comes in exactly one of these, and it is not
-                      adjustable.
-                    </p>
-                  </details>
-                  <details className="ff-acc">
-                    <summary>What happens at checkout</summary>
-                    <p>
-                      Nothing is charged and nothing ships. Checking out makes a receipt for the people in your
-                      bag that you can share. All sales are final because this one already was.
-                    </p>
-                  </details>
-                  <details className="ff-acc">
-                    <summary>Shipping &amp; returns</summary>
-                    <p>
-                      Shipping is free, in the sense that nothing ships; they go where they like. Returns are not
-                      possible because nothing was bought. Exchanges are not offered. I wouldn&rsquo;t anyway.
-                    </p>
-                  </details>
-                  <details className="ff-acc">
-                    <summary>Why there is a price</summary>
-                    <p>
-                      Good Company is a Black Friday sale where every product is a real person in my life. The
-                      price is a date, read as dollars. Which date is the kind of thing you know if you know them.{" "}
-                      <Link href={DIARY_PATH}>Read the studio diary.</Link>
+                      Friendship is smooth sailing; return to land may be requested only in choppy waters.
                     </p>
                   </details>
                 </dd>
@@ -287,8 +313,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
           </section>
         </div>
 
-        <AlsoLike friends={alsoLike} />
-      </ProductSoundtrack>
+      <AlsoLike friends={alsoLike} />
     </main>
   );
 }

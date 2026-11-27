@@ -1,6 +1,8 @@
 import "server-only";
 
 import { randomBytes, randomUUID } from "crypto";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { del } from "@vercel/blob";
 import { neon } from "@neondatabase/serverless";
 import {
@@ -18,8 +20,11 @@ import {
   type Receipt,
   type ReceiptItem,
 } from "@/lib/friend-types";
+import { fetchAnthemMeta } from "@/lib/spotify-anthem";
 
 export const FRIEND_BLOB_PREFIX = "friends-and-family/";
+/* Bust public shop data from mutations (list + PDP). */
+export const FRIENDS_CACHE_TAG = "good-company-friends";
 
 function db() {
   const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? "";
@@ -126,6 +131,8 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS collection TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS birthday TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_url TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_title TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_artist TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS review TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_url TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_pathname TEXT`;
@@ -166,15 +173,14 @@ function toFriend(row: Row): Friend {
     hometown: String(row.hometown ?? ""),
     madeOf: Array.isArray(row.made_of) ? (row.made_of as string[]) : [],
     care: String(row.care ?? ""),
-    description: String(row.description ?? ""),
     favoriteMemory: String(row.favorite_memory ?? ""),
-    favoriteTrait: String(row.favorite_trait ?? ""),
     notes: String(row.notes ?? ""),
     poemTitle: String(row.poem_title ?? ""),
     poemPoet: String(row.poem_poet ?? ""),
     poemUrl: String(row.poem_url ?? ""),
     anthemUrl: String(row.anthem_url ?? ""),
-    review: String(row.review ?? ""),
+    anthemTitle: String(row.anthem_title ?? ""),
+    anthemArtist: String(row.anthem_artist ?? ""),
     voiceUrl: (row.voice_url as string | null) ?? null,
     voicePathname: (row.voice_pathname as string | null) ?? null,
     voiceDurationMs:
@@ -197,22 +203,49 @@ function toFriend(row: Row): Friend {
   };
 }
 
-export async function listFriends({ all = false } = {}): Promise<Friend[]> {
-  await ensureTables();
-  const sql = db();
-  const rows = all
-    ? await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`
-    : await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
-  return (rows as Row[]).map(toFriend);
-}
+/* Public reads skip ensureTables (schema is already live). Mutations still migrate.
+   Results are Data-Cache'd so collection + PDP don't hit Neon on every click. */
+const cachedVisibleFriends = unstable_cache(
+  async () => {
+    const sql = db();
+    const rows = await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
+    return (rows as Row[]).map(toFriend);
+  },
+  ["good-company-visible-friends"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
 
-export async function getFriendBySlug(slug: string, { all = false } = {}): Promise<Friend | null> {
-  await ensureTables();
-  const sql = db();
-  const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
-  const friend = rows[0] ? toFriend(rows[0]) : null;
-  return friend && (all || friend.visible) ? friend : null;
-}
+const cachedFriendBySlug = unstable_cache(
+  async (slug: string) => {
+    const sql = db();
+    const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
+    return rows[0] ? toFriend(rows[0]) : null;
+  },
+  ["good-company-friend-by-slug"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
+
+export const listFriends = cache(async ({ all = false } = {}): Promise<Friend[]> => {
+  if (all) {
+    await ensureTables();
+    const sql = db();
+    const rows = await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`;
+    return (rows as Row[]).map(toFriend);
+  }
+  return cachedVisibleFriends();
+});
+
+export const getFriendBySlug = cache(async (slug: string, { all = false } = {}): Promise<Friend | null> => {
+  if (all) {
+    await ensureTables();
+    const sql = db();
+    const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
+    const friend = rows[0] ? toFriend(rows[0]) : null;
+    return friend;
+  }
+  const friend = await cachedFriendBySlug(slug);
+  return friend?.visible ? friend : null;
+});
 
 export async function getFriendById(id: string): Promise<Friend | null> {
   await ensureTables();
@@ -233,15 +266,14 @@ export type FriendInput = {
   hometown?: unknown;
   madeOf?: unknown;
   care?: unknown;
-  description?: unknown;
   favoriteMemory?: unknown;
-  favoriteTrait?: unknown;
   notes?: unknown;
   poemTitle?: unknown;
   poemPoet?: unknown;
   poemUrl?: unknown;
   anthemUrl?: unknown;
-  review?: unknown;
+  anthemTitle?: unknown;
+  anthemArtist?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
   colors?: unknown;
@@ -256,12 +288,26 @@ function cleanAnthemUrl(value: unknown) {
   return spotifyTrackId(raw) ? raw : "";
 }
 
-function normalise(input: FriendInput) {
+async function resolveAnthem(url: string, titleHint?: unknown, artistHint?: unknown) {
+  if (!url) return { anthemUrl: "", anthemTitle: "", anthemArtist: "" };
+  const title = text(titleHint, 160);
+  const artist = text(artistHint, 120);
+  if (title) return { anthemUrl: url, anthemTitle: title, anthemArtist: artist };
+  const meta = await fetchAnthemMeta(url);
+  return {
+    anthemUrl: url,
+    anthemTitle: text(meta?.title, 160),
+    anthemArtist: text(meta?.artist, 120),
+  };
+}
+
+async function normalise(input: FriendInput) {
   const nickname = text(input.nickname, 60);
   if (!nickname) throw new Error("A nickname is required.");
   const relationship = text(input.relationship, 40);
   const options = list(input.relationshipOptions, 6, 40);
   if (relationship && !options.includes(relationship)) options.unshift(relationship);
+  const anthem = await resolveAnthem(cleanAnthemUrl(input.anthemUrl), input.anthemTitle, input.anthemArtist);
   return {
     nickname,
     slug: slugifyFriend(text(input.slug, 60) || nickname),
@@ -274,15 +320,12 @@ function normalise(input: FriendInput) {
     hometown: text(input.hometown, 80),
     madeOf: list(input.madeOf, 6, 80),
     care: text(input.care, 600),
-    description: text(input.description, 1600),
     favoriteMemory: text(input.favoriteMemory, 1600),
-    favoriteTrait: text(input.favoriteTrait, 600),
     notes: text(input.notes, 1200),
     poemTitle: text(input.poemTitle, 160),
     poemPoet: text(input.poemPoet, 80),
     poemUrl: httpUrl(input.poemUrl),
-    anthemUrl: cleanAnthemUrl(input.anthemUrl),
-    review: text(input.review, 4000),
+    ...anthem,
     relationship,
     relationshipOptions: options,
     colors: colors(input.colors),
@@ -295,17 +338,17 @@ function normalise(input: FriendInput) {
 export async function createFriend(input: FriendInput) {
   await ensureTables();
   const sql = db();
-  const f = normalise(input);
+  const f = await normalise(input);
   const id = randomUUID();
   const taken = (await sql`SELECT 1 FROM friends WHERE slug = ${f.slug}`) as Row[];
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
     INSERT INTO friends (id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown, made_of, care,
-      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, review,
+      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, anthem_title, anthem_artist, review,
       relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.birthday}, ${f.collection}, ${f.metHow},
-      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
-      ${f.anthemUrl}, ${f.review}, ${f.relationship},
+      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${""}, ${f.favoriteMemory}, ${""}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
+      ${f.anthemUrl}, ${f.anthemTitle}, ${f.anthemArtist}, ${""}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -315,16 +358,16 @@ export async function createFriend(input: FriendInput) {
 export async function updateFriend(id: string, input: FriendInput) {
   await ensureTables();
   const sql = db();
-  const f = normalise(input);
+  const f = await normalise(input);
   const clash = (await sql`SELECT 1 FROM friends WHERE slug = ${f.slug} AND id <> ${id}`) as Row[];
   if (clash.length) throw new Error(`The slug "${f.slug}" is already taken.`);
   await sql`
     UPDATE friends SET slug = ${f.slug}, nickname = ${f.nickname}, product_name = ${f.productName}, era = ${f.era},
       badge = ${f.badge}, birthday = ${f.birthday}, collection = ${f.collection}, met_how = ${f.metHow}, hometown = ${f.hometown},
-      made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
-      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
+      made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${""},
+      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${""}, notes = ${f.notes},
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
-      anthem_url = ${f.anthemUrl}, review = ${f.review},
+      anthem_url = ${f.anthemUrl}, anthem_title = ${f.anthemTitle}, anthem_artist = ${f.anthemArtist}, review = ${""},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       updated_at = NOW()
@@ -481,23 +524,59 @@ function receiptId() {
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
-export async function createReceipt(slugs: string[], note: unknown, visitorHash: string | null) {
+export type ReceiptLineIn = {
+  slug: string;
+  colorName?: string;
+  colorHex?: string;
+};
+
+export async function createReceipt(
+  lines: Array<string | ReceiptLineIn>,
+  note: unknown,
+  visitorHash: string | null,
+) {
   await ensureTables();
   const sql = db();
-  const unique = [...new Set(slugs.map(slugifyFriend))].slice(0, 24);
-  if (!unique.length) throw new Error("Your bag is empty.");
-  const rows = (await sql`SELECT * FROM friends WHERE visible AND slug = ANY(${unique})`) as Row[];
+  const parsed: ReceiptLineIn[] = [];
+  for (const line of lines.slice(0, 24)) {
+    if (typeof line === "string") parsed.push({ slug: slugifyFriend(line) });
+    else if (line && typeof line.slug === "string") {
+      parsed.push({
+        slug: slugifyFriend(line.slug),
+        colorName: text(line.colorName, 40) || undefined,
+        colorHex: /^#[0-9a-fA-F]{6}$/.test(String(line.colorHex ?? ""))
+          ? String(line.colorHex).toLowerCase()
+          : undefined,
+      });
+    }
+  }
+  const uniqueSlugs = [...new Set(parsed.map((p) => p.slug))];
+  if (!uniqueSlugs.length) throw new Error("Your bag is empty.");
+  const colorBySlug = new Map(parsed.map((p) => [p.slug, p]));
+  const rows = (await sql`SELECT * FROM friends WHERE visible AND slug = ANY(${uniqueSlugs})`) as Row[];
   const bySlug = new Map(rows.map((row) => [String(row.slug), toFriend(row)]));
-  const items: ReceiptItem[] = unique
+  const items: ReceiptItem[] = uniqueSlugs
     .map((slug) => bySlug.get(slug))
     .filter((f): f is Friend => Boolean(f))
-    .map((f) => ({
-      slug: f.slug,
-      nickname: f.nickname,
-      productName: f.productName,
-      price: friendPrice(f.birthday),
-      heroUrl: f.heroUrl,
-    }));
+    .map((f) => {
+      const picked = colorBySlug.get(f.slug);
+      const fallback = f.colors[0];
+      const colorHex = picked?.colorHex || fallback?.hex || undefined;
+      const colorName =
+        picked?.colorName ||
+        f.colors.find((c) => c.hex === colorHex)?.name ||
+        fallback?.name ||
+        undefined;
+      return {
+        slug: f.slug,
+        nickname: f.nickname,
+        productName: f.productName,
+        price: friendPrice(f.birthday),
+        heroUrl: f.heroUrl,
+        colorName,
+        colorHex,
+      };
+    });
   if (!items.length) throw new Error("Your bag is empty.");
   if (visitorHash) {
     const recent = (await sql`
@@ -519,7 +598,6 @@ export async function createReceipt(slugs: string[], note: unknown, visitorHash:
 }
 
 export async function getReceipt(id: string): Promise<Receipt | null> {
-  await ensureTables();
   const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
   if (!clean) return null;
   const rows = (await db()`SELECT * FROM friend_receipts WHERE id = ${clean} LIMIT 1`) as Row[];

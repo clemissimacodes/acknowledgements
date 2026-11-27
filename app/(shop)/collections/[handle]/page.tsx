@@ -4,8 +4,6 @@ import { CollectionGrid } from "@/components/friends/CollectionGrid";
 import { SHOP_HANDLE, SHOP_NAME, eraLabel, isFriendEra } from "@/lib/friend-types";
 import { listFriends } from "@/lib/friends";
 
-export const dynamic = "force-dynamic";
-
 type Props = {
   params: Promise<{ handle: string }>;
   searchParams: Promise<{ q?: string }>;

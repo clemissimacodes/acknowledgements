@@ -3,34 +3,40 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { DIARY_PATH, FRIEND_ERAS, SALE_NAME, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
+import { DIARY_PATH, FRIEND_ERAS, SHOP_HANDLE, SHOP_NAME, formatPrice } from "@/lib/friend-types";
+import { HeaderVoiceStrip } from "./FriendVoice";
 import { sumPrices, useBag } from "./bag";
 
-const MARQUEE = `${SALE_NAME} ♡ 0% off everything ♡ Buy one, get nothing ♡ Prices only go up ♡ Nothing ships ♡ Doorbusters unavailable, we don't have a door`;
+const MARQUEE =
+  "there is nothing more you have to do than be you. i am so lucky to have you in my life. happy thanksgiving!";
 
 export function ShopHeader() {
   const bag = useBag();
   const pathname = usePathname();
-  const [menu, setMenu] = useState<"shop" | null>(null);
+  const [menu, setMenu] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    setMenu(null);
+    setMenu(false);
     setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!menu) return;
+    if (!menu && !mobileOpen) return;
     const close = (event: PointerEvent) => {
-      if (!navRef.current?.contains(event.target as Node)) setMenu(null);
+      if (!navRef.current?.contains(event.target as Node)) {
+        setMenu(false);
+        setMobileOpen(false);
+      }
     };
     window.addEventListener("pointerdown", close);
     return () => window.removeEventListener("pointerdown", close);
-  }, [menu]);
+  }, [menu, mobileOpen]);
 
   return (
     <header className="ff-header">
+      <HeaderVoiceStrip />
       <Link href={DIARY_PATH} className="ff-marquee" aria-label="About the sale">
         <span className="ff-marquee-track" aria-hidden="true">
           <span>{MARQUEE} →</span>
@@ -40,30 +46,33 @@ export function ShopHeader() {
       </Link>
 
       <nav ref={navRef} className="ff-nav" aria-label="Shop">
-        <button
-          type="button"
-          className="ff-nav-burger"
-          aria-label="Menu"
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen((value) => !value)}
-        >
-          <span />
-          <span />
-        </button>
+        <div className="ff-nav-brand">
+          <button
+            type="button"
+            className="ff-nav-burger"
+            aria-label="Menu"
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((value) => !value)}
+          >
+            <span />
+            <span />
+          </button>
 
-        <ul className={`ff-nav-left${mobileOpen ? " ff-nav-left-open" : ""}`}>
-          <li>
-            <Link href="/">Home</Link>
-          </li>
-          <li className="ff-nav-item">
+          <Link href={`/collections/${SHOP_HANDLE}`} className="ff-logo">
+            <span className="ff-logo-mark">{SHOP_NAME.toUpperCase()}</span>
+            <span className="ff-logo-sub">BY CLEMISSIMA</span>
+          </Link>
+
+          <div className="ff-nav-item ff-nav-shop">
             <button
               type="button"
-              aria-expanded={menu === "shop"}
-              onClick={() => setMenu(menu === "shop" ? null : "shop")}
+              className="ff-nav-shop-btn"
+              aria-expanded={menu}
+              onClick={() => setMenu((value) => !value)}
             >
               Shop <Chevron />
             </button>
-            <ul className={`ff-dropdown${menu === "shop" ? " ff-dropdown-open" : ""}`}>
+            <ul className={`ff-dropdown${menu ? " ff-dropdown-open" : ""}`}>
               <li>
                 <Link href={`/collections/${SHOP_HANDLE}`}>View All</Link>
               </li>
@@ -72,24 +81,72 @@ export function ShopHeader() {
                   <Link href={`/collections/${era.handle}`}>{era.label}</Link>
                 </li>
               ))}
+              <li>
+                <Link href={DIARY_PATH}>Studio Diary</Link>
+              </li>
+              <li>
+                <Link href="/">Home</Link>
+              </li>
             </ul>
+          </div>
+        </div>
+
+        <ul className={`ff-nav-left${mobileOpen ? " ff-nav-left-open" : ""}`}>
+          <li>
+            <Link href={`/collections/${SHOP_HANDLE}`}>View All</Link>
           </li>
+          {FRIEND_ERAS.map((era) => (
+            <li key={era.handle}>
+              <Link href={`/collections/${era.handle}`}>{era.label}</Link>
+            </li>
+          ))}
           <li>
             <Link href={DIARY_PATH}>Studio Diary</Link>
           </li>
+          <li>
+            <Link href="/">Home</Link>
+          </li>
         </ul>
-
-        <Link href={`/collections/${SHOP_HANDLE}`} className="ff-logo">
-          <span className="ff-logo-mark">{SHOP_NAME.toUpperCase()}</span>
-        </Link>
 
         <div className="ff-nav-right">
           <button type="button" className="ff-bag-link" onClick={() => bag.setOpen(true)}>
             Bag {String(bag.items.length).padStart(2, "0")}
           </button>
+          <SearchForm />
         </div>
       </nav>
     </header>
+  );
+}
+
+function SearchForm() {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  return (
+    <form
+      className="ff-search"
+      role="search"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const query = q.trim();
+        router.push(
+          query
+            ? `/collections/${SHOP_HANDLE}?q=${encodeURIComponent(query)}`
+            : `/collections/${SHOP_HANDLE}`,
+        );
+      }}
+    >
+      <input
+        type="search"
+        name="q"
+        value={q}
+        onChange={(event) => setQ(event.target.value)}
+        placeholder="SEARCH"
+        aria-label="Search friends"
+        autoComplete="off"
+      />
+      <button type="submit">Enter</button>
+    </form>
   );
 }
 
@@ -129,7 +186,14 @@ export function BagDrawer() {
       const response = await fetch("/api/friends/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slugs: bag.items.map((item) => item.slug), note }),
+        body: JSON.stringify({
+          items: bag.items.map((item) => ({
+            slug: item.slug,
+            colorName: item.colorName,
+            colorHex: item.colorHex,
+          })),
+          note,
+        }),
       });
       const data = (await response.json()) as { id?: string; error?: string };
       if (!response.ok || !data.id) {

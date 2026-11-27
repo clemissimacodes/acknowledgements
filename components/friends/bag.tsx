@@ -16,6 +16,8 @@ export type BagItem = {
   productName: string;
   price: string;
   heroUrl: string | null;
+  colorName?: string;
+  colorHex?: string;
 };
 
 type BagContextValue = {

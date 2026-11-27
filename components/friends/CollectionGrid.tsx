@@ -207,16 +207,25 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
 
       {visible.length ? (
         <ul className="ff-grid">
-          {visible.map((f) => (
+          {visible.map((f, index) => (
             <li key={f.id} className="ff-card">
-              <Link href={`/products/${f.slug}`}>
+              <Link href={`/products/${f.slug}`} prefetch={index < 8}>
                 <span className="ff-card-media">
                   {f.heroUrl ? (
-                    <img className="ff-card-hero" src={f.heroUrl} alt={f.nickname} loading="lazy" />
+                    <img
+                      className="ff-card-hero"
+                      src={f.heroUrl}
+                      alt={f.nickname}
+                      loading={index < 4 ? "eager" : "lazy"}
+                      fetchPriority={index < 4 ? "high" : "auto"}
+                      decoding="async"
+                    />
                   ) : (
                     <span className="ff-card-blank" aria-hidden="true" />
                   )}
-                  {f.altUrl ? <img className="ff-card-alt" src={f.altUrl} alt="" loading="lazy" /> : null}
+                  {f.altUrl ? (
+                    <img className="ff-card-alt" src={f.altUrl} alt="" loading="lazy" decoding="async" />
+                  ) : null}
                   {f.badge !== "none" ? <span className="ff-badge">{FRIEND_BADGES[f.badge]}</span> : null}
                 </span>
                 <span className="ff-card-text">

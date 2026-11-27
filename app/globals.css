@@ -7255,6 +7255,33 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   width: 100%;
   max-width: 28rem;
 }
+.admin-voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  pointer-events: auto;
+}
+.admin-voice-actions button {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.admin-voice-actions button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.admin-voice-confirm {
+  background: #111 !important;
+  color: #fff !important;
+  border-color: #111 !important;
+}
+.admin-voice-draft {
+  border-style: dashed;
+}
 
 @media (max-width: 860px) {
   .admin-studio {

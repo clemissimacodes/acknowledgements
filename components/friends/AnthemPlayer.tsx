@@ -1,41 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Props = {
   trackId: string;
-  unlocked: boolean;
+  unlocked?: boolean;
   onNeedUnlock?: () => void;
 };
 
-/* Quiet Spotify anthem. Browsers block audible autoplay without a gesture, so
-   we best-effort load with autoplay and unlock on the first tap anywhere. */
-export function AnthemPlayer({ trackId, unlocked, onNeedUnlock }: Props) {
+/* Quiet Spotify anthem. Iframe mounts only after an explicit tap — never on page load. */
+export function AnthemPlayer({ trackId, onNeedUnlock }: Props) {
   const [started, setStarted] = useState(false);
-  const [key, setKey] = useState(0);
 
-  useEffect(() => {
-    if (!unlocked || started) return;
+  const start = () => {
+    onNeedUnlock?.();
     setStarted(true);
-    setKey((k) => k + 1);
-  }, [unlocked, started]);
-
-  const src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0${
-    started || unlocked ? "&autoplay=1" : ""
-  }`;
+  };
 
   return (
     <div className={`ff-anthem${started ? " is-on" : ""}`}>
       {!started ? (
-        <button
-          type="button"
-          className="ff-anthem-whisper"
-          onClick={() => {
-            onNeedUnlock?.();
-            setStarted(true);
-            setKey((k) => k + 1);
-          }}
-        >
+        <button type="button" className="ff-anthem-whisper" onClick={start}>
           ♪ their song — tap to play softly
         </button>
       ) : (
@@ -43,14 +28,15 @@ export function AnthemPlayer({ trackId, unlocked, onNeedUnlock }: Props) {
           ♪ their song is on
         </p>
       )}
-      <iframe
-        key={key}
-        className="ff-anthem-frame"
-        title="Friendship anthem"
-        src={src}
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        loading="lazy"
-      />
+      {started ? (
+        <iframe
+          className="ff-anthem-frame"
+          title="Friendship anthem"
+          src={`https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`}
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        />
+      ) : null}
     </div>
   );
 }

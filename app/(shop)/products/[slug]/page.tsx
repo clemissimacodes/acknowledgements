@@ -4,8 +4,6 @@ import { ProductPage } from "@/components/friends/ProductPage";
 import { SHOP_NAME, pickAlsoLike, priceLabel } from "@/lib/friend-types";
 import { getFriendBySlug, listFriends } from "@/lib/friends";
 
-export const dynamic = "force-dynamic";
-
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -15,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = friend.productName ? `${friend.nickname} — ${friend.productName}` : friend.nickname;
   return {
     title,
-    description: `${priceLabel(friend.birthday)}. One of one. ${(friend.favoriteTrait || friend.description || friend.review).slice(0, 140)}`,
+    description: `${priceLabel(friend.birthday)}. One of one. ${(friend.favoriteMemory || "").slice(0, 140)}`,
     openGraph: friend.heroUrl ? { images: [{ url: friend.heroUrl }] } : undefined,
   };
 }

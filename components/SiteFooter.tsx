@@ -13,10 +13,14 @@ function pageBackground() {
   return "#fff";
 }
 
+const SHOP_PATH =
+  /^\/(products|collections|receipt|blogs\/studio-diary|pages\/(?:about-the-sale|apply))(\/|$)/;
+
 /** Pinned to the bottom of every page, tinted to whatever the page sits on. */
 export function SiteFooter() {
   const ref = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const hide = SHOP_PATH.test(pathname);
 
   useEffect(() => {
     const footer = ref.current;
@@ -29,7 +33,9 @@ export function SiteFooter() {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(late);
     };
-  }, [pathname]);
+  }, [pathname, hide]);
+
+  if (hide) return null;
 
   return (
     <footer ref={ref} className="site-footer">
