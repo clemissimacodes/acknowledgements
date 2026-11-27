@@ -9,7 +9,7 @@ import {
   SHOP_HANDLE,
   collectionOrder,
   priceLabel,
-  type Friend,
+  type FriendCard,
 } from "@/lib/friend-types";
 
 type Sort = "featured" | "longest" | "newest" | "family" | "hometown" | "az" | "fate";
@@ -24,6 +24,9 @@ const SORTS: Array<[Sort, string]> = [
   ["fate", "Leave It to Fate"],
 ];
 
+const HATE = "__hate__";
+const HATE_LABEL = "Friends I Secretly Hate";
+
 /* Deterministic shuffle so "fate" is stable across a visit. */
 function fateOrder(seed: number) {
   let state = seed || 1;
@@ -33,17 +36,21 @@ function fateOrder(seed: number) {
   };
 }
 
+function toggleValue(list: string[], value: string) {
+  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+}
+
 type Props = {
-  friends: Friend[];
+  friends: FriendCard[];
   era: string | null;
   query: string;
 };
 
 export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
   const era = lockedEra ?? "";
-  const [metHow, setMetHow] = useState("");
-  const [relationship, setRelationship] = useState("");
-  const [badge, setBadge] = useState("");
+  const [metHow, setMetHow] = useState<string[]>([]);
+  const [relationship, setRelationship] = useState<string[]>([]);
+  const [badge, setBadge] = useState<string[]>([]);
   const [sort, setSort] = useState<Sort>("featured");
   const [open, setOpen] = useState<string | null>(null);
   const [fateSeed, setFateSeed] = useState(0);
@@ -60,21 +67,24 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
     return () => window.removeEventListener("pointerdown", close);
   }, [open]);
 
+  const hateSelected = relationship.includes(HATE);
+
   const visible = useMemo(() => {
+    if (hateSelected) return [] as FriendCard[];
     const q = query.trim().toLowerCase();
+    const realRelationships = relationship.filter((item) => item !== HATE);
     const list = friends.filter(
       (f) =>
         (!era || f.era === era) &&
-        (!metHow || f.metHow === metHow) &&
-        (!relationship || f.relationship === relationship) &&
-        (!badge || f.badge === badge) &&
+        (!metHow.length || metHow.includes(f.metHow)) &&
+        (!realRelationships.length || realRelationships.includes(f.relationship)) &&
+        (!badge.length || badge.includes(f.badge)) &&
         (!q ||
           f.nickname.toLowerCase().includes(q) ||
           f.productName.toLowerCase().includes(q) ||
           f.hometown.toLowerCase().includes(q)),
     );
-    /* Collection order ("Fall 2024"); unknowns last, then by name so it is stable. */
-    const byDate = (a: Friend, b: Friend) =>
+    const byDate = (a: FriendCard, b: FriendCard) =>
       collectionOrder(a.collection) - collectionOrder(b.collection) || a.nickname.localeCompare(b.nickname);
     switch (sort) {
       case "longest":
@@ -82,7 +92,9 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
       case "newest":
         return list.sort((a, b) => byDate(b, a));
       case "family":
-        return list.sort((a, b) => Number(b.relationship === "Family") - Number(a.relationship === "Family") || byDate(a, b));
+        return list.sort(
+          (a, b) => Number(b.relationship === "Family") - Number(a.relationship === "Family") || byDate(a, b),
+        );
       case "hometown":
         return list.sort((a, b) => (a.hometown || "\uffff").localeCompare(b.hometown || "\uffff") || byDate(a, b));
       case "az":
@@ -97,91 +109,65 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
       default:
         return list;
     }
-  }, [friends, era, metHow, relationship, badge, sort, query, fateSeed]);
+  }, [friends, era, metHow, relationship, badge, sort, query, fateSeed, hateSelected]);
 
-  const metHowOptions = MET_HOW.filter((how) => friends.some((f) => f.metHow === how));
-  const relationshipOptions = RELATIONSHIPS.filter((r) => friends.some((f) => f.relationship === r));
-  const badgeOptions = (Object.keys(FRIEND_BADGES) as Array<keyof typeof FRIEND_BADGES>).filter(
-    (key) => key !== "none" && friends.some((f) => f.badge === key),
+  const metHowOptions = MET_HOW.filter((how) => friends.some((f) => f.metHow === how)).map(
+    (how) => [how, how] as [string, string],
   );
-
-  const Filter = ({
-    id,
-    label,
-    value,
-    options,
-    onPick,
-  }: {
-    id: string;
-    label: string;
-    value: string;
-    options: Array<[string, string]>;
-    onPick: (value: string) => void;
-  }) => (
-    <div className={`ff-filter${open === id ? " ff-filter-open" : ""}`}>
-      <button
-        type="button"
-        aria-expanded={open === id}
-        className={value ? "ff-filter-active" : undefined}
-        onClick={() => setOpen(open === id ? null : id)}
-      >
-        {value ? options.find(([v]) => v === value)?.[1] ?? label : label} <Chevron />
-      </button>
-      <ul className="ff-filter-menu">
-        <li>
-          <button type="button" onClick={() => (onPick(""), setOpen(null))}>
-            All
-          </button>
-        </li>
-        {options.map(([v, text]) => (
-          <li key={v}>
-            <button
-              type="button"
-              aria-current={value === v}
-              onClick={() => (onPick(v), setOpen(null))}
-            >
-              {text}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  const relationshipOptions: Array<[string, string]> = [
+    ...RELATIONSHIPS.filter((r) => friends.some((f) => f.relationship === r)).map(
+      (r) => [r, r] as [string, string],
+    ),
+    [HATE, HATE_LABEL],
+  ];
+  const badgeOptions = (Object.keys(FRIEND_BADGES) as Array<keyof typeof FRIEND_BADGES>)
+    .filter((key) => key !== "none" && friends.some((f) => f.badge === key))
+    .map((key) => [key, FRIEND_BADGES[key]] as [string, string]);
 
   return (
     <>
       <div ref={barRef} className="ff-filterbar">
         <div className="ff-filterbar-left">
           <span className="ff-filter-label">Filter:</span>
-          {relationshipOptions.length ? (
-            <Filter
-              id="relationship"
-              label="Relationship"
-              value={relationship}
-              options={relationshipOptions.map((r) => [r, r])}
-              onPick={setRelationship}
-            />
-          ) : null}
+          <CheckFilter
+            id="relationship"
+            label="Relationship"
+            selected={relationship}
+            options={relationshipOptions}
+            open={open}
+            setOpen={setOpen}
+            onToggle={(value) => setRelationship((prev) => toggleValue(prev, value))}
+            onReset={() => setRelationship([])}
+          />
           {metHowOptions.length ? (
-            <Filter
+            <CheckFilter
               id="how"
               label="How We Met"
-              value={metHow}
-              options={metHowOptions.map((how) => [how, how])}
-              onPick={setMetHow}
+              selected={metHow}
+              options={metHowOptions}
+              open={open}
+              setOpen={setOpen}
+              onToggle={(value) => setMetHow((prev) => toggleValue(prev, value))}
+              onReset={() => setMetHow([])}
             />
           ) : null}
           {badgeOptions.length ? (
-            <Filter
+            <CheckFilter
               id="badge"
               label="Availability"
-              value={badge}
-              options={badgeOptions.map((key) => [key, FRIEND_BADGES[key]])}
-              onPick={setBadge}
+              selected={badge}
+              options={badgeOptions}
+              open={open}
+              setOpen={setOpen}
+              onToggle={(value) => setBadge((prev) => toggleValue(prev, value))}
+              onReset={() => setBadge([])}
             />
           ) : null}
           {query ? (
-            <Link href={lockedEra ? `/collections/${lockedEra}` : `/collections/${SHOP_HANDLE}`} className="ff-filter-clear">
+            <Link
+              href={lockedEra ? `/collections/${lockedEra}` : `/collections/${SHOP_HANDLE}`}
+              className="ff-filter-clear"
+            >
               “{query}” ×
             </Link>
           ) : null}
@@ -189,18 +175,40 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
         <div className="ff-filterbar-right">
           <span className="ff-filter-label">Sort by:</span>
           <div className={`ff-filter${open === "sort" ? " ff-filter-open" : ""}`}>
-            <button type="button" aria-expanded={open === "sort"} onClick={() => setOpen(open === "sort" ? null : "sort")}>
-              {SORTS.find(([v]) => v === sort)?.[1]} <Chevron />
+            <button
+              type="button"
+              className="ff-filter-trigger"
+              aria-expanded={open === "sort"}
+              onClick={() => setOpen(open === "sort" ? null : "sort")}
+            >
+              {SORTS.find(([v]) => v === sort)?.[1] ?? "Featured"} <Chevron />
             </button>
-            <ul className="ff-filter-menu ff-filter-menu-right">
-              {SORTS.map(([v, text]) => (
-                <li key={v}>
-                  <button type="button" aria-current={sort === v} onClick={() => (setSort(v), setOpen(null))}>
-                    {text}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="ff-filter-panel ff-filter-panel-right" role="listbox" aria-label="Sort by">
+              <div className="ff-filter-panel-head">
+                <span>{SORTS.find(([v]) => v === sort)?.[1] ?? "Featured"}</span>
+                <button type="button" className="ff-filter-reset" onClick={() => setSort("featured")}>
+                  Reset
+                </button>
+              </div>
+              <ul className="ff-filter-checks">
+                {SORTS.map(([v, text]) => (
+                  <li key={v}>
+                    <button
+                      type="button"
+                      className="ff-filter-check"
+                      aria-pressed={sort === v}
+                      onClick={() => {
+                        setSort(v);
+                        setOpen(null);
+                      }}
+                    >
+                      <span className={`ff-filter-box${sort === v ? " is-on" : ""}`} aria-hidden="true" />
+                      <span>{text}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -237,11 +245,77 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
           ))}
         </ul>
       ) : (
-        <p className="ff-empty">
-          {friends.length ? "Nothing matches. Try fewer filters." : "The shelves are being stocked. Check back tomorrow morning."}
+        <p className={`ff-empty${hateSelected ? " ff-empty-joke" : ""}`}>
+          {hateSelected
+            ? "nothing to see here (; good try"
+            : friends.length
+              ? "Nothing matches. Try fewer filters."
+              : "The shelves are being stocked. Check back tomorrow morning."}
         </p>
       )}
     </>
+  );
+}
+
+function CheckFilter({
+  id,
+  label,
+  selected,
+  options,
+  open,
+  setOpen,
+  onToggle,
+  onReset,
+}: {
+  id: string;
+  label: string;
+  selected: string[];
+  options: Array<[string, string]>;
+  open: string | null;
+  setOpen: (id: string | null) => void;
+  onToggle: (value: string) => void;
+  onReset: () => void;
+}) {
+  const isOpen = open === id;
+  return (
+    <div className={`ff-filter${isOpen ? " ff-filter-open" : ""}`}>
+      <button
+        type="button"
+        className={`ff-filter-trigger${selected.length ? " ff-filter-active" : ""}`}
+        aria-expanded={isOpen}
+        onClick={() => setOpen(isOpen ? null : id)}
+      >
+        {label} <Chevron />
+      </button>
+      <div className="ff-filter-panel" role="group" aria-label={label}>
+        <div className="ff-filter-panel-head">
+          <span>
+            {selected.length} selected
+          </span>
+          <button type="button" className="ff-filter-reset" onClick={onReset} disabled={!selected.length}>
+            Reset
+          </button>
+        </div>
+        <ul className="ff-filter-checks">
+          {options.map(([value, text]) => {
+            const on = selected.includes(value);
+            return (
+              <li key={value}>
+                <button
+                  type="button"
+                  className="ff-filter-check"
+                  aria-pressed={on}
+                  onClick={() => onToggle(value)}
+                >
+                  <span className={`ff-filter-box${on ? " is-on" : ""}`} aria-hidden="true" />
+                  <span>{text}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
   );
 }
 

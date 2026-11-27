@@ -1,4 +1,4 @@
-import { Ballet, Bodoni_Moda, EB_Garamond } from "next/font/google";
+import { Ballet, Bodoni_Moda, Courier_Prime, EB_Garamond } from "next/font/google";
 
 /* Diary-only display faces — kept out of the shop shell so grid/PDP stay light. */
 const script = Ballet({
@@ -23,6 +23,17 @@ const garamond = EB_Garamond({
   variable: "--ff-garamond",
 });
 
+const receipt = Courier_Prime({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--ff-mono",
+});
+
 export default function DiaryLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <div className={`${script.variable} ${didone.variable} ${garamond.variable}`}>{children}</div>;
+  return (
+    <div className={`${script.variable} ${didone.variable} ${garamond.variable} ${receipt.variable}`}>
+      {children}
+    </div>
+  );
 }

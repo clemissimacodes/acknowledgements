@@ -10,7 +10,6 @@ html:has(.ff) body {
   background: #fcfbf5;
 }
 
-/* Site peel cursor fights the shop chrome and steals main-thread time. */
 html:has(.ff) .peel-cursor,
 html:has(.ff) .peel-cursor-trail {
   display: none !important;
@@ -71,14 +70,21 @@ html.ff-locked {
 }
 
 .ff-label,
-.ff-filter-label,
+.ff-filter-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
 .ff-specs dt,
 .ff-buy-rows dt,
 .ff-footer-head,
 .ff-nav a,
 .ff-nav button,
-.ff-filter > button,
-.ff-filter-menu button,
+.ff-filter-trigger,
+.ff-filter-check,
 .ff-size,
 .ff-color-name,
 .ff-pill {
@@ -131,14 +137,13 @@ html.ff-locked {
 }
 
 /* ---- Nav ----------------------------------------------------------- */
-/* Orseund-style: logo left, bag + search pill right. */
+/* Orseund-style: links left, brand centered, bag + search right. */
 
 .ff-nav {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
   min-height: 72px;
   padding: 18px 28px;
 }
@@ -149,32 +154,14 @@ html.ff-locked {
   list-style: none;
 }
 
-.ff-nav-brand {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  min-width: 0;
-}
-
 .ff-nav-left {
-  display: none;
+  display: flex;
+  gap: 28px;
+  align-items: center;
 }
 
 .ff-nav-left > li > a,
 .ff-nav-left > li > button {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 0;
-  border: 0;
-  background: none;
-}
-
-.ff-nav-item {
-  position: relative;
-}
-
-.ff-nav-shop-btn {
   display: inline-flex;
   gap: 6px;
   align-items: center;
@@ -187,6 +174,10 @@ html.ff-locked {
   text-transform: uppercase;
   color: var(--ink);
   cursor: pointer;
+}
+
+.ff-nav-item {
+  position: relative;
 }
 
 .ff-dropdown {
@@ -224,7 +215,7 @@ html.ff-locked {
 .ff-logo {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   line-height: 1;
 }
 
@@ -247,7 +238,6 @@ html.ff-locked {
   gap: 22px;
   align-items: center;
   justify-content: flex-end;
-  flex: 0 0 auto;
 }
 
 .ff-bag-link {
@@ -314,13 +304,13 @@ html.ff-locked {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 10px 24px 14px;
+  padding: 10px 28px 14px;
 }
 
 .ff-filterbar-left,
 .ff-filterbar-right {
   display: flex;
-  gap: 22px;
+  gap: 28px;
   align-items: center;
 }
 
@@ -328,13 +318,19 @@ html.ff-locked {
   position: relative;
 }
 
-.ff-filter > button {
+.ff-filter-trigger {
   display: inline-flex;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
-  padding: 4px 0;
+  padding: 6px 0;
   border: 0;
   background: none;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .ff-filter-active {
@@ -342,45 +338,104 @@ html.ff-locked {
   text-underline-offset: 3px;
 }
 
-.ff-filter-menu {
+.ff-filter-panel {
   position: absolute;
-  z-index: 20;
-  top: 100%;
-  left: -12px;
+  z-index: 25;
+  top: calc(100% + 6px);
+  left: -14px;
   display: none;
-  min-width: 170px;
-  margin: 0;
-  padding: 8px 12px;
-  border: 1px solid var(--rule);
+  min-width: 280px;
+  max-width: min(360px, 86vw);
+  padding: 0;
+  border: 1px solid var(--ink);
   background: var(--paper);
-  list-style: none;
 }
 
-.ff-filter-menu-right {
-  right: -12px;
+.ff-filter-panel-right {
+  right: -14px;
   left: auto;
 }
 
-.ff-filter-open .ff-filter-menu {
+.ff-filter-open .ff-filter-panel {
   display: block;
 }
 
-.ff-filter-menu button {
-  width: 100%;
-  padding: 5px 0;
-  border: 0;
-  background: none;
-  text-align: left;
+.ff-filter-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.ff-filter-menu button[aria-current="true"] {
+.ff-filter-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-decoration: underline;
   text-underline-offset: 3px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ff-filter-reset:disabled {
+  opacity: 0.35;
+  cursor: default;
+  text-decoration: none;
+}
+
+.ff-filter-checks {
+  margin: 0;
+  padding: 8px 0 12px;
+  list-style: none;
+}
+
+.ff-filter-check {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ff-filter-box {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+
+.ff-filter-box.is-on {
+  background: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--paper);
 }
 
 .ff-filter-clear {
   font-family: var(--serif);
   font-size: 13px;
+  font-style: italic;
+}
+
+.ff-empty-joke {
+  font-family: var(--serif);
   font-style: italic;
 }
 
@@ -404,6 +459,7 @@ html.ff-locked {
   font-size: 14px;
   font-style: italic;
 }
+
 
 /* ---- Voice gift (present on the product page) ---------------------- */
 
@@ -662,12 +718,102 @@ html.ff-locked {
   }
 }
 
+/* ---- Founder voice (hairline) -------------------------------------- */
+
+.ff-voice {
+  margin: 0;
+  padding: 14px 50px 0;
+}
+
+.ff-voice-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ff-voice-icon {
+  flex: none;
+  width: 1.2em;
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.ff-voice-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+.ff-voice-time {
+  flex: none;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.ff-voice-line {
+  height: 2px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+
+.ff-voice-line i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--ink);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 80ms linear;
+}
+
 /* ---- Anthem (Spotify) ---------------------------------------------- */
 
 .ff-anthem {
   position: relative;
   margin: 28px 50px 0;
   padding: 0 0 8px;
+}
+
+.ff-poem .ff-anthem {
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.ff-pairs-inline {
+  display: grid;
+  gap: 8px;
+}
+
+.ff-pairs-inline p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.ff-pairs-label {
+  display: inline-block;
+  min-width: 3.2rem;
+  margin-right: 8px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.ff-pairs-by {
+  color: var(--ink-2);
 }
 
 .ff-anthem-whisper {
@@ -717,11 +863,11 @@ p.ff-anthem-whisper {
 
 .ff-also {
   margin: 0;
-  padding: 28px 50px 48px;
+  padding: 48px 50px 64px;
 }
 
 .ff-also-title {
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   font-family: var(--serif);
   font-size: 18px;
   font-weight: 400;
@@ -750,21 +896,6 @@ p.ff-anthem-whisper {
 
 .ff-card a {
   display: block;
-}
-
-.ff-card {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
-}
-
-.ff-also-grid .ff-card-hero {
-  /* Keep also-like tiles on one baseline whether cutout or photo. */
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  object-fit: cover;
-  object-position: center top;
 }
 
 .ff-card-media {
@@ -866,61 +997,24 @@ p.ff-anthem-whisper {
 
 .ff-product-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 4px 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
   align-items: start;
-  padding: 40px 50px 36px;
+  padding: 50px 50px 90px;
 }
 
-.ff-product-grid-gallery {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 4px 18px;
-}
-
-.ff-product-left,
+.ff-specs,
 .ff-buy {
   position: sticky;
   top: 100px;
-  align-self: start;
-}
-
-.ff-product-left {
-  display: grid;
-  gap: 28px;
-  padding-right: 12px;
 }
 
 .ff-specs {
-  padding-right: 0;
+  padding-right: 50px;
 }
 
 .ff-buy {
-  padding-left: 28px;
-}
-
-.ff-photo-rail {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.ff-parallax-frame {
-  position: relative;
-  margin: 0;
-  overflow: hidden;
-  background: var(--paper-2);
-  aspect-ratio: 4 / 5;
-}
-
-.ff-parallax-frame img {
-  position: absolute;
-  inset: -12% 0;
-  width: 100%;
-  height: 124%;
-  object-fit: cover;
-  object-position: center;
-  will-change: transform;
-  transform: translate3d(0, var(--ff-parallax-y, 0%), 0);
+  padding-left: 60px;
 }
 
 .ff-specs dl,
@@ -933,8 +1027,7 @@ p.ff-anthem-whisper {
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);
   gap: 0 26px;
-  margin-bottom: 12px;
-  align-items: start;
+  margin-bottom: 16px;
 }
 
 .ff-specs dt,
@@ -958,51 +1051,54 @@ p.ff-anthem-whisper {
   display: block;
 }
 
-.ff-hero {
+/* Character sits under materials / care / made in (Orseund left column). */
+.ff-character {
   position: relative;
-  margin: 0;
+  margin: 28px 0 0;
   background: var(--paper);
 }
 
-.ff-hero img {
+.ff-character img {
   display: block;
-  width: 70%;
+  width: 78%;
   margin: 0 auto;
   aspect-ratio: 4 / 5;
   object-fit: contain;
   object-position: center bottom;
 }
 
-.ff-hero .ff-card-blank {
+.ff-character .ff-card-blank {
   position: relative;
   display: block;
   aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg, var(--paper-2), #e7e4da);
 }
 
-@supports (animation-timeline: view()) {
-  .ff-parallax-frame img {
-    animation: ff-photo-parallax linear both;
-    animation-timeline: view();
-    animation-range: cover;
-  }
-
-  @keyframes ff-photo-parallax {
-    from {
-      transform: translate3d(0, -10%, 0);
-    }
-    to {
-      transform: translate3d(0, 10%, 0);
-    }
-  }
+/* Photos stack in the middle column. */
+.ff-photo-col {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ff-parallax-frame img {
-    inset: 0;
-    height: 100%;
-    animation: none;
-    transform: none;
-  }
+.ff-photo {
+  margin: 0;
+  background: var(--paper-2);
+}
+
+.ff-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ff-photo-empty .ff-card-blank {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg, var(--paper-2), #e7e4da);
 }
 
 .ff-title {
@@ -1039,6 +1135,49 @@ p.ff-anthem-whisper {
   font-weight: 500;
   font-style: italic;
 }
+
+.ff-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 3px;
+}
+
+.ff .ff-size {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 31px;
+  height: 31px;
+  padding: 0 10px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ff-size[aria-checked="true"] {
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.ff .ff-size-out {
+  color: var(--ink-2);
+  border-color: var(--rule);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.ff .ff-color-name {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+
+
+
 
 .ff-size-one {
   margin: 0;
@@ -1142,32 +1281,6 @@ p.ff-anthem-whisper {
   border-color: var(--ink);
 }
 
-.ff-pairs {
-  display: grid;
-  gap: 6px;
-  padding: 6px 0 2px;
-}
-
-.ff-pairs p {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.ff-pairs-label {
-  display: inline-block;
-  min-width: 3.2rem;
-  margin-right: 8px;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-}
-
-.ff-pairs-by {
-  color: var(--ink-2);
-}
-
 .ff-price {
   display: inline-flex;
   gap: 8px;
@@ -1245,7 +1358,7 @@ p.ff-anthem-whisper {
 }
 
 .ff-acc {
-  margin: 0 0 4px;
+  margin: 0 0 6px;
 }
 
 .ff-acc summary {
@@ -1280,7 +1393,11 @@ p.ff-anthem-whisper {
 }
 
 .ff-acc p {
-  margin: 4px 0 6px;
+  margin: 6px 0 10px;
+}
+
+.ff-pairs {
+  padding: 0 0 40px;
 }
 
 .ff-pairs h2 {
@@ -1479,17 +1596,9 @@ p.ff-anthem-whisper {
 }
 
 .ff-receipt {
-  --receipt-accent: #c2a27a;
   width: min(340px, 100%);
   padding: 32px 26px 36px;
-  border-top: 6px solid var(--receipt-accent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--receipt-accent) 16%, transparent),
-      transparent 88px
-    ),
-    #fffdf7;
+  background: #fffdf7;
   box-shadow: 0 18px 40px rgba(36, 30, 22, 0.14);
   font-family: var(--mono);
   font-size: 11px;
@@ -1527,20 +1636,6 @@ p.ff-anthem-whisper {
   justify-content: space-between;
   gap: 12px;
   padding: 6px 0;
-}
-
-.ff-receipt-color {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 6px;
-}
-
-.ff-receipt-color i {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 40% 60% 45% 55%;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
 .ff-receipt-items small {
@@ -1734,50 +1829,41 @@ p.ff-anthem-whisper {
 }
 
 @media (max-width: 900px) {
+  .ff-voice,
   .ff-anthem,
   .ff-also {
-    padding: 20px 20px 36px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .ff-also-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .ff-product-grid,
-  .ff-product-grid-gallery {
+  .ff-product-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
-    padding: 20px 20px 28px;
+    gap: 28px;
+    padding: 20px 20px 48px;
   }
 
-  .ff-product-left {
-    position: static;
-    padding: 0;
-    gap: 20px;
+  .ff-photo-col {
     order: -1;
-  }
-
-  .ff-hero {
     margin: 0 -20px;
   }
 
-  .ff-photo-rail {
-    order: 2;
-    margin: 0 -20px;
-  }
-
-  .ff-parallax-frame {
-    aspect-ratio: 5 / 6;
-  }
-
+  .ff-specs,
   .ff-buy {
     position: static;
     padding: 0;
-    order: 1;
   }
 
   .ff-specs {
-    order: unset;
+    order: 3;
+  }
+
+  .ff-character {
+    margin-top: 20px;
+    max-width: 280px;
   }
 
   .ff-footer-cols {
@@ -1787,6 +1873,7 @@ p.ff-anthem-whisper {
 
 @media (max-width: 760px) {
   .ff-nav {
+    grid-template-columns: 44px 1fr auto;
     gap: 12px;
     min-height: 58px;
     padding: 12px 14px;
@@ -1805,10 +1892,6 @@ p.ff-anthem-whisper {
     display: block;
     height: 1px;
     background: var(--ink);
-  }
-
-  .ff-nav-shop {
-    display: none;
   }
 
   .ff-nav-left {
@@ -1844,10 +1927,6 @@ p.ff-anthem-whisper {
     border: 0;
   }
 
-  .ff-nav-signin {
-    margin-top: 6px;
-  }
-
   .ff-logo-mark {
     font-size: 12px;
   }
@@ -1870,6 +1949,18 @@ p.ff-anthem-whisper {
     padding: 0 10px;
   }
 
+  .ff-filter-panel {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    max-width: none;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
   .ff-filterbar {
     gap: 12px;
     padding: 8px 14px 12px;
@@ -1885,17 +1976,6 @@ p.ff-anthem-whisper {
   .ff-filterbar-right {
     gap: 14px;
     white-space: nowrap;
-  }
-
-  .ff-filter-menu {
-    position: fixed;
-    top: auto;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    padding: 16px 20px 28px;
-    border: 0;
-    border-top: 1px solid var(--rule);
   }
 
   .ff-grid {
@@ -1932,8 +2012,7 @@ p.ff-anthem-whisper {
 /* ---- Poem row on the product page ---------------------------------- */
 
 .ff-poem-title {
-  display: inline-block;
-  margin-bottom: 4px;
+  display: inline;
   font-family: var(--serif);
   font-style: italic;
   font-size: 17px;

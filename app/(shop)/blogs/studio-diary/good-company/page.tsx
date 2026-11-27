@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SHOP_HANDLE, SHOP_NAME } from "@/lib/friend-types";
-import { listFriends } from "@/lib/friends";
+import { listFriendCards } from "@/lib/friends";
 
 export const metadata: Metadata = {
   title: "Studio Diary: Good Company",
@@ -50,7 +50,7 @@ const LETTER: Array<
 ];
 
 export default async function GoodCompanyDiary() {
-  const friends = await listFriends();
+  const friends = await listFriendCards();
   const count = friends.length;
 
   return (

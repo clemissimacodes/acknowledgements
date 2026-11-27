@@ -16,6 +16,7 @@ import {
   slugifyFriend,
   spotifyTrackId,
   type Friend,
+  type FriendCard,
   type FriendColor,
   type Receipt,
   type ReceiptItem,
@@ -209,6 +210,28 @@ function toFriend(row: Row): Friend {
   };
 }
 
+function toFriendCard(row: Row): FriendCard {
+  return {
+    id: String(row.id),
+    slug: String(row.slug),
+    nickname: String(row.nickname),
+    productName: String(row.product_name ?? ""),
+    era: isFriendEra(row.era) ? row.era : "new-arrivals",
+    badge: isFriendBadge(row.badge) ? row.badge : "none",
+    birthday: isBirthday(row.birthday) ? row.birthday : "",
+    collection: isCollection(row.collection) ? row.collection : "",
+    metHow: String(row.met_how ?? ""),
+    hometown: String(row.hometown ?? ""),
+    madeOf: Array.isArray(row.made_of) ? (row.made_of as string[]) : [],
+    relationship: String(row.relationship ?? ""),
+    heroUrl: (row.hero_url as string | null) ?? null,
+    altUrl: (row.alt_url as string | null) ?? null,
+    visible: Boolean(row.visible),
+    sortOrder: Number(row.sort_order ?? 0),
+    createdAt: iso(row.created_at),
+  };
+}
+
 /* Public reads skip ensureTables (schema is already live). Mutations still migrate.
    Results are Data-Cache'd so collection + PDP don't hit Neon on every click. */
 const cachedVisibleFriends = unstable_cache(
@@ -221,15 +244,33 @@ const cachedVisibleFriends = unstable_cache(
   { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
 );
 
+const cachedVisibleCards = unstable_cache(
+  async () => {
+    const sql = db();
+    const rows = await sql`
+      SELECT id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown,
+        made_of, relationship, hero_url, alt_url, visible, sort_order, created_at
+      FROM friends
+      WHERE visible
+      ORDER BY sort_order ASC, lower(nickname) ASC
+    `;
+    return (rows as Row[]).map(toFriendCard);
+  },
+  ["good-company-visible-cards-v3"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
+
 const cachedFriendBySlug = unstable_cache(
   async (slug: string) => {
     const sql = db();
     const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
     return rows[0] ? toFriend(rows[0]) : null;
   },
-  ["good-company-friend-by-slug"],
+  ["good-company-friend-by-slug-v3"],
   { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
 );
+
+export const listFriendCards = cache(async (): Promise<FriendCard[]> => cachedVisibleCards());
 
 export const listFriends = cache(async ({ all = false } = {}): Promise<Friend[]> => {
   if (all) {

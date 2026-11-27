@@ -3,21 +3,22 @@
 import Link from "next/link";
 import { useMemo, useState, type CSSProperties } from "react";
 import {
+  DIARY_PATH,
   FRIEND_BADGES,
   SHOP_HANDLE,
   collectionLabel,
   friendPrice,
   formatPrice,
   type Friend,
+  type FriendCard,
   type FriendColor,
 } from "@/lib/friend-types";
 import { colorsForFriend } from "@/lib/friend-colors";
 import { AlsoLike } from "./AlsoLike";
 import { VoiceGift } from "./VoiceGift";
 import { useBag } from "./bag";
-import { PhotoRail } from "./PhotoRail";
 
-type Props = { friend: Friend; alsoLike?: Friend[] };
+type Props = { friend: Friend; alsoLike?: FriendCard[] };
 
 export function ProductPage({ friend, alsoLike = [] }: Props) {
   const bag = useBag();
@@ -39,44 +40,39 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
         <em>{friend.nickname}</em>
       </p>
 
-        <div
-          className={`ff-product-grid${friend.altUrl || friend.extraUrl ? " ff-product-grid-gallery" : ""}`}
-        >
-          <div className="ff-product-left">
-            <aside className="ff-specs">
-              <dl>
-                {friend.madeOf.length ? (
-                  <div>
-                    <dt>Made of</dt>
-                    <dd>
-                      {friend.madeOf.map((item) => (
-                        <span key={item}>{item}</span>
-                      ))}
-                    </dd>
-                  </div>
-                ) : null}
-                {friend.care ? (
-                  <div>
-                    <dt>Care</dt>
-                    <dd>{friend.care}</dd>
-                  </div>
-                ) : null}
-                {friend.hometown ? (
-                  <div>
-                    <dt>Made in</dt>
-                    <dd>{friend.hometown}</dd>
-                  </div>
-                ) : null}
-                {friend.metHow ? (
-                  <div>
-                    <dt>How we met</dt>
-                    <dd>{friend.metHow}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </aside>
-
-            <figure className="ff-hero">
+      <div className="ff-product-grid">
+          <aside className="ff-specs">
+            <dl>
+              {friend.madeOf.length ? (
+                <div>
+                  <dt>Made of</dt>
+                  <dd>
+                    {friend.madeOf.map((item) => (
+                      <span key={item}>{item}</span>
+                    ))}
+                  </dd>
+                </div>
+              ) : null}
+              {friend.care ? (
+                <div>
+                  <dt>Care</dt>
+                  <dd>{friend.care}</dd>
+                </div>
+              ) : null}
+              {friend.hometown ? (
+                <div>
+                  <dt>Made in</dt>
+                  <dd>{friend.hometown}</dd>
+                </div>
+              ) : null}
+              {friend.metHow ? (
+                <div>
+                  <dt>How we met</dt>
+                  <dd>{friend.metHow}</dd>
+                </div>
+              ) : null}
+            </dl>
+            <figure className="ff-character">
               {friend.heroUrl ? (
                 <img
                   src={friend.heroUrl}
@@ -91,19 +87,38 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 <span className="ff-badge">{FRIEND_BADGES[friend.badge]}</span>
               ) : null}
             </figure>
-          </div>
+          </aside>
 
-          <PhotoRail
-            label={`${friend.nickname} photos`}
-            shots={[
-              ...(friend.altUrl
-                ? [{ src: friend.altUrl, alt: `${friend.nickname}, photo 2` }]
-                : []),
-              ...(friend.extraUrl
-                ? [{ src: friend.extraUrl, alt: `${friend.nickname}, photo 3` }]
-                : []),
-            ]}
-          />
+          <div className="ff-photo-col" aria-label={`${friend.nickname} photos`}>
+            {(friend.altUrl || friend.extraUrl) ? (
+              <>
+                {friend.altUrl ? (
+                  <figure className="ff-photo">
+                    <img
+                      src={friend.altUrl}
+                      alt={`${friend.nickname}, photo 2`}
+                      loading="eager"
+                      decoding="async"
+                    />
+                  </figure>
+                ) : null}
+                {friend.extraUrl ? (
+                  <figure className="ff-photo">
+                    <img
+                      src={friend.extraUrl}
+                      alt={`${friend.nickname}, photo 3`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </figure>
+                ) : null}
+              </>
+            ) : (
+              <figure className="ff-photo ff-photo-empty" aria-hidden="true">
+                <span className="ff-card-blank" />
+              </figure>
+            )}
+          </div>
 
           <section className="ff-buy" aria-label="Details">
             <dl className="ff-buy-rows">
@@ -122,6 +137,40 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                     {friend.favoriteMemory.split(/\n\n+/).map((para, index) => (
                       <p key={index}>{para}</p>
                     ))}
+                  </dd>
+                </div>
+              ) : null}
+
+              {hasPairs ? (
+                <div>
+                  <dt>Pairs well with</dt>
+                  <dd className="ff-poem">
+                    <div className="ff-pairs-inline">
+                      {friend.poemTitle ? (
+                        <p>
+                          <span className="ff-pairs-label">Poem</span>
+                          {friend.poemUrl ? (
+                            <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
+                              {friend.poemTitle}
+                            </a>
+                          ) : (
+                            <span className="ff-poem-title">{friend.poemTitle}</span>
+                          )}
+                          {friend.poemPoet ? <span className="ff-pairs-by"> · {friend.poemPoet}</span> : null}
+                        </p>
+                      ) : null}
+                      {friend.anthemUrl ? (
+                        <p>
+                          <span className="ff-pairs-label">Song</span>
+                          <a href={friend.anthemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
+                            {songTitle}
+                          </a>
+                          {friend.anthemArtist ? (
+                            <span className="ff-pairs-by"> · {friend.anthemArtist}</span>
+                          ) : null}
+                        </p>
+                      ) : null}
+                    </div>
                   </dd>
                 </div>
               ) : null}
@@ -277,43 +326,34 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
               <div>
                 <dt>Details</dt>
                 <dd>
-                  {hasPairs ? (
-                    <details className="ff-acc">
-                      <summary>Pairs well with</summary>
-                      <div className="ff-pairs">
-                        {friend.poemTitle ? (
-                          <p>
-                            <span className="ff-pairs-label">Poem</span>
-                            {friend.poemUrl ? (
-                              <a href={friend.poemUrl} target="_blank" rel="noreferrer">
-                                {friend.poemTitle}
-                              </a>
-                            ) : (
-                              <span>{friend.poemTitle}</span>
-                            )}
-                            {friend.poemPoet ? (
-                              <span className="ff-pairs-by"> · {friend.poemPoet}</span>
-                            ) : null}
-                          </p>
-                        ) : null}
-                        {friend.anthemUrl ? (
-                          <p>
-                            <span className="ff-pairs-label">Song</span>
-                            <a href={friend.anthemUrl} target="_blank" rel="noreferrer">
-                              {songTitle}
-                            </a>
-                            {friend.anthemArtist ? (
-                              <span className="ff-pairs-by"> · {friend.anthemArtist}</span>
-                            ) : null}
-                          </p>
-                        ) : null}
-                      </div>
-                    </details>
-                  ) : null}
                   <details className="ff-acc">
-                    <summary>Shipping &amp; Returns</summary>
+                    <summary>Fit guide</summary>
                     <p>
-                      Friendship is smooth sailing; return to land may be requested only in choppy waters.
+                      Friend: I will pick you up from the airport. Family: I will pick you up from the airport at
+                      5 a.m. and not bring it up again. Each listing comes in exactly one of these, and it is not
+                      adjustable.
+                    </p>
+                  </details>
+                  <details className="ff-acc">
+                    <summary>What happens at checkout</summary>
+                    <p>
+                      Nothing is charged and nothing ships. Checking out makes a receipt for the people in your
+                      bag that you can share. All sales are final because this one already was.
+                    </p>
+                  </details>
+                  <details className="ff-acc">
+                    <summary>Shipping &amp; returns</summary>
+                    <p>
+                      Shipping is free, in the sense that nothing ships; they go where they like. Returns are not
+                      possible because nothing was bought. Exchanges are not offered. I wouldn&rsquo;t anyway.
+                    </p>
+                  </details>
+                  <details className="ff-acc">
+                    <summary>Why there is a price</summary>
+                    <p>
+                      Good Company is a Black Friday sale where every product is a real person in my life. The
+                      price is a date, read as dollars. Which date is the kind of thing you know if you know them.{" "}
+                      <Link href={DIARY_PATH}>Read the studio diary.</Link>
                     </p>
                   </details>
                 </dd>

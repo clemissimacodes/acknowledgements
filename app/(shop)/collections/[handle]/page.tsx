@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CollectionGrid } from "@/components/friends/CollectionGrid";
 import { SHOP_HANDLE, SHOP_NAME, eraLabel, isFriendEra } from "@/lib/friend-types";
-import { listFriends } from "@/lib/friends";
+import { listFriendCards } from "@/lib/friends";
 
 type Props = {
   params: Promise<{ handle: string }>;
@@ -24,7 +24,7 @@ export default async function CollectionPage({ params, searchParams }: Props) {
   const era = handle === SHOP_HANDLE ? null : isFriendEra(handle) ? handle : null;
   if (handle !== SHOP_HANDLE && !era) notFound();
 
-  const friends = await listFriends();
+  const friends = await listFriendCards();
 
   return (
     <main className="ff-collection">

@@ -14,7 +14,7 @@ export async function fetchAnthemMeta(url: string): Promise<AnthemMeta | null> {
     if (!res.ok) return null;
     const html = await res.text();
     const titleRaw = /"title":"((?:\\.|[^"\\])*)"/.exec(html)?.[1];
-    const artistsBlock = /"artists":(\[[^\]]*\])/.exec(html)?.[1];
+    const artistsBlock = /"artists":(\[[^\]]*?\])/.exec(html)?.[1];
     const title = titleRaw ? (JSON.parse(`"${titleRaw}"`) as string) : "";
     let artist = "";
     if (artistsBlock) {

@@ -5,6 +5,7 @@ import {
   recordShopEvent,
   removeShopEventsFromRequest,
 } from "@/lib/good-company-analytics";
+import { canSeeShop } from "@/lib/shop-access";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,10 @@ export async function POST(request: Request) {
     } catch {
       return NextResponse.json({ ok: false }, { status: 403 });
     }
+  }
+
+  if (!(await canSeeShop())) {
+    return NextResponse.json({ ok: false }, { status: 404 });
   }
 
   const user = await currentUser();

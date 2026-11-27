@@ -122,6 +122,21 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
           Care instructions <small>(optional)</small>
           <textarea name="care" rows={3} defaultValue={friend?.care ?? ""} placeholder="Do not text before 10am. Feed regularly. Handle with jokes." />
         </label>
+        <label className="admin-ff-block">
+          Anthem <small>(Spotify track URL — title and artist fill in on save)</small>
+          <input
+            name="anthemUrl"
+            type="url"
+            defaultValue={friend?.anthemUrl ?? ""}
+            placeholder="https://open.spotify.com/track/…"
+          />
+        </label>
+        {friend?.anthemTitle ? (
+          <p className="admin-ff-hint">
+            {friend.anthemTitle}
+            {friend.anthemArtist ? ` · ${friend.anthemArtist}` : ""}
+          </p>
+        ) : null}
       </section>
 
       <section className="admin-ff-section" hidden={!show("poem")}>

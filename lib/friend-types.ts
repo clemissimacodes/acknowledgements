@@ -161,6 +161,28 @@ export type Friend = {
   createdAt: string;
 };
 
+/* Slim card for grids / also-like — keeps RSC → client payloads small. */
+export type FriendCard = Pick<
+  Friend,
+  | "id"
+  | "slug"
+  | "nickname"
+  | "productName"
+  | "era"
+  | "badge"
+  | "birthday"
+  | "collection"
+  | "metHow"
+  | "hometown"
+  | "madeOf"
+  | "relationship"
+  | "heroUrl"
+  | "altUrl"
+  | "visible"
+  | "sortOrder"
+  | "createdAt"
+>;
+
 export type ReceiptItem = {
   slug: string;
   nickname: string;
@@ -341,7 +363,7 @@ function birthdayMonth(birthday: string) {
 
 /* High-entropy related products: prefer different era, relationship, met-how,
    little madeOf overlap, distant birthday month. Stable for a given slug. */
-export function pickAlsoLike(current: Friend, pool: Friend[], count = 4): Friend[] {
+export function pickAlsoLike(current: Friend, pool: FriendCard[], count = 4): FriendCard[] {
   const others = pool.filter((f) => f.id !== current.id && f.visible);
   if (!others.length) return [];
   const currentMonth = birthdayMonth(current.birthday);

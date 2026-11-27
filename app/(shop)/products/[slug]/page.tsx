@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductPage } from "@/components/friends/ProductPage";
 import { SHOP_NAME, pickAlsoLike, priceLabel } from "@/lib/friend-types";
-import { getFriendBySlug, listFriends } from "@/lib/friends";
+import { getFriendBySlug, listFriendCards } from "@/lib/friends";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Product({ params }: Props) {
   const { slug } = await params;
-  const [friend, all] = await Promise.all([getFriendBySlug(slug), listFriends()]);
+  const [friend, cards] = await Promise.all([getFriendBySlug(slug), listFriendCards()]);
   if (!friend) notFound();
-  const alsoLike = pickAlsoLike(friend, all, 4);
+  const alsoLike = pickAlsoLike(friend, cards, 4);
   return <ProductPage friend={friend} alsoLike={alsoLike} />;
 }
