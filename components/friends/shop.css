@@ -530,8 +530,8 @@ p.ff-anthem-whisper {
 
 .ff-card-hero {
   object-fit: contain; /* floating Clemi cutouts */
-  width: 85%;
-  height: 85%;
+  width: 70%;
+  height: 70%;
   top: 50%;
   left: 50%;
   right: auto;
@@ -689,7 +689,7 @@ p.ff-anthem-whisper {
 
 .ff-hero img {
   display: block;
-  width: 85%;
+  width: 70%;
   margin: 0 auto;
   aspect-ratio: 4 / 5;
   object-fit: contain;
