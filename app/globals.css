@@ -7236,24 +7236,142 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
 .admin-drop-remove button {
   font-size: 0.75rem;
 }
-.admin-voice-drop {
-  aspect-ratio: auto;
-  min-height: 7rem;
-  max-width: 100%;
-  place-items: stretch;
-  padding: 0.75rem;
+.admin-voice-studio {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 36rem;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.18);
+  border-radius: 0.55rem;
+  background: #f7f4ec;
+}
+.admin-voice-studio-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.admin-voice-studio-head strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.admin-voice-studio-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: rgba(22, 20, 18, 0.6);
+}
+.admin-voice-remove {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  padding: 0.25rem 0.55rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.admin-voice-script {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px dashed rgba(0, 0, 0, 0.18);
+  background: color-mix(in srgb, #fff 70%, #f4efe6);
+}
+.admin-voice-script-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
-.admin-voice-drop .admin-drop-label {
-  position: static;
-  inset: auto;
-  background: none;
-  padding: 0;
-  pointer-events: none;
+.admin-voice-script-head strong {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.admin-voice-drop audio {
+.admin-voice-script-head button {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  padding: 0.2rem 0.55rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.admin-voice-script-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+.admin-voice-script-body {
+  margin: 0;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.admin-voice-panel {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 0.4rem;
+  background: #fff;
+}
+.admin-voice-panel.is-recording {
+  border-color: #b94a3a;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b94a3a 35%, transparent);
+}
+.admin-voice-status {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+}
+.admin-voice-status strong {
+  font-size: 0.9rem;
+}
+.admin-voice-status span {
+  font-size: 0.78rem;
+  color: rgba(22, 20, 18, 0.58);
+}
+.admin-voice-panel audio {
   width: 100%;
   max-width: 28rem;
+}
+.admin-voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+.admin-voice-actions button {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.admin-voice-actions button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.admin-voice-record {
+  background: #161412 !important;
+  color: #fff !important;
+  border-color: #161412 !important;
+  min-width: 9.5rem;
+  font-weight: 600;
+}
+.admin-voice-record.is-stop {
+  background: #b94a3a !important;
+  border-color: #b94a3a !important;
+}
+.admin-voice-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(22, 20, 18, 0.65);
 }
 
 @media (max-width: 860px) {
@@ -7347,4 +7465,59 @@ html:has(.places-page[data-tone="dark"]) .site-footer {
   margin-left: 0.3rem;
   font-size: 0.72rem;
   color: rgba(22, 20, 18, 0.55);
+}
+
+/* Good Company shop analytics (control room) */
+.admin-gc-totals {
+  margin: 0 0 1.1rem;
+  font-size: 0.95rem;
+  color: rgba(22, 20, 18, 0.72);
+}
+.admin-gc-totals strong {
+  color: #161412;
+  font-weight: 500;
+}
+.admin-gc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1.5rem 2rem;
+  align-items: start;
+}
+.admin-gc-subhead {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(22, 20, 18, 0.55);
+}
+.admin-gc-table th:nth-child(n + 3),
+.admin-gc-table td:nth-child(n + 3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.admin-gc-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 28rem;
+  overflow: auto;
+}
+.admin-gc-feed li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(22, 20, 18, 0.08);
+  font-size: 0.92rem;
+}
+.admin-gc-feed em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: rgba(22, 20, 18, 0.5);
+}
+@media (max-width: 900px) {
+  .admin-gc-grid {
+    grid-template-columns: 1fr;
+  }
 }

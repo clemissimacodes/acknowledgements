@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import {
   DIARY_PATH,
   FRIEND_BADGES,
@@ -9,36 +9,31 @@ import {
   collectionLabel,
   friendPrice,
   formatPrice,
-  RELATIONSHIPS,
-  spotifyTrackId,
   type Friend,
+  type FriendCard,
+  type FriendColor,
 } from "@/lib/friend-types";
+import { colorsForFriend } from "@/lib/friend-colors";
 import { AlsoLike } from "./AlsoLike";
-import { AnthemPlayer } from "./AnthemPlayer";
-import { FriendVoiceBridge } from "./FriendVoice";
+import { VoiceGift } from "./VoiceGift";
 import { useBag } from "./bag";
-import type { FriendCard } from "@/lib/friend-types";
 
 type Props = { friend: Friend; alsoLike?: FriendCard[] };
 
 export function ProductPage({ friend, alsoLike = [] }: Props) {
   const bag = useBag();
-  const [pick, setPick] = useState(friend.relationship);
+  const colors = useMemo<FriendColor[]>(() => {
+    if (friend.colors.length) return friend.colors.slice(0, 3);
+    return colorsForFriend(friend.slug, friend.madeOf);
+  }, [friend.colors, friend.slug, friend.madeOf]);
+  const [color, setColor] = useState<FriendColor>(colors[0] ?? { name: "Bone White", hex: "#efe6d8" });
   const price = friendPrice(friend.birthday);
   const inBag = bag.has(friend.slug);
-  const options = friend.relationship && !RELATIONSHIPS.includes(friend.relationship as (typeof RELATIONSHIPS)[number])
-    ? [friend.relationship, ...RELATIONSHIPS]
-    : [...RELATIONSHIPS];
-  const trackId = spotifyTrackId(friend.anthemUrl);
+  const songTitle = friend.anthemTitle || (friend.anthemUrl ? "Their song" : "");
   const hasPairs = Boolean(friend.poemTitle || friend.anthemUrl);
 
   return (
     <main className="ff-product">
-      <FriendVoiceBridge
-        url={friend.voiceUrl}
-        durationMs={friend.voiceDurationMs}
-        label={`Voice memo about ${friend.nickname}`}
-      />
       <p className="ff-crumbs">
         <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
         <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
@@ -135,45 +130,11 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </dd>
               </div>
 
-              {friend.favoriteTrait ? (
-                <div>
-                  <dt>Favorite trait</dt>
-                  <dd className="ff-desc">
-                    {friend.favoriteTrait.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-
               {friend.favoriteMemory ? (
                 <div>
                   <dt>Favorite memory</dt>
                   <dd className="ff-desc">
                     {friend.favoriteMemory.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                  </dd>
-                </div>
-              ) : null}
-
-              {friend.review ? (
-                <div>
-                  <dt>Review</dt>
-                  <dd className="ff-desc ff-review">
-                    {friend.review.split(/\n\n+/).map((para, index) => (
-                      <p key={index}>{para}</p>
-                    ))}
-                    <p className="ff-review-by">— Clementine Shao, founder</p>
-                  </dd>
-                </div>
-              ) : null}
-
-              {friend.description ? (
-                <div>
-                  <dt>Description</dt>
-                  <dd className="ff-desc">
-                    {friend.description.split(/\n\n+/).map((para, index) => (
                       <p key={index}>{para}</p>
                     ))}
                   </dd>
@@ -202,7 +163,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                         <p>
                           <span className="ff-pairs-label">Song</span>
                           <a href={friend.anthemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
-                            {friend.anthemTitle || "Their song"}
+                            {songTitle}
                           </a>
                           {friend.anthemArtist ? (
                             <span className="ff-pairs-by"> · {friend.anthemArtist}</span>
@@ -210,7 +171,6 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                         </p>
                       ) : null}
                     </div>
-                    {trackId ? <AnthemPlayer trackId={trackId} /> : null}
                   </dd>
                 </div>
               ) : null}
@@ -224,24 +184,78 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </div>
               ) : null}
 
-              {options.length ? (
+              <div>
+                <dt>Size</dt>
+                <dd>
+                  <p className="ff-size-one">One size fits all</p>
+                </dd>
+              </div>
+
+              {colors.length ? (
                 <div>
-                  <dt>Relationship</dt>
+                  <dt>Color</dt>
                   <dd>
-                    <div className="ff-sizes" role="radiogroup" aria-label="Relationship">
-                      {options.map((option) => {
-                        const stocked = option === friend.relationship || !friend.relationship;
+                    <p className="ff-color-name">{color.name}</p>
+                    <svg className="ff-swatch-defs" aria-hidden="true" width="0" height="0">
+                      <defs>
+                        <filter
+                          id="ff-crayon"
+                          x="-40%"
+                          y="-60%"
+                          width="180%"
+                          height="220%"
+                          colorInterpolationFilters="sRGB"
+                        >
+                          <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="1.15 0.32"
+                            numOctaves="4"
+                            seed="4"
+                            stitchTiles="stitch"
+                            result="grain"
+                          />
+                          <feDisplacementMap
+                            in="SourceGraphic"
+                            in2="grain"
+                            scale="3.2"
+                            xChannelSelector="R"
+                            yChannelSelector="G"
+                            result="warped"
+                          />
+                          <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="1.6 0.45"
+                            numOctaves="3"
+                            seed="11"
+                            stitchTiles="stitch"
+                            result="speckle"
+                          />
+                          <feColorMatrix
+                            in="speckle"
+                            type="matrix"
+                            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.85 -0.18"
+                            result="speckleAlpha"
+                          />
+                          <feComposite in="warped" in2="speckleAlpha" operator="in" result="chalk" />
+                          <feGaussianBlur in="chalk" stdDeviation="0.35" />
+                        </filter>
+                      </defs>
+                    </svg>
+                    <div className="ff-swatches" role="radiogroup" aria-label="Color">
+                      {colors.map((swatch) => {
+                        const on = color.hex === swatch.hex;
                         return (
                           <button
-                            key={option}
+                            key={swatch.hex}
                             type="button"
                             role="radio"
-                            aria-checked={pick === option}
-                            className={`ff-size${!stocked ? " ff-size-out" : ""}`}
-                            onClick={() => stocked && setPick(option)}
-                            title={stocked ? undefined : "Sold out"}
+                            aria-checked={on}
+                            aria-label={swatch.name}
+                            className={`ff-swatch${on ? " ff-swatch-on" : ""}`}
+                            style={{ "--swatch": swatch.hex } as CSSProperties}
+                            onClick={() => setColor(swatch)}
                           >
-                            {option}
+                            <span className="ff-swatch-stroke" aria-hidden="true" />
                           </button>
                         );
                       })}
@@ -271,7 +285,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                   <p className="ff-stock">
                     <strong>Not for Sale</strong>
                     <br />
-                    In stock: 1 (on hold by Clementine Shao)
+                    In stock: 1 of 1, original
                   </p>
                   <button
                     type="button"
@@ -285,6 +299,8 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                             productName: friend.productName,
                             price,
                             heroUrl: friend.heroUrl,
+                            colorName: color.name,
+                            colorHex: color.hex,
                           })
                     }
                   >
@@ -292,6 +308,20 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                   </button>
                 </dd>
               </div>
+
+              {friend.voiceUrl ? (
+                <div className="ff-buy-voice">
+                  <dt>A note</dt>
+                  <dd>
+                    <VoiceGift
+                      url={friend.voiceUrl}
+                      durationMs={friend.voiceDurationMs}
+                      nickname={friend.nickname}
+                      slug={friend.slug}
+                    />
+                  </dd>
+                </div>
+              ) : null}
 
               <div>
                 <dt>Details</dt>

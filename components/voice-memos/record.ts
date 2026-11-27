@@ -24,8 +24,12 @@ export function extensionForAudio(mime: string, filename = "") {
   return "webm";
 }
 
+export function baseAudioType(mime: string) {
+  return mime.toLowerCase().split(";")[0].trim() || "audio/webm";
+}
+
 export function fileFromRecording(blob: Blob, basename: string) {
-  const type = blob.type || "audio/webm";
+  const type = baseAudioType(blob.type || "audio/webm");
   return new File([blob], `${basename}.${extensionForAudio(type)}`, { type });
 }
 

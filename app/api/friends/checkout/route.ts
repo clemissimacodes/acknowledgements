@@ -1,8 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { isAdminUser } from "@/lib/admin";
 import { createReceipt } from "@/lib/friends";
-import { recordShopEvent } from "@/lib/good-company-analytics";
+import { recordCheckoutEvents } from "@/lib/good-company-analytics";
 import { visitorHash } from "@/lib/recording-visitor";
 import { canSeeShop } from "@/lib/shop-access";
 
@@ -10,36 +8,38 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (!(await canSeeShop())) return NextResponse.json({ error: "Not open yet." }, { status: 404 });
-  let body: { slugs?: unknown; note?: unknown };
+  let body: { slugs?: unknown; items?: unknown; note?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  const slugs = Array.isArray(body.slugs)
-    ? body.slugs.filter((s): s is string => typeof s === "string").slice(0, 24)
-    : [];
+  type CheckoutLine = { slug: string; colorName?: string; colorHex?: string };
+  const lines: CheckoutLine[] = Array.isArray(body.items)
+    ? body.items
+        .flatMap((entry): CheckoutLine[] => {
+          if (!entry || typeof entry !== "object") return [];
+          const row = entry as { slug?: unknown; colorName?: unknown; colorHex?: unknown };
+          if (typeof row.slug !== "string") return [];
+          const line: CheckoutLine = { slug: row.slug };
+          if (typeof row.colorName === "string") line.colorName = row.colorName;
+          if (typeof row.colorHex === "string") line.colorHex = row.colorHex;
+          return [line];
+        })
+        .slice(0, 24)
+    : Array.isArray(body.slugs)
+      ? body.slugs
+          .filter((s): s is string => typeof s === "string")
+          .slice(0, 24)
+          .map((slug) => ({ slug }))
+      : [];
   try {
     const hash = await visitorHash({ create: true });
-    const id = await createReceipt(slugs, body.note, hash);
-    const user = await currentUser().catch(() => null);
-    if (!isAdminUser(user)) {
-      try {
-        const unique = [...new Set(slugs)].slice(0, 24);
-        await Promise.all(
-          unique.map((friendSlug) =>
-            recordShopEvent(request, {
-              event: "checkout",
-              friendSlug,
-              path: "/api/friends/checkout",
-              visitorHash: hash,
-              meta: { receiptId: id, itemCount: unique.length },
-            }),
-          ),
-        );
-      } catch {
-        // Analytics should never block checkout.
-      }
+    const id = await createReceipt(lines, body.note, hash);
+    try {
+      await recordCheckoutEvents(request, lines, id);
+    } catch {
+      // Analytics must never fail checkout.
     }
     return NextResponse.json({ id });
   } catch (error) {

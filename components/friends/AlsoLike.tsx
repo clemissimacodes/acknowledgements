@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { priceLabel, type FriendCard } from "@/lib/friend-types";
+import { FRIEND_BADGES, priceLabel, type FriendCard } from "@/lib/friend-types";
 
 type Props = { friends: FriendCard[] };
 
@@ -14,11 +14,14 @@ export function AlsoLike({ friends }: Props) {
             <Link href={`/products/${f.slug}`}>
               <span className="ff-card-media">
                 {f.heroUrl ? (
-                  <img className="ff-card-hero" src={f.heroUrl} alt={f.nickname} loading="lazy" />
+                  <img className="ff-card-hero" src={f.heroUrl} alt={f.nickname} loading="lazy" decoding="async" />
                 ) : (
                   <span className="ff-card-blank" aria-hidden="true" />
                 )}
-                {f.altUrl ? <img className="ff-card-alt" src={f.altUrl} alt="" loading="lazy" /> : null}
+                {f.altUrl ? (
+                  <img className="ff-card-alt" src={f.altUrl} alt="" loading="lazy" decoding="async" />
+                ) : null}
+                {f.badge !== "none" ? <span className="ff-badge">{FRIEND_BADGES[f.badge]}</span> : null}
               </span>
               <span className="ff-card-text">
                 <span className="ff-card-name">{f.nickname}</span>

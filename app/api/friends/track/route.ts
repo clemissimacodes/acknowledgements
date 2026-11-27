@@ -5,7 +5,6 @@ import {
   recordShopEvent,
   removeShopEventsFromRequest,
 } from "@/lib/good-company-analytics";
-import { visitorHash } from "@/lib/recording-visitor";
 import { canSeeShop } from "@/lib/shop-access";
 
 export const runtime = "nodejs";
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
     try {
       await removeShopEventsFromRequest(request);
     } catch {
-      // Analytics cleanup should never interfere with the shop.
+      // Analytics cleanup should never interfere with the site.
     }
     return NextResponse.json({ ok: true });
   }
@@ -50,8 +49,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const hash = await visitorHash({ create: true });
-    await recordShopEvent(request, { ...payload, visitorHash: hash });
+    await recordShopEvent(request, payload);
   } catch {
     // Analytics should never interfere with the visitor's page.
   }

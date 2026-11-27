@@ -2,66 +2,130 @@
 
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { attachFriendVoice, clearFriendVoiceForm } from "@/app/(shop)/actions";
-import { FRIEND_VOICE_MAX_BYTES, VOICE_CONTENT_TYPES } from "@/lib/friend-types";
+import {
+  FRIEND_VOICE_MAX_BYTES,
+  normalizeVoiceContentType,
+} from "@/lib/friend-types";
+import { voiceNoteScript, voiceNoteScriptHint } from "@/lib/voice-note-script";
+import {
+  extensionForAudio,
+  fileFromRecording,
+  measureAudioDuration,
+  pickRecorderMime,
+} from "@/components/voice-memos/record";
 
 type Props = {
   id: string;
+  nickname: string;
   currentUrl: string | null;
   currentDurationMs: number | null;
 };
 
+type Draft = {
+  file: File;
+  url: string;
+  durationMs: number | null;
+};
+
 function formatDuration(ms: number | null) {
-  if (!ms || ms <= 0) return "";
+  if (!ms || ms <= 0) return "0:00";
   const total = Math.round(ms / 1000);
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-async function measureDuration(file: File): Promise<number | null> {
-  const url = URL.createObjectURL(file);
-  try {
-    const audio = new Audio();
-    audio.preload = "metadata";
-    const duration = await new Promise<number | null>((resolve) => {
-      audio.onloadedmetadata = () => {
-        resolve(Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration * 1000 : null);
-      };
-      audio.onerror = () => resolve(null);
-      audio.src = url;
-    });
-    return duration;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+function prepareVoiceFile(file: File) {
+  const type = normalizeVoiceContentType(file);
+  if (!type) return null;
+  if (file.size > FRIEND_VOICE_MAX_BYTES) return "too-large" as const;
+  const ext = extensionForAudio(type, file.name);
+  const base = file.name.replace(/\.[^.]+$/, "") || "voice";
+  return new File([file], `${base}.${ext}`, { type });
 }
 
-/* Drop / pick an audio file for the founder voice note on the product page. */
-export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
+/* Big on-the-spot recorder — never buried inside an image drop zone. */
+export function VoiceUploader({ id, nickname, currentUrl, currentDurationMs }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const draftUrlRef = useRef<string | null>(null);
 
-  const onFile = async (file: File | undefined | null) => {
-    if (!file) return;
-    const type = file.type || "audio/mpeg";
-    if (!VOICE_CONTENT_TYPES.includes(type) && !/\.(m4a|mp3|wav|aac|ogg|webm)$/i.test(file.name)) {
-      setError("Use an audio file (m4a, mp3, wav…).");
-      return;
+  const [busy, setBusy] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);
+
+  const script = voiceNoteScript(nickname);
+  const hint = voiceNoteScriptHint(nickname);
+
+  useEffect(() => {
+    if (!recording) return;
+    const started = Date.now();
+    const tick = window.setInterval(() => setElapsedMs(Date.now() - started), 200);
+    return () => window.clearInterval(tick);
+  }, [recording]);
+
+  useEffect(() => {
+    return () => {
+      stopStream();
+      if (draftUrlRef.current) URL.revokeObjectURL(draftUrlRef.current);
+    };
+  }, []);
+
+  const stopStream = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    mediaRef.current = null;
+  };
+
+  const clearDraft = () => {
+    if (draftUrlRef.current) {
+      URL.revokeObjectURL(draftUrlRef.current);
+      draftUrlRef.current = null;
     }
-    if (file.size > FRIEND_VOICE_MAX_BYTES) {
+    setDraft(null);
+  };
+
+  const holdDraft = async (file: File) => {
+    const prepared = prepareVoiceFile(file);
+    if (prepared === null) {
+      setError("Use an audio file (m4a, mp3, wav, webm…).");
+      return null;
+    }
+    if (prepared === "too-large") {
       setError("That recording is over 20 MB.");
-      return;
+      return null;
     }
+    const durationMs = await measureAudioDuration(prepared).catch(() => null);
+    if (draftUrlRef.current) URL.revokeObjectURL(draftUrlRef.current);
+    const url = URL.createObjectURL(prepared);
+    draftUrlRef.current = url;
+    const next = { file: prepared, url, durationMs };
+    setDraft(next);
+    return next;
+  };
+
+  const publish = async (incoming: File | Draft) => {
+    const held =
+      "file" in incoming && "url" in incoming
+        ? incoming
+        : await holdDraft(incoming);
+    if (!held) return;
+
     setBusy(true);
     setError("");
     try {
-      const durationMs = await measureDuration(file);
-      const ext = (file.name.split(".").pop() || "m4a").toLowerCase().replace(/[^a-z0-9]/g, "") || "m4a";
-      const blob = await upload(`friends-and-family/${id}/voice.${ext}`, file, {
+      const ext = extensionForAudio(held.file.type, held.file.name);
+      const type = normalizeVoiceContentType(held.file) || held.file.type;
+      const blob = await upload(`friends-and-family/${id}/voice.${ext}`, held.file, {
         access: "public",
         handleUploadUrl: "/api/friends/upload",
         contentType: type,
@@ -70,70 +134,204 @@ export function VoiceUploader({ id, currentUrl, currentDurationMs }: Props) {
         id,
         url: blob.url,
         pathname: blob.pathname,
-        durationMs,
+        durationMs: held.durationMs,
       });
+      clearDraft();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Upload failed — tap retry, your take is still here.";
+      setError(message);
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   };
 
+  const startRecording = async () => {
+    setError("");
+    setMicBlocked(false);
+    clearDraft();
+    if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setMicBlocked(true);
+      setError("This browser can’t record — use Upload file, or open in Chrome / Safari.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = pickRecorderMime();
+      const recorder = mime
+        ? new MediaRecorder(stream, { mimeType: mime })
+        : new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || mime || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
+        stopStream();
+        setRecording(false);
+        void publish(fileFromRecording(blob, `voice-${id}`));
+      };
+      mediaRef.current = recorder;
+      recorder.start(250);
+      setElapsedMs(0);
+      setRecording(true);
+    } catch {
+      stopStream();
+      setMicBlocked(true);
+      setError("Microphone blocked — allow mic access in the browser bar, then try again. Or upload a file.");
+    }
+  };
+
+  const stopRecording = () => {
+    const recorder = mediaRef.current;
+    if (!recorder || recorder.state === "inactive") {
+      stopStream();
+      setRecording(false);
+      return;
+    }
+    recorder.stop();
+  };
+
+  const copyScript = async () => {
+    try {
+      await navigator.clipboard.writeText(script);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setError("Couldn’t copy — read it from the card.");
+    }
+  };
+
   return (
-    <div className="admin-drop-wrap admin-voice-wrap">
-      <div
-        className={`admin-drop admin-voice-drop${busy ? " is-busy" : ""}`}
-        role="button"
-        tabIndex={0}
-        aria-label="Founder voice note"
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-        onDragOver={(event) => {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "copy";
-        }}
-        onDrop={(event) => {
-          event.preventDefault();
-          const file =
-            Array.from(event.dataTransfer.files).find((f) => f.type.startsWith("audio/")) ??
-            event.dataTransfer.files[0];
-          void onFile(file);
-        }}
-      >
-        <span className="admin-drop-label">
-          <strong>{busy ? "Uploading…" : currentUrl ? "Voice note" : "Voice note (none yet)"}</strong>
-          <small>
+    <div className="admin-voice-studio">
+      <header className="admin-voice-studio-head">
+        <div>
+          <strong>Voice memo for {nickname}</strong>
+          <p>
             {currentUrl
-              ? `On the product page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}. Click to replace.`
-              : "Hear what our founder has to say — m4a / mp3 / wav"}
-          </small>
-        </span>
-        {currentUrl ? (
-          <audio controls src={currentUrl} preload="metadata" onClick={(event) => event.stopPropagation()} />
+              ? `Live on their page${currentDurationMs ? ` · ${formatDuration(currentDurationMs)}` : ""}.`
+              : "Nothing live yet — record one now."}
+          </p>
+        </div>
+        {currentUrl && !busy && !recording && !draft ? (
+          <form action={clearFriendVoiceForm}>
+            <input type="hidden" name="id" value={id} />
+            <button type="submit" className="admin-voice-remove">
+              Remove
+            </button>
+          </form>
         ) : null}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.webm"
-          disabled={busy}
-          hidden
-          onChange={(event) => void onFile(event.target.files?.[0])}
-        />
+      </header>
+
+      <div className="admin-voice-script">
+        <div className="admin-voice-script-head">
+          <strong>Light script</strong>
+          <button type="button" onClick={() => void copyScript()}>
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <p className="admin-voice-script-hint">{hint}</p>
+        <pre className="admin-voice-script-body">{script}</pre>
       </div>
-      {error ? <em className="admin-drop-error">{error}</em> : null}
-      {currentUrl && !busy ? (
-        <form action={clearFriendVoiceForm} className="admin-drop-remove">
-          <input type="hidden" name="id" value={id} />
-          <button type="submit">Remove</button>
-        </form>
+
+      {draft && !recording ? (
+        <div className="admin-voice-panel">
+          <p className="admin-voice-status">
+            <strong>{busy ? "Saving…" : "Take ready"}</strong>
+            <span>
+              {busy
+                ? "Uploading — they’ll unwrap it like a present…"
+                : `Held here · ${formatDuration(draft.durationMs)}. Retry if upload fails.`}
+            </span>
+          </p>
+          <audio controls src={draft.url} preload="metadata" />
+          <div className="admin-voice-actions">
+            <button
+              type="button"
+              className="admin-voice-record"
+              disabled={busy}
+              onClick={() => void publish(draft)}
+            >
+              {busy ? "Saving…" : error ? "Retry upload" : "Save to their page"}
+            </button>
+            <button type="button" disabled={busy} onClick={clearDraft}>
+              Discard
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className={`admin-voice-panel${recording ? " is-recording" : ""}`}>
+          <p className="admin-voice-status">
+            <strong>
+              {recording
+                ? `Recording… ${formatDuration(elapsedMs)}`
+                : busy
+                  ? "Saving…"
+                  : "Ready when you are"}
+            </strong>
+            <span>
+              {recording
+                ? "Tap stop when you’re done — it uploads right away."
+                : busy
+                  ? "Uploading to their product page…"
+                  : "One tap. Allow the mic if asked. That’s it."}
+            </span>
+          </p>
+
+          {currentUrl && !recording && !busy ? (
+            <audio controls src={currentUrl} preload="metadata" />
+          ) : null}
+
+          <div className="admin-voice-actions">
+            {recording ? (
+              <button type="button" className="admin-voice-record is-stop" onClick={stopRecording}>
+                Stop &amp; save
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="admin-voice-record"
+                disabled={busy}
+                onClick={() => void startRecording()}
+              >
+                {currentUrl ? "Record again" : "● Record now"}
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={busy || recording}
+              onClick={() => inputRef.current?.click()}
+            >
+              Upload file
+            </button>
+          </div>
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.webm"
+            disabled={busy || recording}
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void publish(file);
+            }}
+          />
+        </div>
+      )}
+
+      {micBlocked ? (
+        <p className="admin-voice-hint">
+          Tip: click the lock / site settings in the address bar → Microphone → Allow, then hit Record again.
+        </p>
       ) : null}
+      {error ? <em className="admin-drop-error">{error}</em> : null}
     </div>
   );
 }

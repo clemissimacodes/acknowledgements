@@ -1,5 +1,6 @@
 import { Ballet, Bodoni_Moda, Courier_Prime, EB_Garamond } from "next/font/google";
 
+/* Diary-only display faces — kept out of the shop shell so grid/PDP stay light. */
 const script = Ballet({
   subsets: ["latin"],
   weight: "400",

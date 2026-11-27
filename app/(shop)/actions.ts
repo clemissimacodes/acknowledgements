@@ -26,6 +26,7 @@ function refresh() {
   revalidatePath("/collections/[handle]", "page");
   revalidatePath("/products/[slug]", "page");
   revalidatePath("/controlroom/friends-and-family");
+  revalidatePath("/blogs/studio-diary/good-company");
 }
 
 function fromForm(form: FormData): FriendInput {
@@ -42,15 +43,12 @@ function fromForm(form: FormData): FriendInput {
     hometown: get("hometown"),
     madeOf: form.getAll("madeOf").map(String),
     care: get("care"),
-    description: get("description"),
     favoriteMemory: get("favoriteMemory"),
-    favoriteTrait: get("favoriteTrait"),
     notes: get("notes"),
     poemTitle: get("poemTitle"),
     poemPoet: get("poemPoet"),
     poemUrl: get("poemUrl"),
     anthemUrl: get("anthemUrl"),
-    review: get("review"),
     relationship: get("relationship"),
     relationshipOptions: get("relationshipOptions"),
     pairsWith: get("pairsWith"),

@@ -17,6 +17,8 @@ export type BagItem = {
   productName: string;
   price: string;
   heroUrl: string | null;
+  colorName?: string;
+  colorHex?: string;
 };
 
 type BagContextValue = {
@@ -64,7 +66,11 @@ export function BagProvider({ children }: { children: ReactNode }) {
       return [...current, item];
     });
     setOpen(true);
-    if (added) trackShopEvent("add_to_bag", item.slug);
+    if (added) {
+      trackShopEvent("add_to_bag", item.slug, {
+        colorName: item.colorName ?? "",
+      });
+    }
   }, []);
   const remove = useCallback((slug: string) => {
     let removed = false;

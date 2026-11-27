@@ -8,21 +8,19 @@ type Props = {
   onNeedUnlock?: () => void;
 };
 
-/* Spotify iframe mounts only after an explicit tap. */
+/* Quiet Spotify anthem. Iframe mounts only after an explicit tap — never on page load. */
 export function AnthemPlayer({ trackId, onNeedUnlock }: Props) {
   const [started, setStarted] = useState(false);
+
+  const start = () => {
+    onNeedUnlock?.();
+    setStarted(true);
+  };
 
   return (
     <div className={`ff-anthem${started ? " is-on" : ""}`}>
       {!started ? (
-        <button
-          type="button"
-          className="ff-anthem-whisper"
-          onClick={() => {
-            onNeedUnlock?.();
-            setStarted(true);
-          }}
-        >
+        <button type="button" className="ff-anthem-whisper" onClick={start}>
           ♪ their song — tap to play softly
         </button>
       ) : (

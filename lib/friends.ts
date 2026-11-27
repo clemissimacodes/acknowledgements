@@ -24,6 +24,7 @@ import {
 import { fetchAnthemMeta } from "@/lib/spotify-anthem";
 
 export const FRIEND_BLOB_PREFIX = "friends-and-family/";
+/* Bust public shop data from mutations (list + PDP). */
 export const FRIENDS_CACHE_TAG = "good-company-friends";
 
 function db() {
@@ -140,6 +141,12 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_url TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS extra_pathname TEXT`;
       await sql`ALTER TABLE friends ALTER COLUMN met_on DROP NOT NULL`;
+      /* Trait + description retired from the shop — wipe any leftover copy. */
+      await sql`
+        UPDATE friends
+        SET description = '', favorite_trait = ''
+        WHERE COALESCE(description, '') <> '' OR COALESCE(favorite_trait, '') <> ''
+      `;
       await sql`
         CREATE TABLE IF NOT EXISTS friend_receipts (
           id TEXT PRIMARY KEY,
@@ -173,9 +180,7 @@ function toFriend(row: Row): Friend {
     hometown: String(row.hometown ?? ""),
     madeOf: Array.isArray(row.made_of) ? (row.made_of as string[]) : [],
     care: String(row.care ?? ""),
-    description: String(row.description ?? ""),
     favoriteMemory: String(row.favorite_memory ?? ""),
-    favoriteTrait: String(row.favorite_trait ?? ""),
     notes: String(row.notes ?? ""),
     poemTitle: String(row.poem_title ?? ""),
     poemPoet: String(row.poem_poet ?? ""),
@@ -183,7 +188,6 @@ function toFriend(row: Row): Friend {
     anthemUrl: String(row.anthem_url ?? ""),
     anthemTitle: String(row.anthem_title ?? ""),
     anthemArtist: String(row.anthem_artist ?? ""),
-    review: String(row.review ?? ""),
     voiceUrl: (row.voice_url as string | null) ?? null,
     voicePathname: (row.voice_pathname as string | null) ?? null,
     voiceDurationMs:
@@ -228,6 +232,18 @@ function toFriendCard(row: Row): FriendCard {
   };
 }
 
+/* Public reads skip ensureTables (schema is already live). Mutations still migrate.
+   Results are Data-Cache'd so collection + PDP don't hit Neon on every click. */
+const cachedVisibleFriends = unstable_cache(
+  async () => {
+    const sql = db();
+    const rows = await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
+    return (rows as Row[]).map(toFriend);
+  },
+  ["good-company-visible-friends"],
+  { tags: [FRIENDS_CACHE_TAG], revalidate: 60 },
+);
+
 const cachedVisibleCards = unstable_cache(
   async () => {
     const sql = db();
@@ -263,9 +279,7 @@ export const listFriends = cache(async ({ all = false } = {}): Promise<Friend[]>
     const rows = await sql`SELECT * FROM friends ORDER BY sort_order ASC, lower(nickname) ASC`;
     return (rows as Row[]).map(toFriend);
   }
-  const sql = db();
-  const rows = await sql`SELECT * FROM friends WHERE visible ORDER BY sort_order ASC, lower(nickname) ASC`;
-  return (rows as Row[]).map(toFriend);
+  return cachedVisibleFriends();
 });
 
 export const getFriendBySlug = cache(async (slug: string, { all = false } = {}): Promise<Friend | null> => {
@@ -273,7 +287,8 @@ export const getFriendBySlug = cache(async (slug: string, { all = false } = {}):
     await ensureTables();
     const sql = db();
     const rows = (await sql`SELECT * FROM friends WHERE slug = ${slug} LIMIT 1`) as Row[];
-    return rows[0] ? toFriend(rows[0]) : null;
+    const friend = rows[0] ? toFriend(rows[0]) : null;
+    return friend;
   }
   const friend = await cachedFriendBySlug(slug);
   return friend?.visible ? friend : null;
@@ -298,9 +313,7 @@ export type FriendInput = {
   hometown?: unknown;
   madeOf?: unknown;
   care?: unknown;
-  description?: unknown;
   favoriteMemory?: unknown;
-  favoriteTrait?: unknown;
   notes?: unknown;
   poemTitle?: unknown;
   poemPoet?: unknown;
@@ -308,7 +321,6 @@ export type FriendInput = {
   anthemUrl?: unknown;
   anthemTitle?: unknown;
   anthemArtist?: unknown;
-  review?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
   colors?: unknown;
@@ -323,8 +335,11 @@ function cleanAnthemUrl(value: unknown) {
   return spotifyTrackId(raw) ? raw : "";
 }
 
-async function resolveAnthem(url: string) {
+async function resolveAnthem(url: string, titleHint?: unknown, artistHint?: unknown) {
   if (!url) return { anthemUrl: "", anthemTitle: "", anthemArtist: "" };
+  const title = text(titleHint, 160);
+  const artist = text(artistHint, 120);
+  if (title) return { anthemUrl: url, anthemTitle: title, anthemArtist: artist };
   const meta = await fetchAnthemMeta(url);
   return {
     anthemUrl: url,
@@ -339,7 +354,7 @@ async function normalise(input: FriendInput) {
   const relationship = text(input.relationship, 40);
   const options = list(input.relationshipOptions, 6, 40);
   if (relationship && !options.includes(relationship)) options.unshift(relationship);
-  const anthem = await resolveAnthem(cleanAnthemUrl(input.anthemUrl));
+  const anthem = await resolveAnthem(cleanAnthemUrl(input.anthemUrl), input.anthemTitle, input.anthemArtist);
   return {
     nickname,
     slug: slugifyFriend(text(input.slug, 60) || nickname),
@@ -352,15 +367,12 @@ async function normalise(input: FriendInput) {
     hometown: text(input.hometown, 80),
     madeOf: list(input.madeOf, 6, 80),
     care: text(input.care, 600),
-    description: text(input.description, 1600),
     favoriteMemory: text(input.favoriteMemory, 1600),
-    favoriteTrait: text(input.favoriteTrait, 600),
     notes: text(input.notes, 1200),
     poemTitle: text(input.poemTitle, 160),
     poemPoet: text(input.poemPoet, 80),
     poemUrl: httpUrl(input.poemUrl),
     ...anthem,
-    review: text(input.review, 4000),
     relationship,
     relationshipOptions: options,
     colors: colors(input.colors),
@@ -382,8 +394,8 @@ export async function createFriend(input: FriendInput) {
       description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, anthem_title, anthem_artist, review,
       relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.birthday}, ${f.collection}, ${f.metHow},
-      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
-      ${f.anthemUrl}, ${f.anthemTitle}, ${f.anthemArtist}, ${f.review}, ${f.relationship},
+      ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${""}, ${f.favoriteMemory}, ${""}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
+      ${f.anthemUrl}, ${f.anthemTitle}, ${f.anthemArtist}, ${""}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -399,10 +411,10 @@ export async function updateFriend(id: string, input: FriendInput) {
   await sql`
     UPDATE friends SET slug = ${f.slug}, nickname = ${f.nickname}, product_name = ${f.productName}, era = ${f.era},
       badge = ${f.badge}, birthday = ${f.birthday}, collection = ${f.collection}, met_how = ${f.metHow}, hometown = ${f.hometown},
-      made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
-      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
+      made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${""},
+      favorite_memory = ${f.favoriteMemory}, favorite_trait = ${""}, notes = ${f.notes},
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
-      anthem_url = ${f.anthemUrl}, anthem_title = ${f.anthemTitle}, anthem_artist = ${f.anthemArtist}, review = ${f.review},
+      anthem_url = ${f.anthemUrl}, anthem_title = ${f.anthemTitle}, anthem_artist = ${f.anthemArtist}, review = ${""},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       updated_at = NOW()
@@ -559,23 +571,59 @@ function receiptId() {
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
-export async function createReceipt(slugs: string[], note: unknown, visitorHash: string | null) {
+export type ReceiptLineIn = {
+  slug: string;
+  colorName?: string;
+  colorHex?: string;
+};
+
+export async function createReceipt(
+  lines: Array<string | ReceiptLineIn>,
+  note: unknown,
+  visitorHash: string | null,
+) {
   await ensureTables();
   const sql = db();
-  const unique = [...new Set(slugs.map(slugifyFriend))].slice(0, 24);
-  if (!unique.length) throw new Error("Your bag is empty.");
-  const rows = (await sql`SELECT * FROM friends WHERE visible AND slug = ANY(${unique})`) as Row[];
+  const parsed: ReceiptLineIn[] = [];
+  for (const line of lines.slice(0, 24)) {
+    if (typeof line === "string") parsed.push({ slug: slugifyFriend(line) });
+    else if (line && typeof line.slug === "string") {
+      parsed.push({
+        slug: slugifyFriend(line.slug),
+        colorName: text(line.colorName, 40) || undefined,
+        colorHex: /^#[0-9a-fA-F]{6}$/.test(String(line.colorHex ?? ""))
+          ? String(line.colorHex).toLowerCase()
+          : undefined,
+      });
+    }
+  }
+  const uniqueSlugs = [...new Set(parsed.map((p) => p.slug))];
+  if (!uniqueSlugs.length) throw new Error("Your bag is empty.");
+  const colorBySlug = new Map(parsed.map((p) => [p.slug, p]));
+  const rows = (await sql`SELECT * FROM friends WHERE visible AND slug = ANY(${uniqueSlugs})`) as Row[];
   const bySlug = new Map(rows.map((row) => [String(row.slug), toFriend(row)]));
-  const items: ReceiptItem[] = unique
+  const items: ReceiptItem[] = uniqueSlugs
     .map((slug) => bySlug.get(slug))
     .filter((f): f is Friend => Boolean(f))
-    .map((f) => ({
-      slug: f.slug,
-      nickname: f.nickname,
-      productName: f.productName,
-      price: friendPrice(f.birthday),
-      heroUrl: f.heroUrl,
-    }));
+    .map((f) => {
+      const picked = colorBySlug.get(f.slug);
+      const fallback = f.colors[0];
+      const colorHex = picked?.colorHex || fallback?.hex || undefined;
+      const colorName =
+        picked?.colorName ||
+        f.colors.find((c) => c.hex === colorHex)?.name ||
+        fallback?.name ||
+        undefined;
+      return {
+        slug: f.slug,
+        nickname: f.nickname,
+        productName: f.productName,
+        price: friendPrice(f.birthday),
+        heroUrl: f.heroUrl,
+        colorName,
+        colorHex,
+      };
+    });
   if (!items.length) throw new Error("Your bag is empty.");
   if (visitorHash) {
     const recent = (await sql`

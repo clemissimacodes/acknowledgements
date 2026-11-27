@@ -34,10 +34,18 @@ export default async function ReceiptPage({ params }: Props) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+  const accent =
+    receipt.items.find((item) => item.colorHex)?.colorHex ||
+    receipt.items[0]?.colorHex ||
+    "#c2a27a";
 
   return (
     <main className="ff-receipt-page">
-      <article className="ff-receipt" aria-label={`Receipt ${receipt.id}`}>
+      <article
+        className="ff-receipt"
+        aria-label={`Receipt ${receipt.id}`}
+        style={{ ["--receipt-accent" as string]: accent }}
+      >
         <header>
           <p className="ff-receipt-brand">{SHOP_NAME.toUpperCase()}</p>
           <p>FRIENDS &amp; FAMILY SALE</p>
@@ -55,6 +63,14 @@ export default async function ReceiptPage({ params }: Props) {
               <span>
                 1 × {item.nickname.toUpperCase()}
                 {item.productName ? <small>{item.productName}</small> : null}
+                {item.colorName ? (
+                  <small className="ff-receipt-color">
+                    <i style={{ background: item.colorHex || accent }} aria-hidden="true" />
+                    {item.colorName.toUpperCase()} · ONE SIZE
+                  </small>
+                ) : (
+                  <small>ONE SIZE</small>
+                )}
               </span>
               <span>{item.price ? money(Number(item.price)) : "P.O.R."}</span>
             </li>

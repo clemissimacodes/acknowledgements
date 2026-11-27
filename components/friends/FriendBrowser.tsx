@@ -19,13 +19,11 @@ const CHECKS = [
   { key: "collection", label: "Collection", tab: "details", test: (f: Friend) => Boolean(f.collection) },
   { key: "hometown", label: "Hometown", tab: "details", test: (f: Friend) => Boolean(f.hometown) },
   { key: "metHow", label: "How we met", tab: "details", test: (f: Friend) => Boolean(f.metHow) },
-  { key: "trait", label: "Trait", tab: "words", test: (f: Friend) => Boolean(f.favoriteTrait) },
   { key: "memory", label: "Memory", tab: "words", test: (f: Friend) => Boolean(f.favoriteMemory) },
   { key: "poem", label: "Poem", tab: "poem", test: (f: Friend) => Boolean(f.poemUrl) },
   { key: "madeOf", label: "Made of", tab: "madeOf", test: (f: Friend) => f.madeOf.length >= 2 },
   { key: "voice", label: "Voice note", tab: "photos", test: (f: Friend) => Boolean(f.voiceUrl) },
   { key: "anthem", label: "Anthem", tab: "words", test: (f: Friend) => Boolean(f.anthemUrl) },
-  { key: "review", label: "Review", tab: "words", test: (f: Friend) => Boolean(f.review) },
 ] as const satisfies readonly { key: string; label: string; tab: FormTab; test: (f: Friend) => boolean }[];
 type CheckKey = (typeof CHECKS)[number]["key"];
 
@@ -341,6 +339,7 @@ function FriendPanel({ friend, tab, setTab, prev, next, position, onStep }: Pane
           />
           <VoiceUploader
             id={friend.id}
+            nickname={friend.nickname}
             currentUrl={friend.voiceUrl}
             currentDurationMs={friend.voiceDurationMs}
           />

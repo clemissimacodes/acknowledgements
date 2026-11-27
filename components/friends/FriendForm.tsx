@@ -115,29 +115,12 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
       <section className="admin-ff-section" hidden={!show("words")}>
         {all ? <h4>Words</h4> : null}
         <label className="admin-ff-block">
-          Favorite trait
-          <textarea name="favoriteTrait" rows={3} defaultValue={friend?.favoriteTrait ?? ""} />
-        </label>
-        <label className="admin-ff-block">
           Favorite memory
           <textarea name="favoriteMemory" rows={6} defaultValue={friend?.favoriteMemory ?? ""} />
         </label>
         <label className="admin-ff-block">
           Care instructions <small>(optional)</small>
           <textarea name="care" rows={3} defaultValue={friend?.care ?? ""} placeholder="Do not text before 10am. Feed regularly. Handle with jokes." />
-        </label>
-        <label className="admin-ff-block">
-          Description <small>(optional)</small>
-          <textarea name="description" rows={6} defaultValue={friend?.description ?? ""} />
-        </label>
-        <label className="admin-ff-block">
-          Review <small>(from the founder — shows on their page)</small>
-          <textarea
-            name="review"
-            rows={6}
-            defaultValue={friend?.review ?? ""}
-            placeholder="A short review of this one. The kind of thing you’d write on a hangtag."
-          />
         </label>
         <label className="admin-ff-block">
           Anthem <small>(Spotify track URL — title and artist fill in on save)</small>

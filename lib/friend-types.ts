@@ -135,9 +135,7 @@ export type Friend = {
   hometown: string;
   madeOf: string[];
   care: string;
-  description: string;
   favoriteMemory: string;
-  favoriteTrait: string;
   notes: string; // backroom only
   poemTitle: string; // a poem from elsewhere that reminds me of them
   poemPoet: string;
@@ -145,7 +143,6 @@ export type Friend = {
   anthemUrl: string; // Spotify track URL — their friendship anthem
   anthemTitle: string;
   anthemArtist: string;
-  review: string; // founder review on the product page
   voiceUrl: string | null;
   voicePathname: string | null;
   voiceDurationMs: number | null;
@@ -192,6 +189,8 @@ export type ReceiptItem = {
   productName: string;
   price: string;
   heroUrl: string | null;
+  colorName?: string;
+  colorHex?: string;
 };
 
 export type Receipt = {
@@ -304,14 +303,38 @@ export function spotifyTrackId(url: string): string | null {
 export const FRIEND_VOICE_MAX_BYTES = 20 * 1024 * 1024;
 export const VOICE_CONTENT_TYPES = [
   "audio/mpeg",
+  "audio/mp3",
   "audio/mp4",
   "audio/m4a",
   "audio/x-m4a",
   "audio/wav",
+  "audio/wave",
+  "audio/x-wav",
   "audio/webm",
   "audio/ogg",
   "audio/aac",
 ];
+
+/* Browsers often send `audio/webm;codecs=opus` — Blob only accepts the base type. */
+export function normalizeVoiceContentType(file: { type?: string; name?: string }) {
+  const raw = String(file.type ?? "")
+    .toLowerCase()
+    .split(";")[0]
+    .trim();
+  if (raw === "audio/m4a" || raw === "audio/x-m4a") return "audio/mp4";
+  if (raw === "audio/mp3") return "audio/mpeg";
+  if (raw === "audio/wave" || raw === "audio/x-wav") return "audio/wav";
+  if (VOICE_CONTENT_TYPES.includes(raw)) return raw;
+  const name = String(file.name ?? "").toLowerCase();
+  if (/\.(m4a|mp4|aac)$/.test(name)) return "audio/mp4";
+  if (/\.mp3$/.test(name)) return "audio/mpeg";
+  if (/\.wav$/.test(name)) return "audio/wav";
+  if (/\.ogg$/.test(name)) return "audio/ogg";
+  if (/\.webm$/.test(name)) return "audio/webm";
+  // MediaRecorder blobs sometimes omit a usable type — prefer webm.
+  if (raw.startsWith("audio/")) return "audio/webm";
+  return "";
+}
 
 /* FNV-1a style hash so the same slug always yields the same “also like” set. */
 function seedFrom(slug: string) {
