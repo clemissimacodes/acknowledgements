@@ -13,26 +13,23 @@ const MARQUEE =
 export function ShopHeader() {
   const bag = useBag();
   const pathname = usePathname();
-  const [menu, setMenu] = useState(false);
+  const [menu, setMenu] = useState<"shop" | "about" | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    setMenu(false);
+    setMenu(null);
     setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!menu && !mobileOpen) return;
+    if (!menu) return;
     const close = (event: PointerEvent) => {
-      if (!navRef.current?.contains(event.target as Node)) {
-        setMenu(false);
-        setMobileOpen(false);
-      }
+      if (!navRef.current?.contains(event.target as Node)) setMenu(null);
     };
     window.addEventListener("pointerdown", close);
     return () => window.removeEventListener("pointerdown", close);
-  }, [menu, mobileOpen]);
+  }, [menu]);
 
   return (
     <header className="ff-header">
@@ -46,33 +43,30 @@ export function ShopHeader() {
       </Link>
 
       <nav ref={navRef} className="ff-nav" aria-label="Shop">
-        <div className="ff-nav-brand">
-          <button
-            type="button"
-            className="ff-nav-burger"
-            aria-label="Menu"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((value) => !value)}
-          >
-            <span />
-            <span />
-          </button>
+        <button
+          type="button"
+          className="ff-nav-burger"
+          aria-label="Menu"
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((value) => !value)}
+        >
+          <span />
+          <span />
+        </button>
 
-          <Link href={`/collections/${SHOP_HANDLE}`} className="ff-logo">
-            <span className="ff-logo-mark">{SHOP_NAME.toUpperCase()}</span>
-            <span className="ff-logo-sub">BY CLEMISSIMA</span>
-          </Link>
-
-          <div className="ff-nav-item ff-nav-shop">
+        <ul className={`ff-nav-left${mobileOpen ? " ff-nav-left-open" : ""}`}>
+          <li>
+            <Link href="/">Home</Link>
+          </li>
+          <li className="ff-nav-item">
             <button
               type="button"
-              className="ff-nav-shop-btn"
-              aria-expanded={menu}
-              onClick={() => setMenu((value) => !value)}
+              aria-expanded={menu === "shop"}
+              onClick={() => setMenu(menu === "shop" ? null : "shop")}
             >
               Shop <Chevron />
             </button>
-            <ul className={`ff-dropdown${menu ? " ff-dropdown-open" : ""}`}>
+            <ul className={`ff-dropdown${menu === "shop" ? " ff-dropdown-open" : ""}`}>
               <li>
                 <Link href={`/collections/${SHOP_HANDLE}`}>View All</Link>
               </li>
@@ -81,32 +75,31 @@ export function ShopHeader() {
                   <Link href={`/collections/${era.handle}`}>{era.label}</Link>
                 </li>
               ))}
+            </ul>
+          </li>
+          <li className="ff-nav-item">
+            <button
+              type="button"
+              aria-expanded={menu === "about"}
+              onClick={() => setMenu(menu === "about" ? null : "about")}
+            >
+              About <Chevron />
+            </button>
+            <ul className={`ff-dropdown${menu === "about" ? " ff-dropdown-open" : ""}`}>
               <li>
                 <Link href={DIARY_PATH}>Studio Diary</Link>
               </li>
               <li>
-                <Link href="/">Home</Link>
+                <Link href="/">Clemissima.com</Link>
               </li>
             </ul>
-          </div>
-        </div>
-
-        <ul className={`ff-nav-left${mobileOpen ? " ff-nav-left-open" : ""}`}>
-          <li>
-            <Link href={`/collections/${SHOP_HANDLE}`}>View All</Link>
-          </li>
-          {FRIEND_ERAS.map((era) => (
-            <li key={era.handle}>
-              <Link href={`/collections/${era.handle}`}>{era.label}</Link>
-            </li>
-          ))}
-          <li>
-            <Link href={DIARY_PATH}>Studio Diary</Link>
-          </li>
-          <li>
-            <Link href="/">Home</Link>
           </li>
         </ul>
+
+        <Link href={`/collections/${SHOP_HANDLE}`} className="ff-logo">
+          <span className="ff-logo-mark">{SHOP_NAME.toUpperCase()}</span>
+          <span className="ff-logo-sub">CLEMISSIMA</span>
+        </Link>
 
         <div className="ff-nav-right">
           <button type="button" className="ff-bag-link" onClick={() => bag.setOpen(true)}>

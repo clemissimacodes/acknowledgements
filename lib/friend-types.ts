@@ -143,6 +143,8 @@ export type Friend = {
   poemPoet: string;
   poemUrl: string;
   anthemUrl: string; // Spotify track URL — their friendship anthem
+  anthemTitle: string;
+  anthemArtist: string;
   review: string; // founder review on the product page
   voiceUrl: string | null;
   voicePathname: string | null;

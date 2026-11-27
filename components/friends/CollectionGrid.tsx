@@ -128,6 +128,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
     <>
       <div ref={barRef} className="ff-filterbar">
         <div className="ff-filterbar-left">
+          <span className="ff-filter-label">Filter:</span>
           <CheckFilter
             id="relationship"
             label="Relationship"
@@ -172,6 +173,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
           ) : null}
         </div>
         <div className="ff-filterbar-right">
+          <span className="ff-filter-label">Sort by:</span>
           <div className={`ff-filter${open === "sort" ? " ff-filter-open" : ""}`}>
             <button
               type="button"
@@ -179,7 +181,7 @@ export function CollectionGrid({ friends, era: lockedEra, query }: Props) {
               aria-expanded={open === "sort"}
               onClick={() => setOpen(open === "sort" ? null : "sort")}
             >
-              Sort by <Chevron />
+              {SORTS.find(([v]) => v === sort)?.[1] ?? "Featured"} <Chevron />
             </button>
             <div className="ff-filter-panel ff-filter-panel-right" role="listbox" aria-label="Sort by">
               <div className="ff-filter-panel-head">

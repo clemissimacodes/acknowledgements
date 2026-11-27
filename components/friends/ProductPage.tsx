@@ -202,8 +202,11 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                         <p>
                           <span className="ff-pairs-label">Song</span>
                           <a href={friend.anthemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
-                            Their song
+                            {friend.anthemTitle || "Their song"}
                           </a>
+                          {friend.anthemArtist ? (
+                            <span className="ff-pairs-by"> · {friend.anthemArtist}</span>
+                          ) : null}
                         </p>
                       ) : null}
                     </div>

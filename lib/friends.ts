@@ -21,6 +21,7 @@ import {
   type Receipt,
   type ReceiptItem,
 } from "@/lib/friend-types";
+import { fetchAnthemMeta } from "@/lib/spotify-anthem";
 
 export const FRIEND_BLOB_PREFIX = "friends-and-family/";
 export const FRIENDS_CACHE_TAG = "good-company-friends";
@@ -130,6 +131,8 @@ function ensureTables() {
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS collection TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS birthday TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_url TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_title TEXT NOT NULL DEFAULT ''`;
+      await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS anthem_artist TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS review TEXT NOT NULL DEFAULT ''`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_url TEXT`;
       await sql`ALTER TABLE friends ADD COLUMN IF NOT EXISTS voice_pathname TEXT`;
@@ -178,6 +181,8 @@ function toFriend(row: Row): Friend {
     poemPoet: String(row.poem_poet ?? ""),
     poemUrl: String(row.poem_url ?? ""),
     anthemUrl: String(row.anthem_url ?? ""),
+    anthemTitle: String(row.anthem_title ?? ""),
+    anthemArtist: String(row.anthem_artist ?? ""),
     review: String(row.review ?? ""),
     voiceUrl: (row.voice_url as string | null) ?? null,
     voicePathname: (row.voice_pathname as string | null) ?? null,
@@ -301,6 +306,8 @@ export type FriendInput = {
   poemPoet?: unknown;
   poemUrl?: unknown;
   anthemUrl?: unknown;
+  anthemTitle?: unknown;
+  anthemArtist?: unknown;
   review?: unknown;
   relationship?: unknown;
   relationshipOptions?: unknown;
@@ -316,12 +323,23 @@ function cleanAnthemUrl(value: unknown) {
   return spotifyTrackId(raw) ? raw : "";
 }
 
-function normalise(input: FriendInput) {
+async function resolveAnthem(url: string) {
+  if (!url) return { anthemUrl: "", anthemTitle: "", anthemArtist: "" };
+  const meta = await fetchAnthemMeta(url);
+  return {
+    anthemUrl: url,
+    anthemTitle: text(meta?.title, 160),
+    anthemArtist: text(meta?.artist, 120),
+  };
+}
+
+async function normalise(input: FriendInput) {
   const nickname = text(input.nickname, 60);
   if (!nickname) throw new Error("A nickname is required.");
   const relationship = text(input.relationship, 40);
   const options = list(input.relationshipOptions, 6, 40);
   if (relationship && !options.includes(relationship)) options.unshift(relationship);
+  const anthem = await resolveAnthem(cleanAnthemUrl(input.anthemUrl));
   return {
     nickname,
     slug: slugifyFriend(text(input.slug, 60) || nickname),
@@ -341,7 +359,7 @@ function normalise(input: FriendInput) {
     poemTitle: text(input.poemTitle, 160),
     poemPoet: text(input.poemPoet, 80),
     poemUrl: httpUrl(input.poemUrl),
-    anthemUrl: cleanAnthemUrl(input.anthemUrl),
+    ...anthem,
     review: text(input.review, 4000),
     relationship,
     relationshipOptions: options,
@@ -355,17 +373,17 @@ function normalise(input: FriendInput) {
 export async function createFriend(input: FriendInput) {
   await ensureTables();
   const sql = db();
-  const f = normalise(input);
+  const f = await normalise(input);
   const id = randomUUID();
   const taken = (await sql`SELECT 1 FROM friends WHERE slug = ${f.slug}`) as Row[];
   const slug = taken.length ? `${f.slug}-${id.slice(0, 4)}` : f.slug;
   await sql`
     INSERT INTO friends (id, slug, nickname, product_name, era, badge, birthday, collection, met_how, hometown, made_of, care,
-      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, review,
+      description, favorite_memory, favorite_trait, notes, poem_title, poem_poet, poem_url, anthem_url, anthem_title, anthem_artist, review,
       relationship, relationship_options, colors, pairs_with, visible, sort_order)
     VALUES (${id}, ${slug}, ${f.nickname}, ${f.productName}, ${f.era}, ${f.badge}, ${f.birthday}, ${f.collection}, ${f.metHow},
       ${f.hometown}, ${JSON.stringify(f.madeOf)}, ${f.care}, ${f.description}, ${f.favoriteMemory}, ${f.favoriteTrait}, ${f.notes}, ${f.poemTitle}, ${f.poemPoet}, ${f.poemUrl},
-      ${f.anthemUrl}, ${f.review}, ${f.relationship},
+      ${f.anthemUrl}, ${f.anthemTitle}, ${f.anthemArtist}, ${f.review}, ${f.relationship},
       ${JSON.stringify(f.relationshipOptions)}, ${JSON.stringify(f.colors)}, ${JSON.stringify(f.pairsWith)},
       ${f.visible}, ${f.sortOrder})
   `;
@@ -375,7 +393,7 @@ export async function createFriend(input: FriendInput) {
 export async function updateFriend(id: string, input: FriendInput) {
   await ensureTables();
   const sql = db();
-  const f = normalise(input);
+  const f = await normalise(input);
   const clash = (await sql`SELECT 1 FROM friends WHERE slug = ${f.slug} AND id <> ${id}`) as Row[];
   if (clash.length) throw new Error(`The slug "${f.slug}" is already taken.`);
   await sql`
@@ -384,7 +402,7 @@ export async function updateFriend(id: string, input: FriendInput) {
       made_of = ${JSON.stringify(f.madeOf)}, care = ${f.care}, description = ${f.description},
       favorite_memory = ${f.favoriteMemory}, favorite_trait = ${f.favoriteTrait}, notes = ${f.notes},
       poem_title = ${f.poemTitle}, poem_poet = ${f.poemPoet}, poem_url = ${f.poemUrl},
-      anthem_url = ${f.anthemUrl}, review = ${f.review},
+      anthem_url = ${f.anthemUrl}, anthem_title = ${f.anthemTitle}, anthem_artist = ${f.anthemArtist}, review = ${f.review},
       relationship = ${f.relationship}, relationship_options = ${JSON.stringify(f.relationshipOptions)},
       colors = ${JSON.stringify(f.colors)}, pairs_with = ${JSON.stringify(f.pairsWith)}, visible = ${f.visible},
       updated_at = NOW()

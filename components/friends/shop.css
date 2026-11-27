@@ -70,7 +70,14 @@ html.ff-locked {
 }
 
 .ff-label,
-.ff-filter-label,
+.ff-filter-label {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
 .ff-specs dt,
 .ff-buy-rows dt,
 .ff-footer-head,
@@ -130,14 +137,13 @@ html.ff-locked {
 }
 
 /* ---- Nav ----------------------------------------------------------- */
-/* Orseund-style: logo left, bag + search pill right. */
+/* Orseund-style: links left, brand centered, bag + search right. */
 
 .ff-nav {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
   min-height: 72px;
   padding: 18px 28px;
 }
@@ -148,32 +154,14 @@ html.ff-locked {
   list-style: none;
 }
 
-.ff-nav-brand {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  min-width: 0;
-}
-
 .ff-nav-left {
-  display: none;
+  display: flex;
+  gap: 28px;
+  align-items: center;
 }
 
 .ff-nav-left > li > a,
 .ff-nav-left > li > button {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 0;
-  border: 0;
-  background: none;
-}
-
-.ff-nav-item {
-  position: relative;
-}
-
-.ff-nav-shop-btn {
   display: inline-flex;
   gap: 6px;
   align-items: center;
@@ -186,6 +174,10 @@ html.ff-locked {
   text-transform: uppercase;
   color: var(--ink);
   cursor: pointer;
+}
+
+.ff-nav-item {
+  position: relative;
 }
 
 .ff-dropdown {
@@ -223,7 +215,7 @@ html.ff-locked {
 .ff-logo {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   line-height: 1;
 }
 
@@ -246,7 +238,6 @@ html.ff-locked {
   gap: 22px;
   align-items: center;
   justify-content: flex-end;
-  flex: 0 0 auto;
 }
 
 .ff-bag-link {
@@ -1619,6 +1610,7 @@ p.ff-anthem-whisper {
 
 @media (max-width: 760px) {
   .ff-nav {
+    grid-template-columns: 44px 1fr auto;
     gap: 12px;
     min-height: 58px;
     padding: 12px 14px;
@@ -1637,10 +1629,6 @@ p.ff-anthem-whisper {
     display: block;
     height: 1px;
     background: var(--ink);
-  }
-
-  .ff-nav-shop {
-    display: none;
   }
 
   .ff-nav-left {
@@ -1674,10 +1662,6 @@ p.ff-anthem-whisper {
     min-width: 0;
     padding: 0 0 6px 14px;
     border: 0;
-  }
-
-  .ff-nav-signin {
-    margin-top: 6px;
   }
 
   .ff-logo-mark {

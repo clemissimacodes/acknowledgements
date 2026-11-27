@@ -140,7 +140,7 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
           />
         </label>
         <label className="admin-ff-block">
-          Anthem <small>(Spotify track URL — plays softly when they open the page)</small>
+          Anthem <small>(Spotify track URL — title and artist fill in on save)</small>
           <input
             name="anthemUrl"
             type="url"
@@ -148,6 +148,12 @@ export function FriendForm({ friend, tab, onStatus }: Props) {
             placeholder="https://open.spotify.com/track/…"
           />
         </label>
+        {friend?.anthemTitle ? (
+          <p className="admin-ff-hint">
+            {friend.anthemTitle}
+            {friend.anthemArtist ? ` · ${friend.anthemArtist}` : ""}
+          </p>
+        ) : null}
       </section>
 
       <section className="admin-ff-section" hidden={!show("poem")}>
