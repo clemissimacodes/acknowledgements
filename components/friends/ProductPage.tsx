@@ -14,9 +14,9 @@ import {
   type Friend,
 } from "@/lib/friend-types";
 import { AlsoLike } from "./AlsoLike";
+import { AnthemPlayer } from "./AnthemPlayer";
 import { FriendVoiceBridge } from "./FriendVoice";
 import { useBag } from "./bag";
-import { ProductSoundtrack } from "./ProductSoundtrack";
 import type { FriendCard } from "@/lib/friend-types";
 
 type Props = { friend: Friend; alsoLike?: FriendCard[] };
@@ -30,6 +30,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
     ? [friend.relationship, ...RELATIONSHIPS]
     : [...RELATIONSHIPS];
   const trackId = spotifyTrackId(friend.anthemUrl);
+  const hasPairs = Boolean(friend.poemTitle || friend.anthemUrl);
 
   return (
     <main className="ff-product">
@@ -38,14 +39,13 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
         durationMs={friend.voiceDurationMs}
         label={`Voice memo about ${friend.nickname}`}
       />
-      <ProductSoundtrack trackId={trackId}>
-        <p className="ff-crumbs">
-          <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
-          <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
-          <em>{friend.nickname}</em>
-        </p>
+      <p className="ff-crumbs">
+        <Link href={`/collections/${SHOP_HANDLE}`}>Home</Link>
+        <span className="ff-crumb-sep" aria-hidden="true">&gt;</span>
+        <em>{friend.nickname}</em>
+      </p>
 
-        <div className="ff-product-grid">
+      <div className="ff-product-grid">
           <aside className="ff-specs">
             <dl>
               {friend.madeOf.length ? (
@@ -180,18 +180,34 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </div>
               ) : null}
 
-              {friend.poemTitle ? (
+              {hasPairs ? (
                 <div>
                   <dt>Pairs well with</dt>
                   <dd className="ff-poem">
-                    {friend.poemUrl ? (
-                      <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
-                        {friend.poemTitle}
-                      </a>
-                    ) : (
-                      <span className="ff-poem-title">{friend.poemTitle}</span>
-                    )}
-                    {friend.poemPoet ? <p className="ff-poem-by">{friend.poemPoet}</p> : null}
+                    <div className="ff-pairs-inline">
+                      {friend.poemTitle ? (
+                        <p>
+                          <span className="ff-pairs-label">Poem</span>
+                          {friend.poemUrl ? (
+                            <a href={friend.poemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
+                              {friend.poemTitle}
+                            </a>
+                          ) : (
+                            <span className="ff-poem-title">{friend.poemTitle}</span>
+                          )}
+                          {friend.poemPoet ? <span className="ff-pairs-by"> · {friend.poemPoet}</span> : null}
+                        </p>
+                      ) : null}
+                      {friend.anthemUrl ? (
+                        <p>
+                          <span className="ff-pairs-label">Song</span>
+                          <a href={friend.anthemUrl} className="ff-poem-title" target="_blank" rel="noreferrer">
+                            Their song
+                          </a>
+                        </p>
+                      ) : null}
+                    </div>
+                    {trackId ? <AnthemPlayer trackId={trackId} /> : null}
                   </dd>
                 </div>
               ) : null}
@@ -313,8 +329,7 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
           </section>
         </div>
 
-        <AlsoLike friends={alsoLike} />
-      </ProductSoundtrack>
+      <AlsoLike friends={alsoLike} />
     </main>
   );
 }
