@@ -77,30 +77,53 @@ export function ProductPage({ friend, alsoLike = [] }: Props) {
                 </div>
               ) : null}
             </dl>
-            {friend.altUrl || friend.extraUrl ? (
-              <div className="ff-alt-stack">
+            <figure className="ff-character">
+              {friend.heroUrl ? (
+                <img
+                  src={friend.heroUrl}
+                  alt={friend.nickname}
+                  fetchPriority="high"
+                  decoding="async"
+                />
+              ) : (
+                <span className="ff-card-blank" aria-hidden="true" />
+              )}
+              {friend.badge !== "none" ? (
+                <span className="ff-badge">{FRIEND_BADGES[friend.badge]}</span>
+              ) : null}
+            </figure>
+          </aside>
+
+          <div className="ff-photo-col" aria-label={`${friend.nickname} photos`}>
+            {(friend.altUrl || friend.extraUrl) ? (
+              <>
                 {friend.altUrl ? (
-                  <figure className="ff-alt">
-                    <img src={friend.altUrl} alt={`${friend.nickname}, photo 2`} />
+                  <figure className="ff-photo">
+                    <img
+                      src={friend.altUrl}
+                      alt={`${friend.nickname}, photo 2`}
+                      loading="eager"
+                      decoding="async"
+                    />
                   </figure>
                 ) : null}
                 {friend.extraUrl ? (
-                  <figure className="ff-alt">
-                    <img src={friend.extraUrl} alt={`${friend.nickname}, photo 3`} />
+                  <figure className="ff-photo">
+                    <img
+                      src={friend.extraUrl}
+                      alt={`${friend.nickname}, photo 3`}
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </figure>
                 ) : null}
-              </div>
-            ) : null}
-          </aside>
-
-          <figure className="ff-hero">
-            {friend.heroUrl ? (
-              <img src={friend.heroUrl} alt={friend.nickname} />
+              </>
             ) : (
-              <span className="ff-card-blank" aria-hidden="true" />
+              <figure className="ff-photo ff-photo-empty" aria-hidden="true">
+                <span className="ff-card-blank" />
+              </figure>
             )}
-            {friend.badge !== "none" ? <span className="ff-badge">{FRIEND_BADGES[friend.badge]}</span> : null}
-          </figure>
+          </div>
 
           <section className="ff-buy" aria-label="Details">
             <dl className="ff-buy-rows">

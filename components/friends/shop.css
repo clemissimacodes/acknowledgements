@@ -747,42 +747,54 @@ p.ff-anthem-whisper {
   display: block;
 }
 
-.ff-alt-stack {
-  display: grid;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.ff-alt {
-  margin: 0;
-}
-
-.ff-alt img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  background: var(--paper-2);
-}
-
-.ff-hero {
+/* Character sits under materials / care / made in (Orseund left column). */
+.ff-character {
   position: relative;
-  margin: 0;
+  margin: 28px 0 0;
   background: var(--paper);
 }
 
-.ff-hero img {
+.ff-character img {
   display: block;
-  width: 70%;
+  width: 78%;
   margin: 0 auto;
   aspect-ratio: 4 / 5;
   object-fit: contain;
   object-position: center bottom;
 }
 
-.ff-hero .ff-card-blank {
+.ff-character .ff-card-blank {
   position: relative;
   display: block;
   aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg, var(--paper-2), #e7e4da);
+}
+
+/* Photos stack in the middle column. */
+.ff-photo-col {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ff-photo {
+  margin: 0;
+  background: var(--paper-2);
+}
+
+.ff-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center;
+}
+
+.ff-photo-empty .ff-card-blank {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg, var(--paper-2), #e7e4da);
 }
 
 .ff-title {
@@ -1452,7 +1464,7 @@ p.ff-anthem-whisper {
     padding: 20px 20px 48px;
   }
 
-  .ff-hero {
+  .ff-photo-col {
     order: -1;
     margin: 0 -20px;
   }
@@ -1465,6 +1477,11 @@ p.ff-anthem-whisper {
 
   .ff-specs {
     order: 3;
+  }
+
+  .ff-character {
+    margin-top: 20px;
+    max-width: 280px;
   }
 
   .ff-footer-cols {
