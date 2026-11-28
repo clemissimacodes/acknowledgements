@@ -8,6 +8,18 @@ Rows live in the [Acknowledgements Notion database](https://app.notion.com/p/8f0
 
 The site reads Notion when `NOTION_TOKEN` is set (share the database with that integration). Otherwise it uses `data/acknowledgements.json`.
 
+## Bad Company
+
+`/bad-company` is the clearance rack behind Good Company: same store, lights off, every item final sale. It is owner-only (`BAD_COMPANY_LIVE` in `lib/bad-company.ts`), independent of `SHOP_LIVE`.
+
+This repo is public, so the real roster is never committed. It loads from, in order:
+
+1. `BAD_COMPANY_ROSTER` env var (a JSON array, set in Vercel)
+2. `.data/bad-company.json` (gitignored, for local)
+3. `data/bad-company.example.json` (placeholder archetypes; copy it to start)
+
+Fields per item: `nickname`, `productName`, `badge` (`final-sale`, `recalled`, `discontinued`, `never-again`, `returned`), `relationship`, `metHow`, `hometown`, `madeOf`, `care`, `worstMemory`, `pairsBadlyWith`, `discontinued`, `condition`, `price`, optional `slug`, `heroUrl`, `visible`.
+
 ## Run locally
 
 ```bash

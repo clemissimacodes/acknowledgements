@@ -14,7 +14,7 @@ function pageBackground() {
 }
 
 const SHOP_PATH =
-  /^\/(products|collections|receipt|blogs\/studio-diary|pages\/(?:about-the-sale|apply))(\/|$)/;
+  /^\/(products|collections|receipt|bad-company|blogs\/studio-diary|pages\/(?:about-the-sale|apply))(\/|$)/;
 
 /** Pinned to the bottom of every page, tinted to whatever the page sits on. */
 export function SiteFooter() {
