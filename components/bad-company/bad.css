@@ -1,0 +1,183 @@
+/* Bad Company — Good Company after hours. Same store, lights off,
+   clearance-red tags. Everything layers over shop.css via its variables. */
+
+html:has(.bc) body {
+  background: #14110d;
+}
+
+.ff.bc {
+  --paper: #14110d;
+  --paper-2: #1e1a15;
+  --ink: #ece4d4;
+  --ink-2: rgba(236, 228, 212, 0.58);
+  --rule: rgba(236, 228, 212, 0.14);
+  --tag: #d2402c;
+}
+
+.bc .ff-marquee {
+  background: var(--tag);
+  border-bottom-color: transparent;
+  color: #fff4ea;
+}
+
+.bc .ff-logo-mark {
+  text-decoration: line-through;
+  text-decoration-color: var(--tag);
+  text-decoration-thickness: 2px;
+}
+
+.bc .ff-logo-sub {
+  color: var(--tag);
+}
+
+.bc-bag-off {
+  color: var(--ink-2) !important;
+  text-decoration: line-through;
+  cursor: not-allowed !important;
+}
+
+.bc .ff-logo-sub {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .bc-bag-off,
+  .bc-logo-extra {
+    display: none;
+  }
+}
+
+.bc .ff-card-blank,
+.bc .ff-photo-empty .ff-card-blank {
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 14px, rgba(236, 228, 212, 0.035) 14px 15px),
+    linear-gradient(180deg, var(--paper-2), #0f0d0a);
+}
+
+.bc-card-media {
+  position: relative;
+}
+
+.bc-card-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: clamp(64px, 9vw, 120px);
+  font-style: italic;
+  color: rgba(236, 228, 212, 0.16);
+  pointer-events: none;
+}
+
+.bc .ff-badge {
+  top: 10px;
+  right: 10px;
+  padding: 2px 8px;
+  background: var(--tag);
+  color: #fff4ea;
+  transform: rotate(3deg);
+}
+
+.bc .ff-card a:hover .ff-card-hero {
+  filter: grayscale(1) contrast(1.1);
+}
+
+.bc .ff-card-hero,
+.bc .ff-character img,
+.bc .ff-photo img {
+  filter: grayscale(0.85);
+}
+
+.bc-was {
+  margin-right: 6px;
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.bc-now {
+  color: var(--tag);
+}
+
+.bc .ff-price .ff-price-scrawl,
+.bc-price-text {
+  color: var(--tag);
+}
+
+.bc-price-text {
+  font-family: var(--scrawl);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.bc .ff-chat {
+  background: var(--tag);
+  color: #fff4ea;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.bc .ff-chat-dot {
+  background: #fff4ea;
+  color: var(--tag);
+}
+
+.bc .ff-dropdown,
+.bc .ff-filter-panel {
+  background: var(--paper-2);
+}
+
+.bc-footer-dead {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.bc-return-done {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--tag);
+}
+
+.bc .ff-diary-pane-left {
+  background: linear-gradient(180deg, var(--paper-2), #0f0d0a);
+}
+
+.bc .ff-diary-pane-right {
+  background: #1a1612;
+}
+
+.bc .ff-diary-ghost {
+  color: rgba(236, 228, 212, 0.1);
+}
+
+.bc .ff-diary-scrawl {
+  color: var(--tag);
+}
+
+.bc .ff-diary-ghost span:first-child {
+  text-decoration: line-through;
+  text-decoration-color: var(--tag);
+  text-decoration-thickness: 0.06em;
+  color: rgba(210, 64, 44, 0.5);
+}
+
+.bc .ff-diary-plate-pull {
+  border-color: var(--tag);
+}
+
+.bc .ff-diary-body {
+  background: var(--paper);
+}
+
+.bc .ff-diary-plate:nth-child(even) {
+  background: var(--paper-2);
+}
+
+.bc .ff-diary-person {
+  text-decoration-color: var(--tag);
+}
